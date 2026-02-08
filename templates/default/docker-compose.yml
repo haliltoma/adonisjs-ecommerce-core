@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: adoniscommerce-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATABASE:-adoniscommerce}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_DATABASE:-adoniscommerce}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - adoniscommerce-network
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: adoniscommerce-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - adoniscommerce-network
+
+  # AdonisJS Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: adoniscommerce-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=3333
+      - APP_KEY=${APP_KEY:-your-app-key-here-min-32-chars-long}
+      - DB_CONNECTION=pg
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_DATABASE=${DB_DATABASE:-adoniscommerce}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
+      - SESSION_DRIVER=redis
+      - CACHE_DRIVER=redis
+    ports:
+      - "${APP_PORT:-3333}:3333"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - adoniscommerce-network
+    command: >
+      sh -c "
+        pnpm install &&
+        node ace migration:run --force &&
+        pnpm dev --host 0.0.0.0
+      "
+
+  # Adminer - Database Management UI (optional)
+  adminer:
+    image: adminer:latest
+    container_name: adoniscommerce-adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    depends_on:
+      - postgres
+    networks:
+      - adoniscommerce-network
+    profiles:
+      - tools
+
+  # Redis Commander - Redis Management UI (optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: adoniscommerce-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-redis123}
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    depends_on:
+      - redis
+    networks:
+      - adoniscommerce-network
+    profiles:
+      - tools
+
+  # MailHog - Email Testing (optional)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: adoniscommerce-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks:
+      - adoniscommerce-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  adoniscommerce-network:
+    driver: bridge

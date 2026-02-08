@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="{{ page.props?.locale || 'en' }}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  {{-- Default title - will be overridden by Inertia Head component --}}
+  <title inertia>{{ title || 'AdonisCommerce - Premium E-Commerce Platform' }}</title>
+
+  {{-- Default description - will be overridden by Inertia Head component --}}
+  <meta head-key="description" name="description" content="{{ description || 'Discover premium products at AdonisCommerce. Shop our curated collection of high-quality items with secure checkout and fast delivery.' }}">
+
+  {{-- Default robots --}}
+  <meta head-key="robots" name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta head-key="googlebot" name="googlebot" content="index, follow">
+
+  {{-- Mobile & PWA --}}
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ page.props?.store?.name || 'AdonisCommerce' }}">
+  <meta name="application-name" content="{{ page.props?.store?.name || 'AdonisCommerce' }}">
+  <meta name="theme-color" content="#1c1917">
+  <meta name="msapplication-TileColor" content="#1c1917">
+
+  {{-- Favicon --}}
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  {{-- Preconnect to external resources --}}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  {{-- DNS prefetch for common CDNs --}}
+  <link rel="dns-prefetch" href="//images.unsplash.com">
+  <link rel="dns-prefetch" href="//cdn.shopify.com">
+
+  {{-- Open Graph defaults --}}
+  <meta head-key="og:type" property="og:type" content="website">
+  <meta head-key="og:locale" property="og:locale" content="{{ page.props?.locale || 'en_US' }}">
+  <meta head-key="og:site_name" property="og:site_name" content="{{ page.props?.store?.name || 'AdonisCommerce' }}">
+
+  {{-- Twitter Card defaults --}}
+  <meta head-key="twitter:card" name="twitter:card" content="summary_large_image">
+
+  {{-- Security --}}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="referrer" content="origin-when-cross-origin">
+
+  {{-- Additional SEO --}}
+  <meta name="author" content="{{ page.props?.store?.name || 'AdonisCommerce' }}">
+  <meta name="generator" content="AdonisJS with Inertia.js">
+
+  {{-- Inertia Head component content (overrides defaults above) --}}
+  @inertiaHead()
+
+  {{-- Development tools --}}
+  @stack('dumper')
+
+  {{-- Vite assets --}}
+  @viteReactRefresh()
+  @vite(['inertia/app/app.tsx', 'inertia/css/app.css'])
+</head>
+
+<body class="min-h-screen w-screen antialiased">
+  @inertia()
+
+  {{-- Noscript fallback --}}
+  <noscript>
+    <div style="padding: 20px; text-align: center; background: #fef3c7; color: #92400e;">
+      JavaScript is required to use this website. Please enable JavaScript in your browser settings.
+    </div>
+  </noscript>
+</body>
+
+</html>

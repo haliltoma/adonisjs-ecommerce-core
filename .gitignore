@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test
+coverage
+.nyc_output
+test-reports
+
+# Temporary files
+tmp
+temp
+.tmp
+.temp
+
+# Cache
+.eslintcache
+.cache
+
+# Docker volumes (local)
+postgres_data
+redis_data
+
+# Package manager locks (keep only pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+.claude
+/docs-ignore

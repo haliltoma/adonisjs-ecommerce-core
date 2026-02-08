@@ -1,0 +1,55 @@
+{
+  "name": "create-adoniscommerce",
+  "version": "1.0.0",
+  "description": "Create a new AdonisCommerce e-commerce application",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "create-adoniscommerce": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "adonisjs",
+    "ecommerce",
+    "create",
+    "scaffold",
+    "react",
+    "inertia",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haliltoma/adonisjs-ecommerce-core.git",
+    "directory": "packages/create-adoniscommerce"
+  },
+  "homepage": "https://github.com/haliltoma/adonisjs-ecommerce-core#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "degit": "^2.8.4",
+    "fs-extra": "^11.2.0",
+    "ora": "^8.1.0",
+    "prompts": "^2.4.2",
+    "validate-npm-package-name": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.15.18",
+    "@types/prompts": "^2.4.9",
+    "@types/validate-npm-package-name": "^4.0.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.8.0"
+  }
+}

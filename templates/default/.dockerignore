@@ -1,0 +1,64 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build output
+build
+dist
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files (use docker-compose env instead)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test files
+tests
+coverage
+.nyc_output
+test-reports
+
+# Docker files (no need to include in context recursively)
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Temporary files
+tmp
+temp
+.tmp
+.temp
+
+# Editor directories and files
+*.sublime-project
+*.sublime-workspace
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Misc
+.eslintcache
+.prettierignore
