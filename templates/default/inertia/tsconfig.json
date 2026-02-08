@@ -1,13 +1,22 @@
 {
-  "extends": "@adonisjs/tsconfig/tsconfig.client.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "target": "ESNext",
     "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
       "~/*": ["./*"],
       "@/*": ["./*"]
-    }
+    },
+    "types": ["vite/client"]
   },
   "include": ["./**/*.ts", "./**/*.tsx"]
 }

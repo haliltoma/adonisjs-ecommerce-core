@@ -139,7 +139,7 @@ export default class AuthService {
   // Password Reset
   async generatePasswordResetToken(email: string, isAdmin: boolean = false): Promise<string | null> {
     const token = string.random(64)
-    const expiresAt = DateTime.now().plus({ hours: 24 })
+    // Token expires in 24 hours - would be stored in password_resets table
 
     if (isAdmin) {
       const user = await User.query().where('email', email.toLowerCase()).first()
@@ -157,12 +157,12 @@ export default class AuthService {
     }
   }
 
-  async verifyPasswordResetToken(token: string): Promise<boolean> {
+  async verifyPasswordResetToken(_token: string): Promise<boolean> {
     // Would verify against password_resets table
     return true
   }
 
-  async resetPassword(data: PasswordResetDTO, isAdmin: boolean = false): Promise<boolean> {
+  async resetPassword(data: PasswordResetDTO, _isAdmin: boolean = false): Promise<boolean> {
     const isValid = await this.verifyPasswordResetToken(data.token)
     if (!isValid) return false
 
@@ -186,7 +186,7 @@ export default class AuthService {
     return { secret, qrCode }
   }
 
-  async confirmTwoFactor(userId: number, code: string): Promise<boolean> {
+  async confirmTwoFactor(userId: number, _code: string): Promise<boolean> {
     const user = await User.findOrFail(userId)
 
     if (!user.twoFactorSecret) {
@@ -211,7 +211,7 @@ export default class AuthService {
     await user.save()
   }
 
-  async verifyTwoFactor(userId: number, code: string): Promise<boolean> {
+  async verifyTwoFactor(userId: number, _code: string): Promise<boolean> {
     const user = await User.findOrFail(userId)
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -223,13 +223,13 @@ export default class AuthService {
   }
 
   // Session Management
-  async invalidateAllSessions(userId: number): Promise<void> {
+  async invalidateAllSessions(_userId: number): Promise<void> {
     // Would invalidate all sessions for the user
     // Implementation depends on session storage strategy
   }
 
   // Email Verification
-  async generateEmailVerificationToken(email: string): Promise<string> {
+  async generateEmailVerificationToken(_email: string): Promise<string> {
     return string.random(64)
   }
 

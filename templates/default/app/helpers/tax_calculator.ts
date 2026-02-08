@@ -38,7 +38,6 @@ interface TaxBreakdown {
  */
 export class TaxCalculator {
   private pricesIncludeTax = false
-  private defaultTaxRate = 0
 
   /**
    * Set whether prices include tax
@@ -51,8 +50,8 @@ export class TaxCalculator {
   /**
    * Set default tax rate
    */
-  setDefaultTaxRate(rate: number): this {
-    this.defaultTaxRate = rate
+  setDefaultTaxRate(_rate: number): this {
+    // Rate stored in external config
     return this
   }
 

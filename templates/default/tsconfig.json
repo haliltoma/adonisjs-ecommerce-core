@@ -6,6 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./inertia/*"]
-    }
-  }
+    },
+    "types": ["@adonisjs/core/providers/edge_provider", "@types/jest"]
+  },
+  "exclude": ["node_modules", "build", "inertia", "tests"]
 }

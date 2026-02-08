@@ -48,8 +48,6 @@ export class DiscountEngine {
    * Apply a discount code to a cart/order
    */
   async applyDiscount(code: string, context: DiscountContext): Promise<DiscountResult> {
-    const errors: string[] = []
-
     // Find the discount
     const discount = await Discount.query()
       .where('code', code.toUpperCase())

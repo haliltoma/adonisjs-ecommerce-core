@@ -283,7 +283,7 @@ export default class DiscountService {
     return Math.round(amount * 100) / 100
   }
 
-  private async getCustomerUsageCount(discountId: string, customerId: string): Promise<number> {
+  private async getCustomerUsageCount(_discountId: string, _customerId: string): Promise<number> {
     // This would query a discount_usages table
     // For now, return 0
     return 0

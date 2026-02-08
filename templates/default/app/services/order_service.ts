@@ -334,7 +334,7 @@ export default class OrderService {
     return stats?.$extras || {}
   }
 
-  private async generateOrderNumber(storeId: string): Promise<string> {
+  private async generateOrderNumber(_storeId: string): Promise<string> {
     const prefix = 'ORD'
     const timestamp = Date.now().toString(36).toUpperCase()
     const random = string.random(4).toUpperCase()

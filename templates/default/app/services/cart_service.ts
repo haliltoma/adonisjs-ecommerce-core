@@ -263,7 +263,7 @@ export default class CartService {
     })
   }
 
-  async markAsConverted(cartId: string, orderId: string): Promise<void> {
+  async markAsConverted(cartId: string, _orderId: string): Promise<void> {
     const cart = await Cart.findOrFail(cartId)
     cart.completedAt = DateTime.now()
     await cart.save()

@@ -98,7 +98,7 @@ router
         router.delete('/me/wishlist/:productId', [CustomersController, 'removeFromWishlist'])
       })
       .prefix('/customers')
-      .use(middleware.auth({ guards: ['api'] }))
+      .use(middleware.auth({ guards: ['web'] }))
 
     /*
     |--------------------------------------------------------------------------
@@ -115,7 +115,7 @@ router
         router.post('/:id/cancel', [OrdersController, 'cancel'])
       })
       .prefix('/orders')
-      .use(middleware.auth({ guards: ['api'] }))
+      .use(middleware.auth({ guards: ['web'] }))
 
     /*
     |--------------------------------------------------------------------------
@@ -131,21 +131,22 @@ router
         return response.notFound({ error: 'Store not found' })
       }
 
+      const meta = store.meta || {}
       return response.json({
         data: {
           id: store.id,
           name: store.name,
-          description: store.description,
+          description: meta.description || null,
           currency: store.defaultCurrency,
           locale: store.defaultLocale,
           timezone: store.timezone,
           logo: store.logoUrl,
           contact: {
-            email: store.contactEmail,
-            phone: store.contactPhone,
-            address: store.address,
+            email: meta.contactEmail || null,
+            phone: meta.contactPhone || null,
+            address: meta.address || null,
           },
-          social: store.socialLinks,
+          social: meta.socialLinks || null,
         },
       })
     })
