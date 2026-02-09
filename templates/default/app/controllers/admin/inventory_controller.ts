@@ -10,6 +10,14 @@ export default class InventoryController {
     this.inventoryService = new InventoryService()
   }
 
+  async exportInventory({ inertia }: HttpContext) {
+    return inertia.render('admin/inventory/Export', {})
+  }
+
+  async importInventory({ inertia }: HttpContext) {
+    return inertia.render('admin/inventory/Import', {})
+  }
+
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id
     const view = request.input('view', 'all') // all, low, out
@@ -48,24 +56,40 @@ export default class InventoryController {
 
     const locations = await this.inventoryService.getLocations(storeId)
 
+    const totalCount = variants.length
+
     return inertia.render('admin/inventory/Index', {
-      variants: variants.map((v) => ({
-        id: v.id,
-        productId: v.productId,
-        productTitle: v.product?.title,
-        title: v.title,
-        sku: v.sku,
-        inventoryQuantity: v.inventoryQuantity,
-        trackInventory: v.trackInventory,
-        allowBackorder: v.allowBackorder,
-      })),
+      inventory: {
+        data: variants.map((v) => ({
+          id: v.id,
+          productId: v.productId,
+          variantId: v.id,
+          productTitle: v.product?.title || '',
+          variantTitle: v.title,
+          sku: v.sku,
+          thumbnail: null,
+          quantity: v.inventoryQuantity || 0,
+          reservedQuantity: 0,
+          availableQuantity: v.inventoryQuantity || 0,
+          lowStockThreshold: 10,
+          trackInventory: v.trackInventory,
+          allowBackorder: v.allowBackorder,
+          locationId: '',
+          locationName: '',
+        })),
+        meta: {
+          total: totalCount,
+          perPage: Number(limit),
+          currentPage: Number(page),
+          lastPage: Math.max(1, Math.ceil(totalCount / Number(limit))),
+        },
+      },
       locations: locations.map((l) => ({
         id: l.id,
         name: l.name,
         code: l.code,
-        priority: l.priority,
       })),
-      filters: { view, search, locationId },
+      filters: { search, locationId, lowStock: view === 'low' },
     })
   }
 

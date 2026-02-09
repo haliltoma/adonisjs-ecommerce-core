@@ -12,8 +12,8 @@ export default class CategoriesController {
    * GET /api/categories
    * List all categories (hierarchical)
    */
-  async index({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async index({ request, response, store }: HttpContext) {
+    const storeId = store.id
     const { flat } = request.qs()
 
     const categories = await Category.query()
@@ -40,8 +40,8 @@ export default class CategoriesController {
    * GET /api/categories/:id
    * Get a single category with products
    */
-  async show({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async show({ params, request, response, store }: HttpContext) {
+    const storeId = store.id
     const identifier = params.id
 
     const query = Category.query()
@@ -97,8 +97,8 @@ export default class CategoriesController {
    * GET /api/categories/:id/breadcrumb
    * Get category breadcrumb
    */
-  async breadcrumb({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async breadcrumb({ params, response, store }: HttpContext) {
+    const storeId = store.id
 
     const category = await Category.query()
       .where('storeId', storeId)
@@ -120,8 +120,8 @@ export default class CategoriesController {
    * GET /api/categories/tree
    * Get full category tree
    */
-  async tree({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async tree({ response, store }: HttpContext) {
+    const storeId = store.id
 
     const categories = await Category.query()
       .where('storeId', storeId)

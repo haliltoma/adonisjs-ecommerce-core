@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import db from '@adonisjs/lucid/services/db'
 import ProductService from '#services/product_service'
 import CategoryService from '#services/category_service'
 import Product from '#models/product'
@@ -68,17 +69,18 @@ export default class ProductsController {
       .limit(10)
 
     // Calculate review stats
-    const reviewStats = await Review.query()
-      .where('productId', product.id)
+    const reviewStats = await db
+      .from('reviews')
+      .where('product_id', product.id)
       .where('status', 'approved')
       .select(
-        Review.query().client.raw('COUNT(*) as total'),
-        Review.query().client.raw('AVG(rating) as average'),
-        Review.query().client.raw('COUNT(CASE WHEN rating = 5 THEN 1 END) as five_star'),
-        Review.query().client.raw('COUNT(CASE WHEN rating = 4 THEN 1 END) as four_star'),
-        Review.query().client.raw('COUNT(CASE WHEN rating = 3 THEN 1 END) as three_star'),
-        Review.query().client.raw('COUNT(CASE WHEN rating = 2 THEN 1 END) as two_star'),
-        Review.query().client.raw('COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star')
+        db.raw('COUNT(*) as total'),
+        db.raw('AVG(rating) as average'),
+        db.raw('COUNT(CASE WHEN rating = 5 THEN 1 END) as five_star'),
+        db.raw('COUNT(CASE WHEN rating = 4 THEN 1 END) as four_star'),
+        db.raw('COUNT(CASE WHEN rating = 3 THEN 1 END) as three_star'),
+        db.raw('COUNT(CASE WHEN rating = 2 THEN 1 END) as two_star'),
+        db.raw('COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star')
       )
       .first()
 
@@ -96,10 +98,10 @@ export default class ProductsController {
         title: r.title,
         content: r.content,
         isVerifiedPurchase: r.isVerifiedPurchase,
-        customerName: r.customer ? `${r.customer.firstName} ${r.customer.lastName.charAt(0)}.` : 'Anonymous',
+        customerName: r.customer ? `${r.customer.firstName} ${r.customer.lastName?.charAt(0) || ''}.` : 'Anonymous',
         createdAt: r.createdAt.toISO(),
       })),
-      reviewStats: reviewStats?.$extras || {
+      reviewStats: reviewStats || {
         total: 0,
         average: 0,
         five_star: 0,
@@ -162,6 +164,46 @@ export default class ProductsController {
         name: c.name,
         slug: c.slug,
         imageUrl: c.imageUrl,
+      })),
+    })
+  }
+
+  async collections({ inertia, store }: HttpContext) {
+    const Category = (await import('#models/category')).default
+    const categories = await Category.query()
+      .where('storeId', store.id)
+      .where('isActive', true)
+      .whereNull('parentId')
+      .orderBy('position', 'asc')
+
+    return inertia.render('storefront/Collections', {
+      categories: categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        description: c.description,
+        imageUrl: c.imageUrl,
+      })),
+    })
+  }
+
+  async allCategories({ inertia, store }: HttpContext) {
+    const Category = (await import('#models/category')).default
+    const categories = await Category.query()
+      .where('storeId', store.id)
+      .where('isActive', true)
+      .orderBy('depth', 'asc')
+      .orderBy('position', 'asc')
+
+    return inertia.render('storefront/Categories', {
+      categories: categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        description: c.description,
+        imageUrl: c.imageUrl,
+        parentId: c.parentId,
+        depth: c.depth,
       })),
     })
   }

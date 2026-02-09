@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import Product from '#models/product'
 import ProductVariant from '#models/product_variant'
 import ProductOption from '#models/product_option'
@@ -212,7 +213,7 @@ export default class ProductService {
 
   async delete(productId: string): Promise<void> {
     const product = await Product.findOrFail(productId)
-    product.deletedAt = new Date() as any
+    product.deletedAt = DateTime.now()
     await product.save()
   }
 

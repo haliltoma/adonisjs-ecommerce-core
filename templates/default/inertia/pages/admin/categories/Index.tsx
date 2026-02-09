@@ -122,21 +122,21 @@ export default function CategoriesIndex({ categories }: Props) {
           <div className="flex-1 min-w-0">
             <Link
               href={`/admin/categories/${category.id}/edit`}
-              className="font-medium hover:underline"
+              className="text-sm font-medium hover:underline underline-offset-4"
             >
               {category.name}
             </Link>
-            <p className="text-muted-foreground truncate text-sm">
+            <p className="text-muted-foreground truncate text-[11px] mt-0.5">
               /{category.slug}
             </p>
           </div>
 
-          <div className="text-muted-foreground flex items-center gap-1 text-sm">
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
             <span>{category.productCount}</span>
             <span className="hidden sm:inline">products</span>
           </div>
 
-          <Badge variant={category.isActive ? 'default' : 'secondary'}>
+          <Badge variant={category.isActive ? 'default' : 'outline'} className="text-[11px]">
             {category.isActive ? 'Active' : 'Inactive'}
           </Badge>
 
@@ -145,7 +145,7 @@ export default function CategoriesIndex({ categories }: Props) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -199,29 +199,31 @@ export default function CategoriesIndex({ categories }: Props) {
     >
       <Head title="Categories - Admin" />
 
-      <Card>
-        <CardContent className="p-0">
-          {categories.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16">
-              <FolderTree className="text-muted-foreground h-12 w-12" />
-              <h3 className="mt-2 font-medium">No categories</h3>
-              <p className="text-muted-foreground text-sm">
-                Get started by creating a new category.
-              </p>
-              <Button asChild className="mt-4">
-                <Link href="/admin/categories/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="divide-y">
-              {categories.map((category) => renderCategory(category))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="animate-fade-in">
+        <Card>
+          <CardContent className="p-0">
+            {categories.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-16">
+                <FolderTree className="text-muted-foreground h-12 w-12" />
+                <h3 className="font-display text-lg mt-2">No categories</h3>
+                <p className="text-muted-foreground text-sm">
+                  Get started by creating a new category.
+                </p>
+                <Button asChild className="mt-4">
+                  <Link href="/admin/categories/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Category
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {categories.map((category) => renderCategory(category))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </AdminLayout>
   )
 }

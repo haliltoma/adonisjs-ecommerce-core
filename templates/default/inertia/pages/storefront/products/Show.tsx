@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react'
 import { useState } from 'react'
-import { ChevronRight, Minus, Package, Plus, Star } from 'lucide-react'
+import { Minus, Plus, Star } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -221,65 +221,78 @@ export default function ProductShow({
         breadcrumbs={breadcrumb}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
-          <BreadcrumbList>
+        <Breadcrumb className="animate-fade-up mb-10">
+          <BreadcrumbList className="text-xs tracking-wide text-muted-foreground/70">
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/">Home</Link>
+                <Link href="/" className="transition-colors hover:text-foreground">
+                  Home
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             {breadcrumb.map((item) => (
-              <BreadcrumbItem key={item.slug}>
+              <span key={item.slug} className="contents">
                 <BreadcrumbSeparator />
-                <BreadcrumbLink asChild>
-                  <Link href={`/category/${item.slug}`}>{item.name}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      href={`/category/${item.slug}`}
+                      className="transition-colors hover:text-foreground"
+                    >
+                      {item.name}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </span>
             ))}
+            <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbPage>{product.title}</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground/50">
+                {product.title}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="lg:grid lg:grid-cols-2 lg:gap-12">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-16">
           {/* Images */}
-          <div>
-            <div className="bg-muted overflow-hidden rounded-xl">
-              <AspectRatio ratio={1}>
+          <div className="animate-fade-up delay-100 lg:col-span-7">
+            <div className="overflow-hidden rounded-2xl bg-muted">
+              <AspectRatio ratio={4 / 5}>
                 {product.images.length > 0 ? (
                   <img
                     src={product.images[selectedImageIndex].url}
                     alt={product.images[selectedImageIndex].alt || product.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-all duration-500 ease-out"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <Package className="text-muted-foreground h-16 w-16" />
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                    <div className="h-20 w-20 rounded-full bg-muted-foreground/10" />
                   </div>
                 )}
               </AspectRatio>
             </div>
             {product.images.length > 1 && (
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
                 {product.images.map((image, index) => (
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`bg-muted h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg transition-all ${
+                    className={`flex-shrink-0 overflow-hidden rounded-xl transition-all duration-300 ${
                       index === selectedImageIndex
-                        ? 'ring-primary ring-2 ring-offset-2'
-                        : 'hover:opacity-80'
+                        ? 'ring-2 ring-accent ring-offset-2 ring-offset-background'
+                        : 'opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img
-                      src={image.url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
+                    <div className="h-20 w-20 overflow-hidden bg-muted sm:h-24 sm:w-24">
+                      <img
+                        src={image.url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   </button>
                 ))}
               </div>
@@ -287,19 +300,19 @@ export default function ProductShow({
           </div>
 
           {/* Product Info */}
-          <div className="mt-8 lg:mt-0">
+          <div className="mt-10 lg:col-span-5 lg:mt-0">
             {product.vendor && (
-              <p className="text-muted-foreground text-sm uppercase tracking-wide">
+              <p className="animate-fade-up delay-200 text-[11px] font-semibold tracking-[0.2em] uppercase text-accent">
                 {product.vendor}
               </p>
             )}
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">
+            <h1 className="animate-fade-up delay-200 font-display mt-2 text-4xl tracking-tight sm:text-5xl leading-[1.1]">
               {product.title}
             </h1>
 
             {/* Reviews summary */}
             {reviewStats.total > 0 && (
-              <div className="mt-4 flex items-center gap-2">
+              <div className="animate-fade-up delay-300 mt-5 flex items-center gap-2">
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
@@ -319,36 +332,40 @@ export default function ProductShow({
             )}
 
             {/* Price */}
-            <div className="mt-6 flex items-center gap-3">
-              <span className="text-3xl font-bold">{formatCurrency(price)}</span>
+            <div className="animate-fade-up delay-300 mt-8 flex items-baseline gap-4">
+              <span className="font-display text-4xl tracking-tight">
+                {formatCurrency(price)}
+              </span>
               {isOnSale && compareAtPrice && (
                 <>
-                  <span className="text-muted-foreground text-xl line-through">
+                  <span className="text-muted-foreground text-lg line-through">
                     {formatCurrency(compareAtPrice)}
                   </span>
-                  <Badge variant="destructive">
+                  <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-white tracking-wide">
                     Save {Math.round(((compareAtPrice - price) / compareAtPrice) * 100)}%
-                  </Badge>
+                  </span>
                 </>
               )}
             </div>
 
             {/* Short description */}
             {product.shortDescription && (
-              <p className="text-muted-foreground mt-4">
+              <p className="animate-fade-up delay-400 text-muted-foreground mt-6 text-[15px] leading-relaxed">
                 {product.shortDescription}
               </p>
             )}
 
-            <Separator className="my-6" />
+            <Separator className="my-8" />
 
             {/* Options */}
             {product.options.length > 0 && (
-              <div className="space-y-6">
+              <div className="animate-fade-up delay-400 space-y-7">
                 {product.options.map((option) => (
                   <div key={option.id}>
-                    <label className="text-sm font-medium">{option.name}</label>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-foreground/70">
+                      {option.name}
+                    </label>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {option.values.map((value) => (
                         <Button
                           key={value}
@@ -358,6 +375,7 @@ export default function ProductShow({
                               : 'outline'
                           }
                           size="sm"
+                          className="rounded-full px-5"
                           onClick={() => handleOptionChange(option.name, value)}
                         >
                           {value}
@@ -371,29 +389,36 @@ export default function ProductShow({
             )}
 
             {/* Quantity and Add to Cart */}
-            <div className="mt-6 flex gap-4">
-              <div className="flex items-center rounded-md border">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-none"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-12 text-center">{quantity}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-none"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+            <div className="animate-fade-up delay-500 mt-8 space-y-4">
+              <div className="flex items-center gap-4">
+                <label className="text-xs font-semibold tracking-[0.1em] uppercase text-foreground/70">
+                  Quantity
+                </label>
+                <div className="flex items-center rounded-full border">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="w-10 text-center text-sm font-medium tabular-nums">
+                    {quantity}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
               <Button
                 size="lg"
-                className="flex-1"
+                className="w-full h-14 text-[15px] font-semibold tracking-wide rounded-full"
                 onClick={addToCart}
                 disabled={!isAvailable || addingToCart}
               >
@@ -407,23 +432,23 @@ export default function ProductShow({
 
             {/* SKU */}
             {(selectedVariant?.sku || product.sku) && (
-              <p className="text-muted-foreground mt-4 text-sm">
+              <p className="animate-fade-up delay-500 text-muted-foreground mt-6 text-xs tracking-wide">
                 SKU: {selectedVariant?.sku || product.sku}
               </p>
             )}
 
             {/* Categories and Tags */}
-            <div className="mt-8 space-y-4 border-t pt-6">
+            <div className="animate-fade-up delay-600 mt-10 space-y-4 border-t pt-8">
               {product.categories.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-xs font-semibold tracking-[0.1em] uppercase text-muted-foreground">
                     Categories:
                   </span>
                   {product.categories.map((cat) => (
                     <Link
                       key={cat.id}
                       href={`/category/${cat.slug}`}
-                      className="text-primary text-sm hover:underline"
+                      className="text-sm text-foreground/70 underline underline-offset-4 decoration-foreground/20 hover:text-foreground hover:decoration-foreground/50 transition-colors"
                     >
                       {cat.name}
                     </Link>
@@ -432,9 +457,11 @@ export default function ProductShow({
               )}
               {product.tags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-muted-foreground text-sm">Tags:</span>
+                  <span className="text-xs font-semibold tracking-[0.1em] uppercase text-muted-foreground">
+                    Tags:
+                  </span>
                   {product.tags.map((tag) => (
-                    <Badge key={tag.id} variant="secondary">
+                    <Badge key={tag.id} variant="secondary" className="rounded-full font-normal">
                       {tag.name}
                     </Badge>
                   ))}
@@ -446,26 +473,39 @@ export default function ProductShow({
 
         {/* Description */}
         {product.description && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold tracking-tight">Description</h2>
-            <div
-              className="prose prose-neutral mt-4 max-w-none"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
+          <section className="animate-fade-up mt-24">
+            <div className="max-w-3xl">
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+                Details
+              </span>
+              <h2 className="font-display text-3xl tracking-tight mt-2">
+                Description
+              </h2>
+              <div
+                className="prose prose-neutral mt-6 max-w-none text-[15px] leading-relaxed text-foreground/80"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            </div>
           </section>
         )}
 
         {/* Reviews */}
         {reviews.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold tracking-tight">
+          <section className="mt-24">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              Feedback
+            </span>
+            <h2 className="font-display text-3xl tracking-tight mt-2">
               Customer Reviews
             </h2>
-            <div className="mt-8 space-y-6">
-              {reviews.map((review) => (
-                <Card key={review.id}>
+            <div className="mt-10 space-y-6">
+              {reviews.map((review, i) => (
+                <Card
+                  key={review.id}
+                  className={`animate-fade-up border-border/50 ${i < 7 ? `delay-${(i + 1) * 100}` : ''}`}
+                >
                   <CardContent className="pt-6">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
@@ -479,21 +519,21 @@ export default function ProductShow({
                         ))}
                       </div>
                       {review.isVerifiedPurchase && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="rounded-full text-[10px] tracking-wide">
                           Verified Purchase
                         </Badge>
                       )}
                     </div>
                     {review.title && (
-                      <h4 className="mt-2 font-semibold">{review.title}</h4>
+                      <h4 className="mt-3 font-semibold">{review.title}</h4>
                     )}
                     {review.content && (
-                      <p className="text-muted-foreground mt-2">
+                      <p className="text-muted-foreground mt-2 text-[15px] leading-relaxed">
                         {review.content}
                       </p>
                     )}
-                    <p className="text-muted-foreground mt-3 text-sm">
-                      {review.customerName} ·{' '}
+                    <p className="text-muted-foreground/60 mt-4 text-xs tracking-wide">
+                      {review.customerName} &middot;{' '}
                       {new Date(review.createdAt).toLocaleDateString()}
                     </p>
                   </CardContent>
@@ -505,59 +545,61 @@ export default function ProductShow({
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold tracking-tight">
-              You May Also Like
-            </h2>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {relatedProducts.map((relatedProduct) => (
+          <section className="mt-24 pb-8">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+                  Explore
+                </span>
+                <h2 className="font-display text-3xl tracking-tight mt-2">
+                  You May Also Like
+                </h2>
+              </div>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {relatedProducts.map((relatedProduct, i) => (
                 <Link
                   key={relatedProduct.id}
                   href={`/products/${relatedProduct.slug}`}
-                  className="group"
+                  className={`group card-hover block animate-fade-up ${i < 4 ? `delay-${(i + 1) * 100}` : ''}`}
                 >
-                  <Card className="overflow-hidden border-0 shadow-none">
-                    <div className="bg-muted relative overflow-hidden rounded-xl">
-                      <AspectRatio ratio={3 / 4}>
-                        {relatedProduct.thumbnail ? (
-                          <img
-                            src={relatedProduct.thumbnail}
-                            alt={relatedProduct.title}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <Package className="text-muted-foreground h-12 w-12" />
-                          </div>
-                        )}
-                      </AspectRatio>
-                      {relatedProduct.isOnSale &&
-                        relatedProduct.discountPercentage && (
-                          <Badge
-                            variant="destructive"
-                            className="absolute left-3 top-3"
-                          >
-                            -{relatedProduct.discountPercentage}%
-                          </Badge>
+                  <div className="relative overflow-hidden rounded-xl bg-muted img-zoom">
+                    <AspectRatio ratio={3 / 4}>
+                      {relatedProduct.thumbnail ? (
+                        <img
+                          src={relatedProduct.thumbnail}
+                          alt={relatedProduct.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                          <div className="h-12 w-12 rounded-full bg-muted-foreground/10" />
+                        </div>
+                      )}
+                    </AspectRatio>
+                    {relatedProduct.isOnSale &&
+                      relatedProduct.discountPercentage && (
+                        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-semibold text-white tracking-wide">
+                          -{relatedProduct.discountPercentage}%
+                        </span>
+                      )}
+                  </div>
+                  <div className="pt-4">
+                    <h3 className="text-sm font-medium leading-snug group-hover:underline underline-offset-4 decoration-foreground/30">
+                      {relatedProduct.title}
+                    </h3>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-sm font-semibold">
+                        {formatCurrency(relatedProduct.price)}
+                      </span>
+                      {relatedProduct.compareAtPrice &&
+                        relatedProduct.compareAtPrice > relatedProduct.price && (
+                          <span className="text-muted-foreground text-xs line-through">
+                            {formatCurrency(relatedProduct.compareAtPrice)}
+                          </span>
                         )}
                     </div>
-                    <CardContent className="px-0 pt-4">
-                      <h3 className="group-hover:text-primary font-medium transition-colors">
-                        {relatedProduct.title}
-                      </h3>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="font-semibold">
-                          {formatCurrency(relatedProduct.price)}
-                        </span>
-                        {relatedProduct.compareAtPrice &&
-                          relatedProduct.compareAtPrice > relatedProduct.price && (
-                            <span className="text-muted-foreground text-sm line-through">
-                              {formatCurrency(relatedProduct.compareAtPrice)}
-                            </span>
-                          )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  </div>
                 </Link>
               ))}
             </div>

@@ -1,4 +1,7 @@
 import { Head, Link } from '@inertiajs/react'
+import { ArrowLeft, Home } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
 
 interface Props {
   error?: string
@@ -9,116 +12,72 @@ export default function NotFound({ error }: Props) {
     <>
       <Head title="Page Not Found" />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
-          {/* 404 Illustration */}
-          <div className="mb-8">
-            <div className="relative inline-block">
-              <span className="text-[180px] font-black text-slate-200 leading-none select-none">
-                404
-              </span>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl">
-                  <svg
-                    className="w-12 h-12 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+          <div className="animate-fade-up mb-8">
+            <span className="font-display text-[160px] leading-none select-none text-foreground/[0.06]">
+              404
+            </span>
           </div>
 
-          {/* Content */}
-          <h1 className="text-3xl font-bold text-slate-800 mb-4">
-            Page Not Found
-          </h1>
+          <div className="animate-fade-up delay-100">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              Lost in Space
+            </span>
+            <h1 className="font-display text-3xl tracking-tight mt-2">
+              Page Not Found
+            </h1>
+          </div>
 
-          <p className="text-slate-600 mb-8 text-lg">
+          <p className="animate-fade-up delay-200 text-muted-foreground mt-4 text-[15px] leading-relaxed max-w-sm mx-auto">
             Sorry, we couldn't find the page you're looking for. Perhaps you've
             mistyped the URL or the page has been moved.
           </p>
 
           {error && (
-            <p className="text-sm text-slate-500 mb-6 bg-slate-100 px-4 py-2 rounded-lg inline-block">
+            <p className="animate-fade-up delay-300 text-sm text-muted-foreground mt-4 bg-secondary px-4 py-2 rounded-lg inline-block">
               {error}
             </p>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/"
-              className="inline-flex items-center px-6 py-3 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              Go Home
-            </Link>
-
-            <button
+          <div className="animate-fade-up delay-300 mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button size="lg" className="px-8 tracking-wide" asChild>
+              <Link href="/">
+                <Home className="mr-2 h-4 w-4" />
+                Go Home
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="px-8"
               onClick={() => window.history.back()}
-              className="inline-flex items-center px-6 py-3 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Go Back
-            </button>
+            </Button>
           </div>
 
-          {/* Quick Links */}
-          <div className="mt-12 pt-8 border-t border-slate-200">
-            <p className="text-sm text-slate-500 mb-4">
-              Here are some helpful links:
+          <div className="animate-fade-up delay-500 mt-14 pt-8 border-t border-border/50">
+            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground/60 mb-4">
+              Helpful Links
             </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link
                 href="/products"
-                className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                className="text-accent hover:underline underline-offset-4"
               >
                 Browse Products
               </Link>
-              <span className="text-slate-300">|</span>
               <Link
                 href="/categories"
-                className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                className="text-accent hover:underline underline-offset-4"
               >
                 Categories
               </Link>
-              <span className="text-slate-300">|</span>
               <Link
                 href="/contact"
-                className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                className="text-accent hover:underline underline-offset-4"
               >
                 Contact Us
               </Link>

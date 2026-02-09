@@ -14,7 +14,7 @@ export default class ProductsController {
    * GET /api/products
    * List products with filtering, sorting, and pagination
    */
-  async index({ request, response }: HttpContext) {
+  async index({ request, response, store }: HttpContext) {
     const {
       page = 1,
       limit = 20,
@@ -30,7 +30,7 @@ export default class ProductsController {
       tags,
     } = request.qs()
 
-    const storeId = request.header('X-Store-ID') || 'default'
+    const storeId = store.id
 
     const query = Product.query()
       .where('storeId', storeId)
@@ -107,8 +107,8 @@ export default class ProductsController {
    * GET /api/products/:id
    * Get a single product by ID or slug
    */
-  async show({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async show({ params, response, store }: HttpContext) {
+    const storeId = store.id
     const identifier = params.id
 
     const query = Product.query()
@@ -142,8 +142,8 @@ export default class ProductsController {
    * GET /api/products/:id/variants
    * Get product variants
    */
-  async variants({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async variants({ params, response, store }: HttpContext) {
+    const storeId = store.id
 
     const product = await Product.query()
       .where('storeId', storeId)
@@ -168,8 +168,8 @@ export default class ProductsController {
    * GET /api/products/:id/related
    * Get related products
    */
-  async related({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async related({ params, request, response, store }: HttpContext) {
+    const storeId = store.id
     const limit = Math.min(Number(request.qs().limit) || 8, 20)
 
     const product = await Product.query()
@@ -204,9 +204,9 @@ export default class ProductsController {
    * GET /api/products/search
    * Full-text search products
    */
-  async search({ request, response }: HttpContext) {
+  async search({ request, response, store }: HttpContext) {
     const payload = await request.validateUsing(productSearchValidator)
-    const storeId = request.header('X-Store-ID') || 'default'
+    const storeId = store.id
 
     const query = Product.query()
       .where('storeId', storeId)
@@ -236,8 +236,8 @@ export default class ProductsController {
    * GET /api/products/featured
    * Get featured products
    */
-  async featured({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async featured({ request, response, store }: HttpContext) {
+    const storeId = store.id
     const limit = Math.min(Number(request.qs().limit) || 8, 20)
 
     const products = await Product.query()
@@ -258,8 +258,8 @@ export default class ProductsController {
    * GET /api/products/new
    * Get new arrivals
    */
-  async newArrivals({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async newArrivals({ request, response, store }: HttpContext) {
+    const storeId = store.id
     const limit = Math.min(Number(request.qs().limit) || 8, 20)
 
     const products = await Product.query()

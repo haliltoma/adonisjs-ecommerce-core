@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { ArrowLeft, Minus, Package, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
-import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -74,20 +73,23 @@ export default function CartPage({ cart }: Props) {
     return (
       <StorefrontLayout>
         <Head title="Cart" />
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight">Shopping Cart</h1>
-          <Card className="mt-12 border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <ShoppingBag className="text-muted-foreground h-16 w-16" />
-              <h2 className="mt-4 text-xl font-semibold">Your cart is empty</h2>
-              <p className="text-muted-foreground mt-2">
-                Browse our products and add items to your cart.
-              </p>
-              <Button asChild className="mt-6">
-                <Link href="/products">Continue Shopping</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="animate-fade-up">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Your Bag</span>
+            <h1 className="font-display text-3xl tracking-tight mt-2">Shopping Cart</h1>
+          </div>
+          <div className="mt-16 flex flex-col items-center justify-center py-16 text-center animate-fade-up delay-200">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-border">
+              <ShoppingBag className="text-muted-foreground/50 h-8 w-8" />
+            </div>
+            <h2 className="mt-6 font-display text-xl">Your cart is empty</h2>
+            <p className="text-muted-foreground mt-2 text-sm max-w-sm">
+              Browse our products and add items to your cart to get started.
+            </p>
+            <Button asChild className="mt-8 px-8" size="lg">
+              <Link href="/products">Continue Shopping</Link>
+            </Button>
+          </div>
         </div>
       </StorefrontLayout>
     )
@@ -96,21 +98,24 @@ export default function CartPage({ cart }: Props) {
   return (
     <StorefrontLayout>
       <Head title="Cart" />
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight">Shopping Cart</h1>
-        <p className="text-muted-foreground mt-1">
-          {cart.itemCount} {cart.itemCount === 1 ? 'item' : 'items'}
-        </p>
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="animate-fade-up">
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Your Bag</span>
+          <h1 className="font-display text-3xl tracking-tight mt-2">Shopping Cart</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {cart.itemCount} {cart.itemCount === 1 ? 'item' : 'items'}
+          </p>
+        </div>
 
-        <div className="mt-12 lg:grid lg:grid-cols-12 lg:gap-12">
+        <div className="mt-12 lg:grid lg:grid-cols-12 lg:gap-16">
           {/* Cart Items */}
           <div className="lg:col-span-7">
             <div className="divide-y">
-              {cart.items.map((item) => (
-                <div key={item.id} className="flex gap-6 py-6">
+              {cart.items.map((item, i) => (
+                <div key={item.id} className={`flex gap-6 py-6 animate-fade-up delay-${Math.min((i + 1) * 100, 500)}`}>
                   <Link
                     href={`/products/${item.productSlug}`}
-                    className="bg-muted h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg"
+                    className="h-28 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-muted img-zoom"
                   >
                     {item.thumbnail ? (
                       <img
@@ -119,8 +124,8 @@ export default function CartPage({ cart }: Props) {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Package className="text-muted-foreground h-8 w-8" />
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                        <Package className="text-muted-foreground/30 h-8 w-8" />
                       </div>
                     )}
                   </Link>
@@ -130,7 +135,7 @@ export default function CartPage({ cart }: Props) {
                       <div>
                         <Link
                           href={`/products/${item.productSlug}`}
-                          className="hover:text-primary font-medium transition-colors"
+                          className="font-medium hover:underline underline-offset-4 decoration-foreground/30"
                         >
                           {item.title}
                         </Link>
@@ -140,39 +145,35 @@ export default function CartPage({ cart }: Props) {
                           </p>
                         )}
                         {item.sku && (
-                          <p className="text-muted-foreground mt-1 text-xs">
+                          <p className="text-muted-foreground mt-0.5 text-[11px] tracking-wide uppercase">
                             SKU: {item.sku}
                           </p>
                         )}
                       </div>
-                      <p className="font-semibold">
+                      <p className="font-display text-lg">
                         {formatCurrency(item.totalPrice)}
                       </p>
                     </div>
 
                     <div className="mt-auto flex items-center justify-between pt-4">
-                      <div className="flex items-center rounded-md border">
+                      <div className="flex items-center rounded-lg border">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-none"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
+                          className="h-8 w-8 rounded-none rounded-l-lg"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-10 text-center text-sm">
+                        <span className="w-10 text-center text-sm font-medium">
                           {item.quantity}
                         </span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-none"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
+                          className="h-8 w-8 rounded-none rounded-r-lg"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -180,10 +181,10 @@ export default function CartPage({ cart }: Props) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive text-xs"
                         onClick={() => removeItem(item.id)}
                       >
-                        <Trash2 className="mr-1 h-4 w-4" />
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
                         Remove
                       </Button>
                     </div>
@@ -192,7 +193,7 @@ export default function CartPage({ cart }: Props) {
               ))}
             </div>
 
-            <Button variant="ghost" asChild className="mt-6">
+            <Button variant="ghost" asChild className="mt-6 text-sm">
               <Link href="/products">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Continue Shopping
@@ -202,24 +203,22 @@ export default function CartPage({ cart }: Props) {
 
           {/* Order Summary */}
           <div className="mt-12 lg:col-span-5 lg:mt-0">
-            <Card>
+            <Card className="animate-fade-up delay-300 sticky top-[88px]">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle className="font-display text-lg">Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">
-                    {formatCurrency(cart.subtotal)}
-                  </span>
+                  <span className="font-medium">{formatCurrency(cart.subtotal)}</span>
                 </div>
 
                 {cart.discountTotal > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-sm text-emerald-700">
                     <span className="flex items-center gap-2">
                       Discount
                       {cart.discountCode && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-[10px]">
                           {cart.discountCode}
                         </Badge>
                       )}
@@ -231,37 +230,36 @@ export default function CartPage({ cart }: Props) {
                 )}
 
                 {cart.taxTotal > 0 && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="font-medium">
-                      {formatCurrency(cart.taxTotal)}
-                    </span>
+                    <span className="font-medium">{formatCurrency(cart.taxTotal)}</span>
                   </div>
                 )}
 
                 <Separator />
 
-                <div className="flex justify-between">
-                  <span className="text-lg font-semibold">Total</span>
-                  <span className="text-lg font-semibold">
-                    {formatCurrency(cart.total)}
-                  </span>
+                <div className="flex justify-between items-baseline">
+                  <span className="font-display text-lg">Total</span>
+                  <span className="font-display text-xl">{formatCurrency(cart.total)}</span>
                 </div>
 
                 {/* Discount Code */}
                 {!cart.discountCode ? (
-                  <div className="pt-4">
-                    <label className="text-sm font-medium">Discount Code</label>
+                  <div className="pt-3">
+                    <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                      Discount Code
+                    </label>
                     <div className="mt-2 flex gap-2">
                       <Input
                         type="text"
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value)}
                         placeholder="Enter code"
-                        className="flex-1"
+                        className="flex-1 text-sm"
                       />
                       <Button
                         variant="secondary"
+                        size="sm"
                         onClick={applyDiscount}
                         disabled={applyingDiscount}
                       >
@@ -270,31 +268,31 @@ export default function CartPage({ cart }: Props) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between rounded-lg bg-green-50 p-3 dark:bg-green-950/20">
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-50 p-3 dark:bg-emerald-950/20">
                     <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-400">
-                        Code applied: {cart.discountCode}
+                      <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
+                        Code: {cart.discountCode}
                       </p>
-                      <p className="text-sm text-green-600 dark:text-green-500">
+                      <p className="text-xs text-emerald-600 dark:text-emerald-500">
                         -{formatCurrency(cart.discountTotal)}
                       </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      className="h-7 w-7 text-emerald-600 hover:text-emerald-700"
                       onClick={removeDiscount}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex-col gap-4">
-                <Button asChild className="w-full" size="lg">
+              <CardFooter className="flex-col gap-3">
+                <Button asChild className="w-full h-12 text-sm tracking-wide" size="lg">
                   <Link href="/checkout">Proceed to Checkout</Link>
                 </Button>
-                <p className="text-muted-foreground text-center text-sm">
+                <p className="text-muted-foreground text-center text-xs">
                   Shipping calculated at checkout
                 </p>
               </CardFooter>

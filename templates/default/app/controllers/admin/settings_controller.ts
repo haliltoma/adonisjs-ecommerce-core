@@ -13,21 +13,41 @@ export default class SettingsController {
   }
 
   async index({ inertia, store }: HttpContext) {
-    const settings = await this.storeService.getAllSettings(store.id)
+    const allSettings = await this.storeService.getAllSettings(store.id)
+    const currencies = await Currency.query().where('isActive', true).orderBy('code', 'asc')
+    const locales = await Locale.query().where('isActive', true).orderBy('code', 'asc')
+
+    // Flatten settings into the shape the frontend expects
+    const general = allSettings.general || {}
+    const tax = allSettings.tax || {}
+    const shipping = allSettings.shipping || {}
+    const inventory = allSettings.inventory || {}
+    const seo = allSettings.seo || {}
 
     return inertia.render('admin/settings/Index', {
-      store: {
-        id: store.id,
-        name: store.name,
-        slug: store.slug,
-        domain: store.domain,
-        logoUrl: store.logoUrl,
-        defaultLocale: store.defaultLocale,
-        defaultCurrency: store.defaultCurrency,
-        timezone: store.timezone,
-        isActive: store.isActive,
+      settings: {
+        storeName: store.name || '',
+        storeEmail: (general.contactEmail as string) || '',
+        storePhone: (general.contactPhone as string) || '',
+        storeAddress: (general.address as string) || '',
+        storeLogo: store.logoUrl || null,
+        storeFavicon: (general.favicon as string) || null,
+        currency: store.defaultCurrency || 'USD',
+        timezone: store.timezone || 'UTC',
+        locale: store.defaultLocale || 'en',
+        taxEnabled: (tax.enabled as boolean) ?? false,
+        taxRate: (tax.rate as number) ?? 0,
+        taxIncludedInPrice: (tax.includedInPrice as boolean) ?? false,
+        shippingEnabled: (shipping.enabled as boolean) ?? true,
+        freeShippingThreshold: (shipping.freeThreshold as number) ?? null,
+        lowStockThreshold: (inventory.lowStockThreshold as number) ?? 10,
+        orderPrefix: (general.orderPrefix as string) || 'ORD-',
+        metaTitle: (seo.metaTitle as string) || store.name || '',
+        metaDescription: (seo.metaDescription as string) || '',
       },
-      settings,
+      currencies: currencies.map((c) => ({ code: c.code, name: c.name })),
+      timezones: Intl.supportedValuesOf('timeZone'),
+      locales: locales.map((l) => ({ code: l.code, name: l.name })),
     })
   }
 
@@ -221,6 +241,21 @@ export default class SettingsController {
       session.flash('error', error.message)
       return response.redirect().back()
     }
+  }
+
+  // Payment Settings
+  async payments({ inertia }: HttpContext) {
+    return inertia.render('admin/settings/Payments', {
+      providers: [],
+    })
+  }
+
+  // Shipping Settings
+  async shipping({ inertia }: HttpContext) {
+    return inertia.render('admin/settings/Shipping', {
+      zones: [],
+      methods: [],
+    })
   }
 
   // Currency Settings

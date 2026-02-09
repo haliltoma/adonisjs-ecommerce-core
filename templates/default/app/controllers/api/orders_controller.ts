@@ -16,8 +16,8 @@ export default class OrdersController {
    * GET /api/orders
    * List customer's orders
    */
-  async index({ request, response, auth }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async index({ request, response, auth, store }: HttpContext) {
+    const storeId = store.id
     const customer = auth.user
 
     if (!customer) {
@@ -55,8 +55,8 @@ export default class OrdersController {
    * GET /api/orders/:id
    * Get a single order
    */
-  async show({ params, request, response, auth }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async show({ params, request, response, auth, store }: HttpContext) {
+    const storeId = store.id
     const customer = auth.user
 
     const query = Order.query()
@@ -103,8 +103,8 @@ export default class OrdersController {
    * POST /api/orders
    * Create a new order (checkout)
    */
-  async store({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async store({ request, response, session, store }: HttpContext) {
+    const storeId = store.id
     const payload = await request.validateUsing(createOrderValidator)
 
     // Get cart
@@ -246,8 +246,8 @@ export default class OrdersController {
    * POST /api/orders/:id/cancel
    * Cancel an order
    */
-  async cancel({ params, request, response, auth }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async cancel({ params, request, response, auth, store }: HttpContext) {
+    const storeId = store.id
     const customer = auth.user
 
     if (!customer) {
@@ -300,8 +300,8 @@ export default class OrdersController {
    * GET /api/orders/:id/track
    * Get order tracking info
    */
-  async track({ params, request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async track({ params, request, response, store }: HttpContext) {
+    const storeId = store.id
     const { email } = request.qs()
 
     const query = Order.query()

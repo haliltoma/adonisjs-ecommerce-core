@@ -68,6 +68,136 @@ export default class PagesController {
   }
 
   /**
+   * Shipping page
+   */
+  async shipping({ inertia, store }: HttpContext) {
+    const page = await Page.query()
+      .where('storeId', store.id)
+      .where('slug', 'shipping')
+      .where('status', 'published')
+      .first()
+
+    return inertia.render('storefront/Shipping', {
+      store: {
+        name: store.name,
+        logoUrl: store.logoUrl,
+      },
+      page: page
+        ? {
+            title: page.title,
+            content: this.contentToHtml(page.content),
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : null,
+    })
+  }
+
+  /**
+   * Returns page
+   */
+  async returns({ inertia, store }: HttpContext) {
+    const page = await Page.query()
+      .where('storeId', store.id)
+      .where('slug', 'returns')
+      .where('status', 'published')
+      .first()
+
+    return inertia.render('storefront/Returns', {
+      store: {
+        name: store.name,
+        logoUrl: store.logoUrl,
+      },
+      page: page
+        ? {
+            title: page.title,
+            content: this.contentToHtml(page.content),
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : null,
+    })
+  }
+
+  /**
+   * FAQ page
+   */
+  async faq({ inertia, store }: HttpContext) {
+    const page = await Page.query()
+      .where('storeId', store.id)
+      .where('slug', 'faq')
+      .where('status', 'published')
+      .first()
+
+    return inertia.render('storefront/Faq', {
+      store: {
+        name: store.name,
+        logoUrl: store.logoUrl,
+      },
+      page: page
+        ? {
+            title: page.title,
+            content: this.contentToHtml(page.content),
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : null,
+    })
+  }
+
+  /**
+   * Privacy policy page
+   */
+  async privacy({ inertia, store }: HttpContext) {
+    const page = await Page.query()
+      .where('storeId', store.id)
+      .where('slug', 'privacy')
+      .where('status', 'published')
+      .first()
+
+    return inertia.render('storefront/Privacy', {
+      store: {
+        name: store.name,
+        logoUrl: store.logoUrl,
+      },
+      page: page
+        ? {
+            title: page.title,
+            content: this.contentToHtml(page.content),
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : null,
+    })
+  }
+
+  /**
+   * Terms of service page
+   */
+  async terms({ inertia, store }: HttpContext) {
+    const page = await Page.query()
+      .where('storeId', store.id)
+      .where('slug', 'terms')
+      .where('status', 'published')
+      .first()
+
+    return inertia.render('storefront/Terms', {
+      store: {
+        name: store.name,
+        logoUrl: store.logoUrl,
+      },
+      page: page
+        ? {
+            title: page.title,
+            content: this.contentToHtml(page.content),
+            metaTitle: page.metaTitle,
+            metaDescription: page.metaDescription,
+          }
+        : null,
+    })
+  }
+
+  /**
    * Dynamic page by slug
    */
   async show({ params, inertia, response, store }: HttpContext) {

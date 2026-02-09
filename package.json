@@ -12,20 +12,28 @@
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "pnpm --filter @adoniscommerce/template dev",
-    "dev:cli": "pnpm --filter create-adoniscommerce dev",
+    "dev:cli": "pnpm --filter @adonisjs-ecommerce-core/create dev",
     "build": "pnpm -r build",
-    "build:cli": "pnpm --filter create-adoniscommerce build",
+    "build:cli": "pnpm --filter @adonisjs-ecommerce-core/create build",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @adoniscommerce/template test:e2e",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "clean": "pnpm -r clean && rm -rf node_modules",
+    "infra:up": "pnpm --filter @adoniscommerce/template infra:up",
+    "infra:down": "pnpm --filter @adoniscommerce/template infra:down",
+    "infra:status": "pnpm --filter @adoniscommerce/template infra:status",
+    "db:migrate": "pnpm --filter @adoniscommerce/template db:migrate",
+    "db:seed": "pnpm --filter @adoniscommerce/template db:seed",
+    "db:fresh": "pnpm --filter @adoniscommerce/template db:fresh",
+    "setup": "pnpm --filter @adoniscommerce/template setup",
+    "go": "pnpm --filter @adoniscommerce/template go",
     "docker:dev": "pnpm --filter @adoniscommerce/template docker:dev",
     "docker:stop": "pnpm --filter @adoniscommerce/template docker:stop",
-    "publish:cli": "pnpm --filter create-adoniscommerce publish --access public",
-    "version:patch": "pnpm --filter create-adoniscommerce version patch",
-    "version:minor": "pnpm --filter create-adoniscommerce version minor",
-    "version:major": "pnpm --filter create-adoniscommerce version major",
+    "publish:cli": "pnpm --filter @adonisjs-ecommerce-core/create publish --access public",
+    "version:patch": "pnpm --filter @adonisjs-ecommerce-core/create version patch",
+    "version:minor": "pnpm --filter @adonisjs-ecommerce-core/create version minor",
+    "version:major": "pnpm --filter @adonisjs-ecommerce-core/create version major",
     "prepare": "pnpm build:cli"
   },
   "repository": {
@@ -48,5 +56,8 @@
   "homepage": "https://github.com/haliltoma/adonisjs-ecommerce-core#readme",
   "devDependencies": {
     "prettier": "^3.5.3"
+  },
+  "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.15"
   }
 }

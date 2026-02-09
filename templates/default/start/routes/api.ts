@@ -122,25 +122,21 @@ router
     | Store Info API
     |--------------------------------------------------------------------------
     */
-    router.get('/store', async ({ request, response }) => {
-      const storeId = request.header('X-Store-ID') || 'default'
-      const Store = (await import('#models/store')).default
-      const store = await Store.find(storeId)
-
-      if (!store) {
+    router.get('/store', async ({ response, store: currentStore }) => {
+      if (!currentStore) {
         return response.notFound({ error: 'Store not found' })
       }
 
-      const meta = store.meta || {}
+      const meta = (currentStore as any).meta || {}
       return response.json({
         data: {
-          id: store.id,
-          name: store.name,
+          id: currentStore.id,
+          name: currentStore.name,
           description: meta.description || null,
-          currency: store.defaultCurrency,
-          locale: store.defaultLocale,
-          timezone: store.timezone,
-          logo: store.logoUrl,
+          currency: currentStore.defaultCurrency,
+          locale: currentStore.defaultLocale,
+          timezone: currentStore.timezone,
+          logo: currentStore.logoUrl,
           contact: {
             email: meta.contactEmail || null,
             phone: meta.contactPhone || null,

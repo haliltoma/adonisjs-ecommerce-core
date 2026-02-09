@@ -9,6 +9,10 @@ export default class CategoriesController {
     this.categoryService = new CategoryService()
   }
 
+  async collections({ inertia }: HttpContext) {
+    return inertia.render('admin/collections/Index', { collections: [] })
+  }
+
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id
     const tree = await this.categoryService.getTree(storeId, true)

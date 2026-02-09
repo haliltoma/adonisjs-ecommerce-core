@@ -9,8 +9,8 @@ import path from 'path'
 import { execSync } from 'child_process'
 import validatePackageName from 'validate-npm-package-name'
 
-const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core/templates/default'
-const VERSION = '1.0.0'
+const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core/templates/default#main'
+const VERSION = '1.0.1'
 
 interface ProjectOptions {
   projectName: string
@@ -20,15 +20,51 @@ interface ProjectOptions {
   docker: boolean
 }
 
+function printBanner() {
+  const lines = [
+    '',
+    '  $$\\                                         $$\\                           $$$$$$\\  ',
+    '  $$ |                                        $$ |                         $$  __$$\\ ',
+    '  $$ | $$$$$$\\   $$$$$$$\\  $$$$$$\\   $$$$$$\\  $$ |  $$\\  $$$$$$\\   $$$$$$\\ $$ /  \\__|',
+    '  $$ | \\____$$\\ $$  _____|$$  __$$\\ $$  __$$\\ $$ | $$  |$$  __$$\\ $$  __$$\\$$$$\\     ',
+    '  $$ | $$$$$$$ |\\$$$$$$\\  $$$$$$$$ |$$ |  \\__|$$$$$$  / $$ /  $$ |$$ /  $$ $$  _|    ',
+    '  $$ |$$  __$$ | \\____$$\\ $$   ____|$$ |      $$  _$$<  $$ |  $$ |$$ |  $$ $$ |      ',
+    '  $$ |\\$$$$$$$ |$$$$$$$  |\\$$$$$$$\\ $$ |      $$ | \\$$\\ \\$$$$$$  |$$$$$$$ $$ |      ',
+    '  \\__| \\_______|\\_______/  \\_______|\\__|      \\__|  \\__| \\______/ $$ ____/ \\__|      ',
+    '                                                                  $$ |                ',
+    '                                                                  $$ |                ',
+    '                                                                  \\__|                ',
+  ]
+
+  const gradientColors = [
+    '#5E35B1', '#5C37B5', '#5939B9', '#573BBD',
+    '#543DC1', '#5240C5', '#4F42C9', '#4D44CD',
+    '#4A46D1', '#4748D5', '#454AD9', '#424CDD',
+  ]
+
+  for (let i = 0; i < lines.length; i++) {
+    const color = gradientColors[i % gradientColors.length]
+    console.log(chalk.hex(color)(lines[i]))
+  }
+
+  console.log()
+  console.log(
+    chalk.hex('#7C4DFF').bold('  AdonisJS E-Commerce') +
+    chalk.gray('  |  ') +
+    chalk.hex('#B388FF')(`v${VERSION}`)
+  )
+  console.log(chalk.gray('  Modern e-commerce platform powered by AdonisJS 6 + React'))
+  console.log()
+  console.log(chalk.gray('  ─────────────────────────────────────────────────────────'))
+  console.log()
+}
+
 async function main() {
-  console.log()
-  console.log(chalk.bold.cyan('🛒 Create AdonisCommerce'))
-  console.log(chalk.gray('Modern e-commerce platform with AdonisJS 6 + React'))
-  console.log()
+  printBanner()
 
   program
-    .name('create-adoniscommerce')
-    .description('Create a new AdonisCommerce e-commerce application')
+    .name('create-adonisjs-ecommerce-core')
+    .description('Create a new AdonisJS E-Commerce application')
     .version(VERSION)
     .argument('[project-name]', 'Name of the project')
     .option('-t, --template <name>', 'Template to use', 'default')
@@ -142,11 +178,22 @@ async function createProject(config: ProjectOptions) {
   }
 
   console.log()
-  const spinner = ora('Creating project...').start()
+  const spinner = ora({
+    text: chalk.hex('#B388FF')('Scaffolding your store...'),
+    spinner: {
+      frames: ['   >', '  >>', ' >>>', '>>>>',  '>>>>', ' >>>', '  >>', '   >'],
+      interval: 100,
+    },
+    color: 'magenta',
+  }).start()
 
   try {
     // Clone template
-    spinner.text = 'Downloading template...'
+    spinner.text = chalk.hex('#B388FF')('Downloading template...')
+    spinner.spinner = {
+      frames: ['   *', '  **', ' ***', '****', '****', ' ***', '  **', '   *'],
+      interval: 100,
+    }
 
     // Use degit to download template
     const degit = (await import('degit')).default
@@ -159,7 +206,11 @@ async function createProject(config: ProjectOptions) {
     await emitter.clone(targetDir)
 
     // Update package.json
-    spinner.text = 'Configuring project...'
+    spinner.text = chalk.hex('#B388FF')('Configuring project...')
+    spinner.spinner = {
+      frames: ['[    ]', '[=   ]', '[==  ]', '[=== ]', '[ ===]', '[  ==]', '[   =]', '[    ]'],
+      interval: 100,
+    }
     const packageJsonPath = path.join(targetDir, 'package.json')
     const packageJson = await fs.readJson(packageJsonPath)
 
@@ -218,60 +269,75 @@ async function createProject(config: ProjectOptions) {
       await fs.writeJson(packageJsonPath, pkgJson, { spaces: 2 })
     }
 
-    spinner.succeed('Project created')
+    spinner.succeed(chalk.hex('#7C4DFF')('Project created'))
 
     // Initialize git
     if (config.git) {
-      spinner.start('Initializing git...')
+      spinner.start({
+        text: chalk.hex('#B388FF')('Initializing git...'),
+        spinner: 'dots',
+        color: 'magenta',
+      })
       try {
         execSync('git init', { cwd: targetDir, stdio: 'ignore' })
         execSync('git add -A', { cwd: targetDir, stdio: 'ignore' })
-        execSync('git commit -m "Initial commit from create-adoniscommerce"', {
+        execSync('git commit -m "Initial commit from @adonisjs-ecommerce-core/create"', {
           cwd: targetDir,
           stdio: 'ignore',
         })
-        spinner.succeed('Git initialized')
+        spinner.succeed(chalk.hex('#7C4DFF')('Git initialized'))
       } catch {
-        spinner.warn('Git initialization failed')
+        spinner.warn(chalk.yellow('Git initialization failed'))
       }
     }
 
     // Install dependencies
     if (config.install) {
-      spinner.start('Installing dependencies...')
+      spinner.start({
+        text: chalk.hex('#B388FF')('Installing dependencies... (this may take a moment)'),
+        spinner: {
+          frames: ['[>         ]', '[=>        ]', '[==>       ]', '[ ==>      ]', '[  ==>     ]', '[   ==>    ]', '[    ==>   ]', '[     ==>  ]', '[      ==> ]', '[       ==>]', '[        =>]', '[         >]'],
+          interval: 80,
+        },
+        color: 'magenta',
+      })
       try {
         const installCmd = getInstallCommand(config.packageManager)
         execSync(installCmd, { cwd: targetDir, stdio: 'ignore' })
-        spinner.succeed('Dependencies installed')
+        spinner.succeed(chalk.hex('#7C4DFF')('Dependencies installed'))
       } catch {
-        spinner.warn('Dependency installation failed. Run install manually.')
+        spinner.warn(chalk.yellow('Dependency installation failed. Run install manually.'))
       }
     }
 
     // Success message
     console.log()
-    console.log(chalk.green('✔ Project created successfully!'))
+    console.log(chalk.gray('  ─────────────────────────────────────────────────────────'))
     console.log()
-    console.log('Next steps:')
+    console.log(chalk.hex('#7C4DFF').bold('  Your store is ready!'))
     console.log()
-    console.log(chalk.cyan(`  cd ${config.projectName}`))
+    console.log(chalk.white('  Next steps:'))
+    console.log()
+    console.log(chalk.hex('#B388FF')(`    $ cd ${config.projectName}`))
 
     if (!config.install) {
-      console.log(chalk.cyan(`  ${config.packageManager} install`))
+      console.log(chalk.hex('#B388FF')(`    $ ${config.packageManager} install`))
     }
 
     if (config.docker) {
       console.log()
-      console.log(chalk.gray('  # Start with Docker (recommended):'))
-      console.log(chalk.cyan('  make docker-dev'))
-      console.log(chalk.cyan('  make docker-db-reset'))
+      console.log(chalk.gray('    # Start with Docker (recommended):'))
+      console.log(chalk.hex('#B388FF')('    $ make docker-dev'))
+      console.log(chalk.hex('#B388FF')('    $ make docker-db-reset'))
       console.log()
-      console.log(chalk.gray('  # Or without Docker:'))
+      console.log(chalk.gray('    # Or without Docker:'))
     }
 
-    console.log(chalk.cyan(`  ${config.packageManager === 'npm' ? 'npm run' : config.packageManager} dev`))
+    console.log(chalk.hex('#B388FF')(`    $ ${config.packageManager === 'npm' ? 'npm run' : config.packageManager} dev`))
     console.log()
-    console.log(chalk.gray('  Documentation: https://github.com/haliltoma/adonisjs-ecommerce-core'))
+    console.log(chalk.gray('  Docs  ') + chalk.hex('#7C4DFF').underline('https://github.com/haliltoma/adonisjs-ecommerce-core'))
+    console.log(chalk.gray('  Web   ') + chalk.hex('#7C4DFF').underline('https://laserkopf.com'))
+    console.log(chalk.gray('  Made with ') + chalk.hex('#E040FB')('<3') + chalk.gray(' by ') + chalk.hex('#7C4DFF').bold('laserkopf'))
     console.log()
 
   } catch (error) {

@@ -44,6 +44,7 @@ const AdminCategoriesController = () => import('#controllers/admin/categories_co
 const AdminDiscountsController = () => import('#controllers/admin/discounts_controller')
 const AdminInventoryController = () => import('#controllers/admin/inventory_controller')
 const AdminSettingsController = () => import('#controllers/admin/settings_controller')
+const AdminContentController = () => import('#controllers/admin/content_controller')
 
 /*
 |--------------------------------------------------------------------------
@@ -59,11 +60,21 @@ router.get('/search', [HomeController, 'search']).as('storefront.search')
 router.get('/about', [PagesController, 'about']).as('storefront.about')
 router.get('/contact', [PagesController, 'contact']).as('storefront.contact')
 router.get('/pages/:slug', [PagesController, 'show']).as('storefront.pages.show')
+router.get('/shipping', [PagesController, 'shipping']).as('storefront.shipping')
+router.get('/returns', [PagesController, 'returns']).as('storefront.returns')
+router.get('/faq', [PagesController, 'faq']).as('storefront.faq')
+router.get('/privacy', [PagesController, 'privacy']).as('storefront.privacy')
+router.get('/terms', [PagesController, 'terms']).as('storefront.terms')
 
 // Products
 router.get('/products', [ProductsController, 'index']).as('storefront.products.index')
 router.get('/products/:slug', [ProductsController, 'show']).as('storefront.products.show')
 router.get('/category/:slug', [ProductsController, 'byCategory']).as('storefront.category')
+router.get('/collections', [ProductsController, 'collections']).as('storefront.collections')
+router.get('/categories', [ProductsController, 'allCategories']).as('storefront.categories')
+
+// Wishlist
+router.get('/wishlist', [AccountController, 'wishlist']).as('storefront.wishlist')
 
 // Cart
 router.get('/cart', [CartController, 'index']).as('storefront.cart')
@@ -127,6 +138,7 @@ router.group(() => {
 
     // Dashboard
     router.get('/', [AdminDashboardController, 'index']).as('admin.dashboard')
+    router.get('/dashboard', [AdminDashboardController, 'index']).as('admin.dashboard.alias')
     router.get('/analytics', [AdminDashboardController, 'analytics']).as('admin.analytics')
 
     // Profile
@@ -221,5 +233,24 @@ router.group(() => {
     router.get('/settings/locales', [AdminSettingsController, 'locales']).as('admin.settings.locales')
     router.post('/settings/locales', [AdminSettingsController, 'createLocale']).as('admin.settings.locales.create')
     router.patch('/settings/locales/:id', [AdminSettingsController, 'updateLocale']).as('admin.settings.locales.update')
-  }).use(middleware.auth())
+    router.get('/settings/payments', [AdminSettingsController, 'payments']).as('admin.settings.payments')
+    router.get('/settings/shipping', [AdminSettingsController, 'shipping']).as('admin.settings.shipping')
+
+    // Content Management
+    router.get('/content/pages', [AdminContentController, 'pages']).as('admin.content.pages')
+    router.get('/content/menus', [AdminContentController, 'menus']).as('admin.content.menus')
+    router.get('/content/banners', [AdminContentController, 'banners']).as('admin.content.banners')
+
+    // Analytics Sub-Pages
+    router.get('/analytics/sales', [AdminDashboardController, 'analyticsSales']).as('admin.analytics.sales')
+    router.get('/analytics/products', [AdminDashboardController, 'analyticsProducts']).as('admin.analytics.products')
+    router.get('/analytics/customers', [AdminDashboardController, 'analyticsCustomers']).as('admin.analytics.customers')
+
+    // Collections
+    router.get('/collections', [AdminCategoriesController, 'collections']).as('admin.collections')
+
+    // Inventory Export/Import
+    router.get('/inventory/export', [AdminInventoryController, 'exportInventory']).as('admin.inventory.export')
+    router.get('/inventory/import', [AdminInventoryController, 'importInventory']).as('admin.inventory.importPage')
+  }).use(middleware.adminAuth())
 }).prefix('/admin')

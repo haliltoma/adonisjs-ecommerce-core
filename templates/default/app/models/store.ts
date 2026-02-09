@@ -41,7 +41,7 @@ export default class Store extends BaseModel {
   @column()
   declare isActive: boolean
 
-  @column()
+  @column({ columnName: 'settings' })
   declare config: Record<string, unknown>
 
   @column()

@@ -6,7 +6,6 @@ import {
   Package,
   ShoppingCart,
   TrendingUp,
-  Users,
   AlertTriangle,
 } from 'lucide-react'
 import {
@@ -86,7 +85,6 @@ interface Props {
   }>
 }
 
-// Sample chart data
 const revenueData = [
   { date: 'Mon', revenue: 2400 },
   { date: 'Tue', revenue: 1398 },
@@ -106,6 +104,9 @@ const ordersData = [
   { date: 'Sat', orders: 22 },
   { date: 'Sun', orders: 16 },
 ]
+
+const CHART_COLOR = '#d4872e'
+const CHART_COLOR_SOFT = '#e9b96e'
 
 export default function Dashboard({
   stats,
@@ -141,153 +142,119 @@ export default function Dashboard({
     }
   }
 
+  const statCards = [
+    {
+      title: "Today's Revenue",
+      icon: DollarSign,
+      value: formatCurrency(stats.today.revenue),
+      change: revenueChange,
+      sub: 'from yesterday',
+    },
+    {
+      title: "Today's Orders",
+      icon: ShoppingCart,
+      value: stats.today.orderCount.toString(),
+      change: ordersChange,
+      sub: 'from yesterday',
+    },
+    {
+      title: 'Monthly Revenue',
+      icon: TrendingUp,
+      value: formatCurrency(stats.monthly.revenue),
+      change: null,
+      sub: `${stats.monthly.orderCount} orders this month`,
+    },
+    {
+      title: 'Avg Order Value',
+      icon: Package,
+      value: formatCurrency(stats.monthly.averageOrderValue),
+      change: null,
+      sub: 'This month',
+    },
+  ]
+
   return (
     <AdminLayout>
       <Head title="Dashboard - Admin" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
+        {/* Welcome */}
+        <div>
+          <h1 className="font-display text-2xl tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Overview of your store performance
+          </p>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Today's Revenue
-              </CardTitle>
-              <DollarSign className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(stats.today.revenue)}
-              </div>
-              <p className="text-muted-foreground flex items-center text-xs">
-                {revenueChange >= 0 ? (
-                  <ArrowUp className="mr-1 h-3 w-3 text-green-500" />
-                ) : (
-                  <ArrowDown className="mr-1 h-3 w-3 text-red-500" />
-                )}
-                <span
-                  className={
-                    revenueChange >= 0 ? 'text-green-500' : 'text-red-500'
-                  }
-                >
-                  {Math.abs(revenueChange).toFixed(1)}%
-                </span>
-                <span className="ml-1">from yesterday</span>
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Today's Orders
-              </CardTitle>
-              <ShoppingCart className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.today.orderCount}</div>
-              <p className="text-muted-foreground flex items-center text-xs">
-                {ordersChange >= 0 ? (
-                  <ArrowUp className="mr-1 h-3 w-3 text-green-500" />
-                ) : (
-                  <ArrowDown className="mr-1 h-3 w-3 text-red-500" />
-                )}
-                <span
-                  className={
-                    ordersChange >= 0 ? 'text-green-500' : 'text-red-500'
-                  }
-                >
-                  {Math.abs(ordersChange).toFixed(1)}%
-                </span>
-                <span className="ml-1">from yesterday</span>
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Monthly Revenue
-              </CardTitle>
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(stats.monthly.revenue)}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {stats.monthly.orderCount} orders this month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg Order Value
-              </CardTitle>
-              <Package className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(stats.monthly.averageOrderValue)}
-              </div>
-              <p className="text-muted-foreground text-xs">This month</p>
-            </CardContent>
-          </Card>
+          {statCards.map((stat, i) => (
+            <Card key={stat.title} className={`animate-fade-up delay-${(i + 1) * 100}`}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className="text-muted-foreground/50 h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="font-display text-2xl tracking-tight">
+                  {stat.value}
+                </div>
+                <p className="text-muted-foreground flex items-center text-xs mt-1">
+                  {stat.change !== null ? (
+                    <>
+                      {stat.change >= 0 ? (
+                        <ArrowUp className="mr-1 h-3 w-3 text-emerald-600" />
+                      ) : (
+                        <ArrowDown className="mr-1 h-3 w-3 text-red-500" />
+                      )}
+                      <span className={stat.change >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                        {Math.abs(stat.change).toFixed(1)}%
+                      </span>
+                      <span className="ml-1">{stat.sub}</span>
+                    </>
+                  ) : (
+                    stat.sub
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Charts */}
         <div className="grid gap-4 md:grid-cols-2">
-          <Card>
+          <Card className="animate-fade-up delay-500">
             <CardHeader>
-              <CardTitle>Revenue Overview</CardTitle>
+              <CardTitle className="text-base">Revenue Overview</CardTitle>
               <CardDescription>Daily revenue for the past week</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
+              <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueData}>
                     <defs>
-                      <linearGradient
-                        id="colorRevenue"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="hsl(var(--primary))"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="hsl(var(--primary))"
-                          stopOpacity={0}
-                        />
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={CHART_COLOR} stopOpacity={0.2} />
+                        <stop offset="95%" stopColor={CHART_COLOR} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      className="text-muted-foreground text-xs"
-                    />
-                    <YAxis className="text-muted-foreground text-xs" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
+                        backgroundColor: '#faf8f5',
+                        border: '1px solid #e5e0db',
                         borderRadius: '8px',
+                        fontSize: '13px',
                       }}
                     />
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="hsl(var(--primary))"
+                      stroke={CHART_COLOR}
+                      strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#colorRevenue)"
                     />
@@ -297,34 +264,29 @@ export default function Dashboard({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="animate-fade-up delay-600">
             <CardHeader>
-              <CardTitle>Orders Overview</CardTitle>
+              <CardTitle className="text-base">Orders Overview</CardTitle>
               <CardDescription>Daily orders for the past week</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
+              <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ordersData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      className="text-muted-foreground text-xs"
-                    />
-                    <YAxis className="text-muted-foreground text-xs" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
+                        backgroundColor: '#faf8f5',
+                        border: '1px solid #e5e0db',
                         borderRadius: '8px',
+                        fontSize: '13px',
                       }}
                     />
                     <Bar
                       dataKey="orders"
-                      fill="hsl(var(--primary))"
+                      fill={CHART_COLOR_SOFT}
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -340,7 +302,7 @@ export default function Dashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Recent Orders</CardTitle>
+                <CardTitle className="text-base">Recent Orders</CardTitle>
                 <CardDescription>Latest orders from your store</CardDescription>
               </div>
               <Button variant="outline" size="sm" asChild>
@@ -351,10 +313,10 @@ export default function Dashboard({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-xs">Order</TableHead>
+                    <TableHead className="text-xs">Customer</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-right text-xs">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -363,21 +325,21 @@ export default function Dashboard({
                       <TableCell>
                         <Link
                           href={`/admin/orders/${order.id}`}
-                          className="font-medium hover:underline"
+                          className="text-sm font-medium hover:underline underline-offset-4"
                         >
                           {order.orderNumber}
                         </Link>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-muted-foreground text-[11px] mt-0.5">
                           {formatDateTime(order.createdAt)}
                         </div>
                       </TableCell>
-                      <TableCell>{order.customerName}</TableCell>
+                      <TableCell className="text-sm">{order.customerName}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(order.status)}>
+                        <Badge variant={getStatusVariant(order.status)} className="text-[11px]">
                           {order.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right text-sm font-medium">
                         {formatCurrency(order.total)}
                       </TableCell>
                     </TableRow>
@@ -391,8 +353,8 @@ export default function Dashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
                   Low Stock Alerts
                 </CardTitle>
                 <CardDescription>Products that need restocking</CardDescription>
@@ -403,24 +365,21 @@ export default function Dashboard({
             </CardHeader>
             <CardContent>
               {lowStockProducts.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-sm py-4 text-center">
                   No low stock items
                 </p>
               ) : (
                 <div className="space-y-4">
                   {lowStockProducts.slice(0, 4).map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-start justify-between"
-                    >
+                    <div key={product.id} className="flex items-start justify-between">
                       <div>
                         <Link
                           href={`/admin/products/${product.id}/edit`}
-                          className="font-medium hover:underline"
+                          className="text-sm font-medium hover:underline underline-offset-4"
                         >
                           {product.title}
                         </Link>
-                        <div className="mt-1 space-y-0.5">
+                        <div className="mt-1.5 space-y-1">
                           {product.variants.map((variant) => (
                             <div
                               key={variant.id}
@@ -428,12 +387,8 @@ export default function Dashboard({
                             >
                               <span>{variant.sku || variant.title}</span>
                               <Badge
-                                variant={
-                                  variant.quantity <= 5
-                                    ? 'destructive'
-                                    : 'secondary'
-                                }
-                                className="ml-2"
+                                variant={variant.quantity <= 5 ? 'destructive' : 'secondary'}
+                                className="ml-2 text-[11px]"
                               >
                                 {variant.quantity} left
                               </Badge>
@@ -453,10 +408,8 @@ export default function Dashboard({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Top Selling Products</CardTitle>
-              <CardDescription>
-                Best performing products this month
-              </CardDescription>
+              <CardTitle className="text-base">Top Selling Products</CardTitle>
+              <CardDescription>Best performing products this month</CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href="/admin/analytics/products">View report</Link>
@@ -466,9 +419,9 @@ export default function Dashboard({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Units Sold</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-xs">Product</TableHead>
+                  <TableHead className="text-right text-xs">Units Sold</TableHead>
+                  <TableHead className="text-right text-xs">Revenue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -476,21 +429,21 @@ export default function Dashboard({
                   <TableRow key={product.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium">
+                        <span className="text-muted-foreground flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-medium">
                           {index + 1}
                         </span>
                         <Link
                           href={`/admin/products/${product.id}/edit`}
-                          className="font-medium hover:underline"
+                          className="text-sm font-medium hover:underline underline-offset-4"
                         >
                           {product.title}
                         </Link>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-sm">
                       {product.total_sold}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right text-sm font-medium">
                       {formatCurrency(product.total_revenue)}
                     </TableCell>
                   </TableRow>

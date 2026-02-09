@@ -6,9 +6,8 @@ import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
 export default class DashboardController {
-  async index({ inertia, auth, store }: HttpContext) {
-    const user = auth.user!
-    await user.load('role')
+  async index({ inertia, admin, store }: HttpContext) {
+    const user = admin!
 
     const storeId = store.id
 
@@ -53,7 +52,7 @@ export default class DashboardController {
       .where('orders.created_at', '>=', thisMonth.toSQL()!)
       .select('products.id', 'products.title')
       .sum('order_items.quantity as total_sold')
-      .sum('order_items.line_total as total_revenue')
+      .sum('order_items.total_price as total_revenue')
       .groupBy('products.id', 'products.title')
       .orderBy('total_sold', 'desc')
       .limit(5)
@@ -127,6 +126,18 @@ export default class DashboardController {
     }
   }
 
+  async analyticsSales({ inertia }: HttpContext) {
+    return inertia.render('admin/analytics/Sales', { period: '30d', data: [] })
+  }
+
+  async analyticsProducts({ inertia }: HttpContext) {
+    return inertia.render('admin/analytics/Products', { period: '30d', products: [] })
+  }
+
+  async analyticsCustomers({ inertia }: HttpContext) {
+    return inertia.render('admin/analytics/Customers', { period: '30d', customers: [] })
+  }
+
   async analytics({ inertia, request, store }: HttpContext) {
     const storeId = store.id
     const { period = '30d' } = request.qs()
@@ -175,7 +186,8 @@ export default class DashboardController {
       .where('created_at', '>=', dateFrom.toSQL()!)
       .whereNotNull('customer_id')
       .select('customer_id')
-      .countDistinct('customer_id as unique_customers')
+      .count('* as order_count')
+      .groupBy('customer_id')
       .havingRaw('COUNT(*) > 1')
 
     // Product analytics
@@ -187,7 +199,7 @@ export default class DashboardController {
       .where('orders.store_id', storeId)
       .where('orders.created_at', '>=', dateFrom.toSQL()!)
       .select('categories.name')
-      .sum('order_items.line_total as revenue')
+      .sum('order_items.total_price as revenue')
       .groupBy('categories.name')
       .orderBy('revenue', 'desc')
       .limit(10)

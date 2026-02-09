@@ -33,13 +33,13 @@ export default class ProductVariant extends BaseModel {
   @column()
   declare weight: number | null
 
-  @column()
+  @column({ columnName: 'option_1' })
   declare option1: string | null
 
-  @column()
+  @column({ columnName: 'option_2' })
   declare option2: string | null
 
-  @column()
+  @column({ columnName: 'option_3' })
   declare option3: string | null
 
   @column()

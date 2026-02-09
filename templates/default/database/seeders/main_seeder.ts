@@ -144,11 +144,9 @@ export default class MainSeeder extends BaseSeeder {
   }
 
   private async createAdmin(role: Role) {
-    const passwordHash = await hash.make('admin123')
-
     const admin = await User.create({
       email: 'admin@example.com',
-      password: passwordHash,
+      password: 'admin123',
       firstName: 'Admin',
       lastName: 'User',
       isActive: true,

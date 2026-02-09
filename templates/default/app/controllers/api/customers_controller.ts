@@ -16,8 +16,8 @@ export default class CustomersController {
    * POST /api/customers/register
    * Register a new customer
    */
-  async register({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async register({ request, response, store }: HttpContext) {
+    const storeId = store.id
     const payload = await request.validateUsing(registerValidator)
 
     // Check if email already exists
@@ -66,8 +66,8 @@ export default class CustomersController {
    * POST /api/customers/login
    * Customer login
    */
-  async login({ request, response }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async login({ request, response, store }: HttpContext) {
+    const storeId = store.id
     const payload = await request.validateUsing(loginValidator)
 
     const customer = await Customer.query()

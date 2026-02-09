@@ -36,32 +36,45 @@ export default function Contact({ store, page }: Props) {
         canonical={`${baseUrl}/contact`}
       />
 
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          {page?.title || 'Contact Us'}
-        </h1>
+      {/* Hero */}
+      <section className="relative py-20 grain">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-fade-up">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              Get in Touch
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">
+              {page?.title || 'Contact Us'}
+            </h1>
+          </div>
+        </div>
+      </section>
 
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         {page?.content && (
           <div
-            className="prose prose-lg max-w-none mb-12"
+            className="prose prose-lg max-w-none mb-12 prose-headings:font-display prose-a:text-accent animate-fade-up delay-100"
             dangerouslySetInnerHTML={{ __html: page.content }}
           />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Contact Form */}
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Send us a message</h2>
+          <div className="animate-fade-up delay-200">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              Send a Message
+            </span>
+            <h2 className="font-display text-2xl tracking-tight mt-2 mb-8">We'd love to hear from you</h2>
 
             {submitted ? (
-              <div className="rounded-lg bg-green-50 p-6 text-green-800">
-                <h3 className="font-semibold mb-2">Thank you for your message!</h3>
-                <p>We'll get back to you as soon as possible.</p>
+              <div className="rounded-2xl bg-secondary/50 border border-accent/20 p-8 animate-fade-up">
+                <h3 className="font-display text-xl mb-2">Thank you for your message!</h3>
+                <p className="text-muted-foreground">We'll get back to you as soon as possible.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="name" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
                     Name
                   </label>
                   <input
@@ -70,12 +83,12 @@ export default function Contact({ store, page }: Props) {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-11 rounded-lg border border-border/60 bg-background px-4 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
                     Email
                   </label>
                   <input
@@ -84,12 +97,12 @@ export default function Contact({ store, page }: Props) {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-11 rounded-lg border border-border/60 bg-background px-4 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="subject" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
                     Subject
                   </label>
                   <input
@@ -98,12 +111,12 @@ export default function Contact({ store, page }: Props) {
                     required
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-11 rounded-lg border border-border/60 bg-background px-4 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="message" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
                     Message
                   </label>
                   <textarea
@@ -112,13 +125,13 @@ export default function Contact({ store, page }: Props) {
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-border/60 bg-background px-4 py-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-gray-900 px-6 py-3 text-white font-medium hover:bg-gray-800 transition-colors"
+                  className="w-full h-11 rounded-lg bg-primary px-6 text-primary-foreground text-sm font-semibold tracking-wide uppercase hover:bg-primary/90 transition-colors"
                 >
                   Send Message
                 </button>
@@ -127,29 +140,32 @@ export default function Contact({ store, page }: Props) {
           </div>
 
           {/* Contact Info */}
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Get in touch</h2>
+          <div className="animate-fade-up delay-300">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              Other Ways
+            </span>
+            <h2 className="font-display text-2xl tracking-tight mt-2 mb-8">Reach us directly</h2>
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Customer Support</h3>
-                <p className="text-gray-600">
+            <div className="space-y-8">
+              <div className="rounded-2xl bg-secondary/50 p-6">
+                <h3 className="font-display text-lg mb-2">Customer Support</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Our team is here to help with any questions about orders, products, or your account.
                 </p>
               </div>
 
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Business Hours</h3>
-                <p className="text-gray-600">
+              <div className="rounded-2xl bg-secondary/50 p-6">
+                <h3 className="font-display text-lg mb-2">Business Hours</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Monday - Friday: 9:00 AM - 6:00 PM<br />
                   Saturday: 10:00 AM - 4:00 PM<br />
                   Sunday: Closed
                 </p>
               </div>
 
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Response Time</h3>
-                <p className="text-gray-600">
+              <div className="rounded-2xl bg-secondary/50 p-6">
+                <h3 className="font-display text-lg mb-2">Response Time</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   We typically respond to all inquiries within 24-48 hours during business days.
                 </p>
               </div>

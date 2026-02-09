@@ -17,8 +17,8 @@ export default class CartController {
    * GET /api/cart
    * Get current cart
    */
-  async show({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async show({ response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
 
     if (!cartId) {
@@ -53,8 +53,8 @@ export default class CartController {
    * POST /api/cart/items
    * Add item to cart
    */
-  async addItem({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async addItem({ request, response, session, store }: HttpContext) {
+    const storeId = store.id
     const { productId, variantId, quantity = 1 } = request.body()
 
     // Validate product exists
@@ -158,8 +158,8 @@ export default class CartController {
    * PATCH /api/cart/items/:id
    * Update cart item quantity
    */
-  async updateItem({ params, request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async updateItem({ params, request, response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
     const { quantity } = request.body()
 
@@ -221,8 +221,8 @@ export default class CartController {
    * DELETE /api/cart/items/:id
    * Remove item from cart
    */
-  async removeItem({ params, request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async removeItem({ params, response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
 
     if (!cartId) {
@@ -269,8 +269,8 @@ export default class CartController {
    * DELETE /api/cart
    * Clear entire cart
    */
-  async clear({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async clear({ response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
 
     if (!cartId) {
@@ -300,8 +300,8 @@ export default class CartController {
    * POST /api/cart/discount
    * Apply discount code
    */
-  async applyDiscount({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async applyDiscount({ request, response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
     const { code } = request.body()
 
@@ -371,8 +371,8 @@ export default class CartController {
    * DELETE /api/cart/discount
    * Remove discount code
    */
-  async removeDiscount({ request, response, session }: HttpContext) {
-    const storeId = request.header('X-Store-ID') || 'default'
+  async removeDiscount({ response, session, store }: HttpContext) {
+    const storeId = store.id
     const cartId = session.get('cart_id')
 
     if (!cartId) {

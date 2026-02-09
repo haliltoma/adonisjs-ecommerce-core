@@ -30,6 +30,7 @@ export default class AuthController {
         return response.redirect().toRoute('admin.auth.2fa')
       }
 
+      session.put('adminId', user.id)
       await auth.use('web').login(user, remember === 'on')
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
@@ -66,6 +67,7 @@ export default class AuthController {
 
       const user = await User.findOrFail(userId)
       session.forget('2fa_user_id')
+      session.put('adminId', user.id)
       await auth.use('web').login(user)
 
       session.flash('success', 'Welcome back!')
@@ -77,6 +79,7 @@ export default class AuthController {
   }
 
   async logout({ response, auth, session }: HttpContext) {
+    session.forget('adminId')
     await auth.use('web').logout()
     session.flash('success', 'You have been logged out')
     return response.redirect().toRoute('admin.auth.login')
@@ -131,9 +134,8 @@ export default class AuthController {
     }
   }
 
-  async showProfile({ inertia, auth }: HttpContext) {
-    const user = auth.user!
-    await user.load('role')
+  async showProfile({ inertia, admin }: HttpContext) {
+    const user = admin!
 
     return inertia.render('admin/auth/Profile', {
       user: {
@@ -151,8 +153,8 @@ export default class AuthController {
     })
   }
 
-  async updateProfile({ request, response, auth, session }: HttpContext) {
-    const user = auth.user!
+  async updateProfile({ request, response, admin, session }: HttpContext) {
+    const user = admin!
     const { firstName, lastName, email } = request.only(['firstName', 'lastName', 'email'])
 
     try {
@@ -178,8 +180,8 @@ export default class AuthController {
     }
   }
 
-  async updatePassword({ request, response, auth, session }: HttpContext) {
-    const user = auth.user!
+  async updatePassword({ request, response, admin, session }: HttpContext) {
+    const user = admin!
     const { currentPassword, newPassword } = request.only(['currentPassword', 'newPassword'])
 
     try {
@@ -203,8 +205,8 @@ export default class AuthController {
     }
   }
 
-  async enable2FA({ response, auth, session }: HttpContext) {
-    const user = auth.user!
+  async enable2FA({ response, admin, session }: HttpContext) {
+    const user = admin!
 
     try {
       const { secret, qrCode } = await this.authService.enableTwoFactor(user.id)
@@ -216,8 +218,8 @@ export default class AuthController {
     }
   }
 
-  async confirm2FA({ request, response, auth, session }: HttpContext) {
-    const user = auth.user!
+  async confirm2FA({ request, response, admin, session }: HttpContext) {
+    const user = admin!
     const { code } = request.only(['code'])
 
     try {
@@ -234,8 +236,8 @@ export default class AuthController {
     }
   }
 
-  async disable2FA({ request, response, auth, session }: HttpContext) {
-    const user = auth.user!
+  async disable2FA({ request, response, admin, session }: HttpContext) {
+    const user = admin!
     const { code } = request.only(['code'])
 
     try {

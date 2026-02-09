@@ -28,7 +28,7 @@ export default function AdminLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -36,21 +36,21 @@ export default function AdminLayout({
 
           {/* Search */}
           <div className="flex flex-1 items-center gap-2">
-            <div className="relative max-w-md flex-1">
+            <div className="relative max-w-sm flex-1">
               <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
               <Input
                 type="search"
-                placeholder="Search orders, products, customers..."
-                className="bg-background/50 pl-8"
+                placeholder="Search..."
+                className="bg-secondary/50 border-0 pl-8 text-sm h-9"
               />
             </div>
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="relative h-8 w-8">
               <Bell className="h-4 w-4" />
-              <span className="bg-primary absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-white">
+              <span className="bg-accent absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-semibold text-white">
                 3
               </span>
             </Button>
@@ -59,11 +59,11 @@ export default function AdminLayout({
 
         <main className="flex-1 overflow-auto">
           {title && (
-            <div className="flex items-center justify-between border-b bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="flex items-center justify-between border-b px-6 py-5">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+                <h1 className="font-display text-2xl tracking-tight">{title}</h1>
                 {description && (
-                  <p className="text-muted-foreground text-sm">{description}</p>
+                  <p className="text-muted-foreground text-sm mt-0.5">{description}</p>
                 )}
               </div>
               {actions && <div className="flex items-center gap-2">{actions}</div>}

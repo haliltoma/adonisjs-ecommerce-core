@@ -65,34 +65,34 @@ export default function Home({
   return (
     <StorefrontLayout>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
+      <section className="relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
             <div className="flex flex-col justify-center">
-              <Badge variant="secondary" className="mb-4 w-fit">
+              <span className="animate-fade-up text-xs font-semibold tracking-[0.2em] uppercase text-accent">
                 New Collection
-              </Badge>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              </span>
+              <h1 className="animate-fade-up delay-100 font-display text-5xl tracking-tight sm:text-6xl lg:text-7xl mt-4 leading-[1.05]">
                 {banners[0]?.title || 'Discover Quality Products'}
               </h1>
-              <p className="text-muted-foreground mt-6 text-lg">
+              <p className="animate-fade-up delay-200 text-muted-foreground mt-6 text-lg leading-relaxed max-w-lg">
                 {banners[0]?.subtitle ||
                   'Explore our curated collection of premium products designed for modern living.'}
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button size="lg" asChild>
+              <div className="animate-fade-up delay-300 mt-10 flex flex-wrap gap-4">
+                <Button size="lg" className="px-8" asChild>
                   <Link href={banners[0]?.linkUrl || '/products'}>
                     Shop Now
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                <Button size="lg" variant="outline" className="px-8" asChild>
                   <Link href="/collections">View Collections</Link>
                 </Button>
               </div>
             </div>
-            <div className="relative">
-              <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-xl bg-muted">
+            <div className="animate-fade-up delay-300 relative">
+              <div className="overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
                 {banners[0]?.imageUrl ? (
                   <img
                     src={banners[0].imageUrl}
@@ -100,11 +100,13 @@ export default function Home({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <Package className="text-muted-foreground h-16 w-16" />
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                    <Package className="text-muted-foreground/40 h-20 w-20" />
                   </div>
                 )}
-              </AspectRatio>
+              </div>
+              {/* Decorative element */}
+              <div className="absolute -bottom-4 -right-4 h-full w-full rounded-2xl border border-border -z-10" />
             </div>
           </div>
         </div>
@@ -112,44 +114,44 @@ export default function Home({
 
       {/* Categories */}
       {categories.length > 0 && (
-        <section className="py-16">
+        <section className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Shop by Category</h2>
-                <p className="text-muted-foreground mt-1">Browse our most popular categories</p>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Browse</span>
+                <h2 className="font-display text-3xl tracking-tight mt-2">Shop by Category</h2>
               </div>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" className="text-sm" asChild>
                 <Link href="/categories">
                   View All
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {categories.slice(0, 4).map((category) => (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {categories.slice(0, 4).map((category, i) => (
                 <Link
                   key={category.id}
                   href={`/category/${category.slug}`}
-                  className="group relative overflow-hidden rounded-xl"
+                  className={`group relative overflow-hidden rounded-xl img-zoom animate-fade-up delay-${(i + 1) * 100}`}
                 >
                   <AspectRatio ratio={1} className="bg-muted">
                     {category.imageUrl ? (
                       <img
                         src={category.imageUrl}
                         alt={category.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Package className="text-muted-foreground h-12 w-12" />
+                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                        <Package className="text-muted-foreground/30 h-14 w-14" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-4">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5">
                       <h3 className="text-lg font-semibold text-white">{category.name}</h3>
-                      {category.productCount && (
-                        <p className="text-sm text-white/80">{category.productCount} products</p>
+                      {category.productCount !== undefined && category.productCount > 0 && (
+                        <p className="text-sm text-white/70 mt-0.5">{category.productCount} products</p>
                       )}
                     </div>
                   </AspectRatio>
@@ -162,23 +164,23 @@ export default function Home({
 
       {/* Featured Products */}
       {featuredProducts.length > 0 && (
-        <section className="bg-muted/30 py-16">
+        <section className="py-20 bg-secondary/40">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Featured Products</h2>
-                <p className="text-muted-foreground mt-1">Hand-picked just for you</p>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Curated</span>
+                <h2 className="font-display text-3xl tracking-tight mt-2">Featured Products</h2>
               </div>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" className="text-sm" asChild>
                 <Link href="/products?featured=true">
                   View All
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredProducts.slice(0, 8).map((product) => (
-                <ProductCard key={product.id} product={product} />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredProducts.slice(0, 8).map((product, i) => (
+                <ProductCardComponent key={product.id} product={product} index={i} />
               ))}
             </div>
           </div>
@@ -186,49 +188,49 @@ export default function Home({
       )}
 
       {/* Banner */}
-      <section className="py-16">
+      <section className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Card className="overflow-hidden bg-primary text-primary-foreground">
-            <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-              <Badge variant="secondary" className="mb-4">
+          <div className="relative overflow-hidden rounded-2xl bg-foreground text-background grain">
+            <div className="relative z-10 flex flex-col items-center justify-center p-12 sm:p-16 text-center">
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-background/60">
                 Limited Time Offer
-              </Badge>
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              </span>
+              <h2 className="font-display text-4xl tracking-tight mt-4 sm:text-5xl">
                 Up to 40% Off Sale
               </h2>
-              <p className="mt-4 max-w-xl text-primary-foreground/80">
+              <p className="mt-4 max-w-xl text-background/70 leading-relaxed">
                 Discover our seasonal collection with exclusive discounts on premium products.
               </p>
-              <Button size="lg" variant="secondary" className="mt-8" asChild>
+              <Button size="lg" variant="secondary" className="mt-8 px-8" asChild>
                 <Link href="/products?sale=true">
                   Shop the Sale
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
-        <section className="py-16">
+        <section className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">New Arrivals</h2>
-                <p className="text-muted-foreground mt-1">The latest additions to our collection</p>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Just In</span>
+                <h2 className="font-display text-3xl tracking-tight mt-2">New Arrivals</h2>
               </div>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" className="text-sm" asChild>
                 <Link href="/products?sort=newest">
                   View All
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {newArrivals.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} showNew />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {newArrivals.slice(0, 4).map((product, i) => (
+                <ProductCardComponent key={product.id} product={product} showNew index={i} />
               ))}
             </div>
           </div>
@@ -237,37 +239,37 @@ export default function Home({
 
       {/* Collections */}
       {collections.length > 0 && (
-        <section className="bg-muted/30 py-16">
+        <section className="py-20 bg-secondary/40">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Our Collections</h2>
-              <p className="text-muted-foreground mt-1">Explore curated product collections</p>
+            <div className="text-center mb-12">
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Explore</span>
+              <h2 className="font-display text-3xl tracking-tight mt-2">Our Collections</h2>
             </div>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               {collections.slice(0, 3).map((collection) => (
                 <Link
                   key={collection.id}
                   href={`/collection/${collection.slug}`}
-                  className="group relative overflow-hidden rounded-xl"
+                  className="group relative overflow-hidden rounded-xl img-zoom"
                 >
                   <AspectRatio ratio={16 / 9} className="bg-muted">
                     {collection.imageUrl ? (
                       <img
                         src={collection.imageUrl}
                         alt={collection.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Package className="text-muted-foreground h-12 w-12" />
+                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                        <Package className="text-muted-foreground/30 h-14 w-14" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-6">
-                      <Badge variant="secondary" className="mb-2">
+                      <span className="text-[10px] font-semibold tracking-[0.15em] uppercase text-white/60">
                         Collection
-                      </Badge>
-                      <h3 className="text-xl font-semibold text-white">{collection.name}</h3>
+                      </span>
+                      <h3 className="text-xl font-semibold text-white mt-1">{collection.name}</h3>
                     </div>
                   </AspectRatio>
                 </Link>
@@ -284,34 +286,20 @@ export default function Home({
       <section className="border-t py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-                <Truck className="text-primary h-6 w-6" />
+            {[
+              { icon: Truck, title: 'Free Shipping', desc: 'On orders over $100' },
+              { icon: RefreshCw, title: 'Easy Returns', desc: '30-day return policy' },
+              { icon: Shield, title: 'Secure Payment', desc: '256-bit SSL encryption' },
+              { icon: Package, title: 'Quality Products', desc: 'Carefully curated selection' },
+            ].map((feature) => (
+              <div key={feature.title} className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border">
+                  <feature.icon className="text-foreground/70 h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-semibold tracking-wide">{feature.title}</h3>
+                <p className="text-muted-foreground mt-1 text-xs">{feature.desc}</p>
               </div>
-              <h3 className="font-semibold">Free Shipping</h3>
-              <p className="text-muted-foreground mt-1 text-sm">On orders over $100</p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-                <RefreshCw className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="font-semibold">Easy Returns</h3>
-              <p className="text-muted-foreground mt-1 text-sm">30-day return policy</p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-                <Shield className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="font-semibold">Secure Payment</h3>
-              <p className="text-muted-foreground mt-1 text-sm">256-bit SSL encryption</p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-                <Package className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="font-semibold">Quality Products</h3>
-              <p className="text-muted-foreground mt-1 text-sm">Carefully curated selection</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -319,56 +307,62 @@ export default function Home({
   )
 }
 
-function ProductCard({
+function ProductCardComponent({
   product,
   showNew = false,
+  index = 0,
 }: {
   product: ProductCard
   showNew?: boolean
+  index?: number
 }) {
   return (
-    <Link href={`/products/${product.slug}`} className="group">
-      <Card className="overflow-hidden border-0 shadow-none">
-        <div className="relative overflow-hidden rounded-xl bg-muted">
-          <AspectRatio ratio={3 / 4}>
-            {product.thumbnail ? (
-              <img
-                src={product.thumbnail}
-                alt={product.title}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <Package className="text-muted-foreground h-12 w-12" />
-              </div>
-            )}
-          </AspectRatio>
-          <div className="absolute left-3 top-3 flex flex-col gap-2">
-            {showNew && <Badge>New</Badge>}
-            {product.isOnSale && product.discountPercentage && (
-              <Badge variant="destructive">-{product.discountPercentage}%</Badge>
-            )}
-          </div>
-        </div>
-        <CardContent className="px-0 pt-4">
-          {product.vendor && (
-            <p className="text-muted-foreground text-xs uppercase tracking-wide">
-              {product.vendor}
-            </p>
+    <Link href={`/products/${product.slug}`} className="group card-hover block">
+      <div className="relative overflow-hidden rounded-xl bg-muted img-zoom">
+        <AspectRatio ratio={3 / 4}>
+          {product.thumbnail ? (
+            <img
+              src={product.thumbnail}
+              alt={product.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+              <Package className="text-muted-foreground/30 h-12 w-12" />
+            </div>
           )}
-          <h3 className="group-hover:text-primary mt-1 font-medium transition-colors">
-            {product.title}
-          </h3>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="font-semibold">{formatCurrency(product.price)}</span>
-            {product.compareAtPrice && product.compareAtPrice > product.price && (
-              <span className="text-muted-foreground text-sm line-through">
-                {formatCurrency(product.compareAtPrice)}
-              </span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        </AspectRatio>
+        <div className="absolute left-3 top-3 flex flex-col gap-2">
+          {showNew && (
+            <span className="inline-flex items-center rounded-full bg-foreground px-2.5 py-0.5 text-[10px] font-semibold text-background tracking-wide uppercase">
+              New
+            </span>
+          )}
+          {product.isOnSale && product.discountPercentage && (
+            <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-semibold text-white tracking-wide">
+              -{product.discountPercentage}%
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="pt-4">
+        {product.vendor && (
+          <p className="text-muted-foreground text-[11px] tracking-[0.1em] uppercase">
+            {product.vendor}
+          </p>
+        )}
+        <h3 className="mt-1 text-sm font-medium leading-snug group-hover:underline underline-offset-4 decoration-foreground/30">
+          {product.title}
+        </h3>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm font-semibold">{formatCurrency(product.price)}</span>
+          {product.compareAtPrice && product.compareAtPrice > product.price && (
+            <span className="text-muted-foreground text-xs line-through">
+              {formatCurrency(product.compareAtPrice)}
+            </span>
+          )}
+        </div>
+      </div>
     </Link>
   )
 }
@@ -384,33 +378,34 @@ function NewsletterSection() {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Card className="border-0 bg-muted/50">
-          <CardContent className="flex flex-col items-center p-12 text-center">
-            <h2 className="text-2xl font-bold tracking-tight">Stay Updated</h2>
-            <p className="text-muted-foreground mt-2 max-w-md">
+        <div className="relative overflow-hidden rounded-2xl bg-secondary/60 grain">
+          <div className="relative z-10 flex flex-col items-center p-12 sm:p-16 text-center">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Stay Connected</span>
+            <h2 className="font-display text-3xl tracking-tight mt-3">Stay Updated</h2>
+            <p className="text-muted-foreground mt-3 max-w-md leading-relaxed">
               Subscribe to our newsletter for exclusive offers, new arrivals, and style tips.
             </p>
             {wasSuccessful ? (
-              <p className="mt-6 text-green-600">Thank you for subscribing!</p>
+              <p className="mt-6 text-sm font-medium text-accent">Thank you for subscribing!</p>
             ) : (
-              <form onSubmit={handleSubmit} className="mt-6 flex w-full max-w-md gap-2">
+              <form onSubmit={handleSubmit} className="mt-8 flex w-full max-w-md gap-2">
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={data.email}
                   onChange={(e) => setData('email', e.target.value)}
                   required
-                  className="flex-1"
+                  className="flex-1 bg-background"
                 />
                 <Button type="submit" disabled={processing}>
-                  {processing ? 'Subscribing...' : 'Subscribe'}
+                  {processing ? 'Joining...' : 'Subscribe'}
                 </Button>
               </form>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </section>
   )

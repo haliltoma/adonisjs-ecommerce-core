@@ -170,250 +170,252 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
     >
       <Head title="Inventory - Admin" />
 
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative flex-1 sm:max-w-xs">
-              <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
-              <Input
-                placeholder="Search by product or SKU..."
-                value={search}
-                onChange={handleSearchChange}
-                className="pl-8"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Select
-                value={filters.locationId || 'all'}
-                onValueChange={(value) =>
-                  handleFilterChange('locationId', value === 'all' ? '' : value)
-                }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All locations</SelectItem>
-                  {locations.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <label className="flex items-center gap-2">
-                <Checkbox
-                  checked={filters.lowStock || false}
-                  onCheckedChange={(checked) =>
-                    handleFilterChange('lowStock', checked === true)
-                  }
+      <div className="animate-fade-in">
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4" />
+                <Input
+                  placeholder="Search by product or SKU..."
+                  value={search}
+                  onChange={handleSearchChange}
+                  className="bg-secondary/50 border-0 pl-8 text-sm h-9"
                 />
-                <span className="text-sm">Low stock only</span>
-              </label>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-center">Available</TableHead>
-                <TableHead className="text-center">Reserved</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="w-32"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inventory.data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Package className="text-muted-foreground h-8 w-8" />
-                      <p className="text-muted-foreground text-sm">
-                        {filters.search || filters.lowStock
-                          ? 'No inventory found'
-                          : 'No inventory yet'}
-                      </p>
-                      {!filters.search && !filters.lowStock && (
-                        <p className="text-muted-foreground text-xs">
-                          Add products to see inventory here
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                inventory.data.map((item) => {
-                  const status = getStockStatus(item)
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
-                            {item.thumbnail ? (
-                              <img
-                                src={item.thumbnail}
-                                alt=""
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-muted-foreground flex h-full w-full items-center justify-center">
-                                <Package className="h-5 w-5" />
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <Link
-                              href={`/admin/products/${item.productId}/edit`}
-                              className="font-medium hover:underline"
-                            >
-                              {item.productTitle}
-                            </Link>
-                            {item.variantTitle && (
-                              <p className="text-muted-foreground text-xs">
-                                {item.variantTitle}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {item.sku || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="text-muted-foreground h-3 w-3" />
-                          <span className="text-sm">{item.locationName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={status.variant}>
-                          {status.variant === 'secondary' && (
-                            <AlertTriangle className="mr-1 h-3 w-3" />
-                          )}
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className={`font-medium ${getQuantityColor(item)}`}>
-                          {item.availableQuantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-center">
-                        {item.reservedQuantity}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {item.quantity}
-                      </TableCell>
-                      <TableCell>
-                        {adjustingId === item.id ? (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="number"
-                              value={adjustmentValue}
-                              onChange={(e) => setAdjustmentValue(e.target.value)}
-                              placeholder="+/-"
-                              className="h-8 w-16 text-center"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-green-600 hover:text-green-700"
-                              onClick={() => handleAdjustment(item.id)}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => {
-                                setAdjustingId(null)
-                                setAdjustmentValue('')
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => {
-                                setAdjustingId(item.id)
-                                setAdjustmentValue('-1')
-                              }}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => {
-                                setAdjustingId(item.id)
-                                setAdjustmentValue('1')
-                              }}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
+              </div>
 
-          {/* Pagination */}
-          {inventory.meta.lastPage > 1 && (
-            <div className="flex items-center justify-between border-t px-4 py-3">
-              <p className="text-muted-foreground text-sm">
-                Page {inventory.meta.currentPage} of {inventory.meta.lastPage}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={inventory.meta.currentPage <= 1}
-                  onClick={() =>
-                    router.get('/admin/inventory', {
-                      ...filters,
-                      page: inventory.meta.currentPage - 1,
-                    })
+              <div className="flex flex-wrap items-center gap-3">
+                <Select
+                  value={filters.locationId || 'all'}
+                  onValueChange={(value) =>
+                    handleFilterChange('locationId', value === 'all' ? '' : value)
                   }
                 >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={inventory.meta.currentPage >= inventory.meta.lastPage}
-                  onClick={() =>
-                    router.get('/admin/inventory', {
-                      ...filters,
-                      page: inventory.meta.currentPage + 1,
-                    })
-                  }
-                >
-                  Next
-                </Button>
+                  <SelectTrigger className="w-[180px] h-9 text-sm">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All locations</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={filters.lowStock || false}
+                    onCheckedChange={(checked) =>
+                      handleFilterChange('lowStock', checked === true)
+                    }
+                  />
+                  <span className="text-sm">Low stock only</span>
+                </label>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Product</TableHead>
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs">Location</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-center text-xs">Available</TableHead>
+                  <TableHead className="text-center text-xs">Reserved</TableHead>
+                  <TableHead className="text-center text-xs">Total</TableHead>
+                  <TableHead className="w-32"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inventory.data.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-32 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Package className="text-muted-foreground h-8 w-8" />
+                        <p className="text-muted-foreground text-sm">
+                          {filters.search || filters.lowStock
+                            ? 'No inventory found'
+                            : 'No inventory yet'}
+                        </p>
+                        {!filters.search && !filters.lowStock && (
+                          <p className="text-muted-foreground text-[11px]">
+                            Add products to see inventory here
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  inventory.data.map((item) => {
+                    const status = getStockStatus(item)
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
+                              {item.thumbnail ? (
+                                <img
+                                  src={item.thumbnail}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-muted-foreground flex h-full w-full items-center justify-center">
+                                  <Package className="h-5 w-5" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <Link
+                                href={`/admin/products/${item.productId}/edit`}
+                                className="text-sm font-medium hover:underline underline-offset-4"
+                              >
+                                {item.productTitle}
+                              </Link>
+                              {item.variantTitle && (
+                                <p className="text-muted-foreground text-[11px] mt-0.5">
+                                  {item.variantTitle}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {item.sku || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="text-muted-foreground h-3 w-3" />
+                            <span className="text-sm">{item.locationName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={status.variant} className="text-[11px]">
+                            {status.variant === 'secondary' && (
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                            )}
+                            {status.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className={`text-sm font-medium ${getQuantityColor(item)}`}>
+                            {item.availableQuantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-center text-sm">
+                          {item.reservedQuantity}
+                        </TableCell>
+                        <TableCell className="text-center text-sm font-medium">
+                          {item.quantity}
+                        </TableCell>
+                        <TableCell>
+                          {adjustingId === item.id ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                value={adjustmentValue}
+                                onChange={(e) => setAdjustmentValue(e.target.value)}
+                                placeholder="+/-"
+                                className="h-8 w-16 text-center text-sm"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600 hover:text-green-700"
+                                onClick={() => handleAdjustment(item.id)}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setAdjustingId(null)
+                                  setAdjustmentValue('')
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setAdjustingId(item.id)
+                                  setAdjustmentValue('-1')
+                                }}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setAdjustingId(item.id)
+                                  setAdjustmentValue('1')
+                                }}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            {inventory.meta.lastPage > 1 && (
+              <div className="flex items-center justify-between border-t px-4 py-3">
+                <p className="text-muted-foreground text-xs">
+                  Page {inventory.meta.currentPage} of {inventory.meta.lastPage}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={inventory.meta.currentPage <= 1}
+                    onClick={() =>
+                      router.get('/admin/inventory', {
+                        ...filters,
+                        page: inventory.meta.currentPage - 1,
+                      })
+                    }
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={inventory.meta.currentPage >= inventory.meta.lastPage}
+                    onClick={() =>
+                      router.get('/admin/inventory', {
+                        ...filters,
+                        page: inventory.meta.currentPage + 1,
+                      })
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </AdminLayout>
   )
 }

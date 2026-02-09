@@ -17,6 +17,12 @@ export default class AccountController {
     this.cartService = new CartService()
   }
 
+  async wishlist({ inertia }: HttpContext) {
+    return inertia.render('storefront/Wishlist', {
+      items: [],
+    })
+  }
+
   async showLogin({ inertia }: HttpContext) {
     return inertia.render('storefront/account/Login')
   }
@@ -117,21 +123,27 @@ export default class AccountController {
 
     const recentOrders = await this.orderService.getCustomerOrders(customerId, 1, 5)
 
-    return inertia.render('storefront/account/Dashboard', {
+    return inertia.render('storefront/account/Index', {
       customer: {
+        id: customer.id,
         firstName: customer.firstName,
         lastName: customer.lastName,
         email: customer.email,
-        totalOrders: customer.totalOrders,
-        totalSpent: customer.totalSpent,
+        phone: customer.phone,
+        createdAt: customer.createdAt.toISO(),
       },
       recentOrders: recentOrders.all().map((o) => ({
         id: o.id,
         orderNumber: o.orderNumber,
         total: o.grandTotal,
         status: o.status,
+        itemCount: o.items?.reduce((sum, i) => sum + i.quantity, 0) || 0,
         createdAt: o.createdAt.toISO(),
       })),
+      stats: {
+        totalOrders: customer.totalOrders,
+        totalSpent: customer.totalSpent,
+      },
     })
   }
 

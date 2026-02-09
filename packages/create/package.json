@@ -1,17 +1,17 @@
 {
-  "name": "create-adoniscommerce",
-  "version": "1.0.0",
-  "description": "Create a new AdonisCommerce e-commerce application",
+  "name": "@adonisjs-ecommerce-core/create",
+  "version": "1.0.2",
+  "description": "Create a new AdonisJS E-Commerce application",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "create-adoniscommerce": "dist/index.js"
+    "create-adonisjs-ecommerce-core": "dist/index.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts --format esm --clean",
     "dev": "tsup src/index.ts --format esm --watch",
     "prepublishOnly": "pnpm build"
   },
@@ -29,7 +29,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/haliltoma/adonisjs-ecommerce-core.git",
-    "directory": "packages/create-adoniscommerce"
+    "directory": "packages/create"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "homepage": "https://github.com/haliltoma/adonisjs-ecommerce-core#readme",
   "engines": {

@@ -89,11 +89,11 @@ export default class OrdersController {
     })
   }
 
-  async updateStatus({ params, request, response, session, auth }: HttpContext) {
+  async updateStatus({ params, request, response, session, admin }: HttpContext) {
     const { status, note } = request.only(['status', 'note'])
 
     try {
-      await this.orderService.updateStatus(params.id, status, note, auth.user?.id)
+      await this.orderService.updateStatus(params.id, status, note, admin?.id)
       session.flash('success', 'Order status updated')
       return response.redirect().back()
     } catch (error) {
@@ -102,7 +102,7 @@ export default class OrdersController {
     }
   }
 
-  async createFulfillment({ params, request, response, session, auth }: HttpContext) {
+  async createFulfillment({ params, request, response, session, admin }: HttpContext) {
     const data = request.only(['locationId', 'trackingNumber', 'trackingUrl', 'carrier', 'notes', 'items'])
 
     try {
@@ -111,7 +111,7 @@ export default class OrdersController {
           orderId: params.id,
           ...data,
         },
-        auth.user?.id?.toString()
+        admin?.id?.toString()
       )
       session.flash('success', 'Fulfillment created')
       return response.redirect().back()
@@ -164,7 +164,7 @@ export default class OrdersController {
     }
   }
 
-  async createRefund({ params, request, response, session, auth }: HttpContext) {
+  async createRefund({ params, request, response, session, admin }: HttpContext) {
     const data = request.only(['reason', 'notes', 'items', 'refundShipping'])
 
     try {
@@ -173,7 +173,7 @@ export default class OrdersController {
           orderId: params.id,
           ...data,
         },
-        auth.user?.id
+        admin?.id
       )
 
       // Auto-process refund (in production, this would integrate with payment provider)
@@ -187,11 +187,11 @@ export default class OrdersController {
     }
   }
 
-  async cancel({ params, request, response, session, auth }: HttpContext) {
+  async cancel({ params, request, response, session, admin }: HttpContext) {
     const { reason } = request.only(['reason'])
 
     try {
-      await this.orderService.cancel(params.id, reason, auth.user?.id)
+      await this.orderService.cancel(params.id, reason, admin?.id)
       session.flash('success', 'Order cancelled')
       return response.redirect().back()
     } catch (error) {

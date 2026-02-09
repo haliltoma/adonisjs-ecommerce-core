@@ -23,13 +23,23 @@ export default function Page({ store, page }: Props) {
         baseUrl={baseUrl}
       />
 
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          {page.title}
-        </h1>
+      {/* Hero */}
+      <section className="relative py-20 grain">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-fade-up">
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              {store.name}
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">
+              {page.title}
+            </h1>
+          </div>
+        </div>
+      </section>
 
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <div
-          className="prose prose-lg max-w-none"
+          className="prose prose-lg max-w-none prose-headings:font-display prose-a:text-accent prose-a:no-underline hover:prose-a:underline animate-fade-up delay-200"
           dangerouslySetInnerHTML={{ __html: page.content }}
         />
       </div>
