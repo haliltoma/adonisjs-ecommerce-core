@@ -4,7 +4,6 @@ import OrderService from '#services/order_service'
 import CustomerService from '#services/customer_service'
 import emitter from '@adonisjs/core/services/emitter'
 import {
-  PaymentAuthorized,
   PaymentCaptured,
   PaymentFailed,
   PaymentRefunded,
@@ -47,7 +46,7 @@ export default class PaymentWebhookController {
     }
 
     // Emit raw webhook event for audit/logging
-    await emitter.emit('payment:webhook:received', new PaymentWebhookReceived(
+    await emitter.emit(PaymentWebhookReceived, new PaymentWebhookReceived(
       'stripe',
       webhookEvent.type,
       webhookEvent.data
@@ -84,7 +83,7 @@ export default class PaymentWebhookController {
       return response.status(400).json({ error: 'Invalid Iyzico callback' })
     }
 
-    await emitter.emit('payment:webhook:received', new PaymentWebhookReceived(
+    await emitter.emit(PaymentWebhookReceived, new PaymentWebhookReceived(
       'iyzico',
       webhookEvent.type,
       webhookEvent.data
@@ -134,7 +133,7 @@ export default class PaymentWebhookController {
 
         const updatedOrder = await this.orderService.findById(order.id)
         if (updatedOrder) {
-          await emitter.emit('payment:captured', new PaymentCaptured(updatedOrder, transaction))
+          await emitter.emit(PaymentCaptured, new PaymentCaptured(updatedOrder, transaction))
         }
       } else {
         await this.orderService.addTransaction(order.id, {
@@ -151,7 +150,7 @@ export default class PaymentWebhookController {
 
         const updatedOrder = await this.orderService.findById(order.id)
         if (updatedOrder) {
-          await emitter.emit('payment:failed', new PaymentFailed(
+          await emitter.emit(PaymentFailed, new PaymentFailed(
             updatedOrder,
             (data.errorMessage as string) || 'Payment failed',
             (data.errorCode as string) || 'iyzico_failed'
@@ -252,7 +251,7 @@ export default class PaymentWebhookController {
     // Emit payment captured event
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
-      await emitter.emit('payment:captured', new PaymentCaptured(updatedOrder, transaction))
+      await emitter.emit(PaymentCaptured, new PaymentCaptured(updatedOrder, transaction))
     }
   }
 
@@ -270,7 +269,7 @@ export default class PaymentWebhookController {
 
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
-      await emitter.emit('payment:failed', new PaymentFailed(
+      await emitter.emit(PaymentFailed, new PaymentFailed(
         updatedOrder,
         'Checkout session expired',
         'session_expired'
@@ -312,7 +311,7 @@ export default class PaymentWebhookController {
 
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
-      await emitter.emit('payment:captured', new PaymentCaptured(updatedOrder, transaction))
+      await emitter.emit(PaymentCaptured, new PaymentCaptured(updatedOrder, transaction))
     }
   }
 
@@ -341,7 +340,7 @@ export default class PaymentWebhookController {
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
       const lastError = (data.last_payment_error as any)
-      await emitter.emit('payment:failed', new PaymentFailed(
+      await emitter.emit(PaymentFailed, new PaymentFailed(
         updatedOrder,
         lastError?.message || 'Payment failed',
         lastError?.code || 'payment_failed'
@@ -391,7 +390,7 @@ export default class PaymentWebhookController {
 
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
-      await emitter.emit('payment:refunded', new PaymentRefunded(
+      await emitter.emit(PaymentRefunded, new PaymentRefunded(
         updatedOrder,
         refundTxn,
         amountRefunded

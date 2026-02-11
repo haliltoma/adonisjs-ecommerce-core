@@ -12,7 +12,7 @@ export default class extends BaseSchema {
       table.string('token_hash').notNullable()
       table.string('last4', 4).notNullable()
       table.string('prefix', 10).notNullable() // pk_ for publishable, sk_ for secret
-      table.uuid('created_by').nullable().references('id').inTable('users').onDelete('SET NULL')
+      table.integer('created_by').unsigned().nullable().references('id').inTable('users').onDelete('SET NULL')
       table.timestamp('revoked_at').nullable()
       table.timestamp('last_used_at').nullable()
       table.jsonb('metadata').notNullable().defaultTo('{}')

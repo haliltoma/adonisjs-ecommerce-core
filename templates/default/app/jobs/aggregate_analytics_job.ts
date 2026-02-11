@@ -24,7 +24,7 @@ export async function handleAggregateAnalytics(job: JobContext): Promise<void> {
       .where('createdAt', '>=', today.toSQL()!)
       .where('status', '!=', 'cancelled')
 
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0)
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.grandTotal || 0), 0)
     const todayCount = todayOrders.length
 
     await job.updateProgress(30)
@@ -35,7 +35,7 @@ export async function handleAggregateAnalytics(job: JobContext): Promise<void> {
       .where('createdAt', '<', today.toSQL()!)
       .where('status', '!=', 'cancelled')
 
-    const yesterdayRevenue = yesterdayOrders.reduce((sum, o) => sum + Number(o.total || 0), 0)
+    const yesterdayRevenue = yesterdayOrders.reduce((sum, o) => sum + Number(o.grandTotal || 0), 0)
     const yesterdayCount = yesterdayOrders.length
 
     await job.updateProgress(50)

@@ -35,7 +35,7 @@ export async function handleCleanupCarts(job: JobContext): Promise<void> {
         // Emit abandoned event before cleanup
         try {
           const { CartAbandoned } = await import('#events/cart_events')
-          await emitter.emit(new CartAbandoned({ cart }))
+          await emitter.emit(CartAbandoned, new CartAbandoned(cart))
           abandoned++
         } catch {
           // Event emission is best-effort

@@ -37,7 +37,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
 
         for (const variant of lowStockVariants) {
           const { ProductLowStock } = await import('#events/product_events')
-          await emitter.emit(new ProductLowStock({ product: variant.product, variant }))
+          await emitter.emit(ProductLowStock, new ProductLowStock(variant.product, variant, variant.stockQuantity, threshold))
         }
 
         const outOfStockVariants = await ProductVariant.query()
@@ -47,7 +47,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
 
         for (const variant of outOfStockVariants) {
           const { ProductOutOfStock } = await import('#events/product_events')
-          await emitter.emit(new ProductOutOfStock({ product: variant.product, variant }))
+          await emitter.emit(ProductOutOfStock, new ProductOutOfStock(variant.product, variant))
         }
 
         await job.updateProgress(80)
@@ -62,7 +62,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
         const { DateTime } = await import('luxon')
 
         const expired = await InventoryReservation.query()
-          .where('status', 'reserved')
+          .whereNotNull('expiresAt')
           .where('expiresAt', '<', DateTime.now().toSQL()!)
 
         for (const reservation of expired) {
@@ -73,8 +73,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
             variant.stockQuantity += reservation.quantity
             await variant.save()
           }
-          reservation.status = 'expired'
-          await reservation.save()
+          await reservation.delete()
         }
 
         await job.updateProgress(80)
@@ -95,7 +94,8 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
             .first()
 
           const reservedQty = Number(reserved?.$extras?.total || 0)
-          variant.reservedQuantity = reservedQty
+          // Update available stock based on reservations
+          variant.stockQuantity = Math.max(0, variant.inventoryQuantity - reservedQty)
           await variant.save()
         }
         await job.updateProgress(80)

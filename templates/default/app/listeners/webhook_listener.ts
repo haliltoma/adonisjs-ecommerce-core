@@ -51,7 +51,7 @@ export default class WebhookListener {
       orderNumber: event.order.orderNumber,
       status: event.order.status,
       grandTotal: event.order.grandTotal,
-      currency: event.order.currency,
+      currency: event.order.currencyCode,
       email: event.order.email,
       customerId: event.customer?.id || null,
       createdAt: event.order.createdAt?.toISO(),
@@ -163,12 +163,10 @@ export default class WebhookListener {
 
   async handleInventoryAdjusted(event: InventoryAdjusted) {
     const item = event.inventoryItem
-    await this.dispatch(item.storeId || '', 'inventory.updated', {
+    await this.dispatch('', 'inventory.updated', {
       variantId: item.variantId,
-      sku: item.sku,
       previousQuantity: event.previousQuantity,
       newQuantity: event.newQuantity,
-      reason: event.reason,
     })
   }
 
@@ -178,8 +176,7 @@ export default class WebhookListener {
     await this.dispatch(event.order.storeId, 'payment.completed', {
       orderId: event.order.id,
       orderNumber: event.order.orderNumber,
-      amount: event.amount,
-      transactionId: event.transactionId,
+      transactionId: event.transaction.id,
     })
   }
 
@@ -187,7 +184,7 @@ export default class WebhookListener {
     await this.dispatch(event.order.storeId, 'payment.failed', {
       orderId: event.order.id,
       orderNumber: event.order.orderNumber,
-      error: event.error,
+      error: event.errorMessage,
     })
   }
 
@@ -196,7 +193,7 @@ export default class WebhookListener {
       orderId: event.order.id,
       orderNumber: event.order.orderNumber,
       amount: event.amount,
-      transactionId: event.transactionId,
+      transactionId: event.transaction.id,
     })
   }
 }

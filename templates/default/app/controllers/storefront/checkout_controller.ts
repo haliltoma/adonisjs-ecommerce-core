@@ -319,7 +319,7 @@ export default class CheckoutController {
           gatewayResponse: result.gatewayResponse,
         })
 
-        await emitter.emit('payment:failed', new PaymentFailed(
+        await emitter.emit(PaymentFailed, new PaymentFailed(
           order,
           result.errorMessage || 'Payment failed',
           result.errorCode
@@ -361,7 +361,7 @@ export default class CheckoutController {
 
         const updatedOrder = await this.orderService.findById(order.id)
         if (updatedOrder) {
-          await emitter.emit('payment:captured', new PaymentCaptured(updatedOrder, transaction))
+          await emitter.emit(PaymentCaptured, new PaymentCaptured(updatedOrder, transaction))
         }
 
         session.flash('success', 'Payment successful!')

@@ -27,17 +27,28 @@ export async function handleProcessImport(job: JobContext): Promise<void> {
     const ImportExportService = (await import('#services/import_export_service')).default
     const service = new ImportExportService()
 
-    await service.processImport({
-      importId: payload.importId,
-      filePath: payload.filePath,
-      type: payload.type,
-      columnMapping: payload.columnMapping,
-      storeId: payload.storeId,
-      userId: payload.userId,
-      onProgress: async (percent: number) => {
-        await job.updateProgress(Math.min(95, percent))
-      },
+    // Read and parse CSV file
+    const fs = await import('node:fs/promises')
+    const content = await fs.readFile(payload.filePath, 'utf-8')
+    const lines = content.trim().split('\n')
+    const headers = lines[0].split(',').map((h) => h.trim())
+    const rows = lines.slice(1).map((line) => {
+      const values = line.split(',').map((v) => v.trim())
+      const row: Record<string, string> = {}
+      headers.forEach((h, i) => { row[h] = values[i] || '' })
+      return row
     })
+
+    switch (payload.type) {
+      case 'products':
+        await service.importProducts(payload.storeId, rows as any)
+        break
+      case 'customers':
+        await service.importCustomers(payload.storeId, rows as any)
+        break
+      default:
+        throw new Error(`Unsupported import type: ${payload.type}`)
+    }
 
     await job.updateProgress(100)
     logger.info(`[ImportJob] Import ${payload.importId} completed`)

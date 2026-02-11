@@ -122,10 +122,9 @@ export default class CacheInvalidationListener {
 
   // ── Inventory Cache Invalidation ────────────────────────
 
-  async handleInventoryAdjusted(event: InventoryAdjusted) {
+  async handleInventoryAdjusted(_event: InventoryAdjusted) {
     try {
       const cache = await this.getCache()
-      const item = event.inventoryItem
 
       // Invalidate product cache since stock affects availability display
       await cache.deletePattern(`store:*:product:*`)

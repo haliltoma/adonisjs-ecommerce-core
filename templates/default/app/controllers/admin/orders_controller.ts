@@ -516,7 +516,7 @@ export default class OrdersController {
       await OrderEdit.create({
         storeId,
         orderId: params.id,
-        createdBy: admin?.id || null,
+        createdBy: admin?.id ? String(admin.id) : null,
         status: 'created',
         internalNote: internalNote || null,
         differenceAmount: 0,

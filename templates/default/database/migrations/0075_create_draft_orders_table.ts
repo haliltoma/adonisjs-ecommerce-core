@@ -24,7 +24,7 @@ export default class extends BaseSchema {
       table.decimal('grand_total', 12, 2).defaultTo(0)
       table.text('note').nullable()
       table.uuid('order_id').nullable().references('id').inTable('orders').onDelete('SET NULL')
-      table.uuid('created_by').nullable().references('id').inTable('users').onDelete('SET NULL')
+      table.integer('created_by').unsigned().nullable().references('id').inTable('users').onDelete('SET NULL')
       table.jsonb('metadata').defaultTo('{}')
       table.timestamp('completed_at').nullable()
       table.timestamp('created_at').notNullable()

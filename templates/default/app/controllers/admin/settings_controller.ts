@@ -1618,7 +1618,7 @@ export default class SettingsController {
         storeId,
         title,
         type,
-        createdBy: admin?.id,
+        createdBy: admin?.id ? String(admin.id) : undefined,
         salesChannelIds,
       })
       session.flash('success', 'API key created')

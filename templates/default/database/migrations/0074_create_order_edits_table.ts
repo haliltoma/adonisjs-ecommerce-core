@@ -8,7 +8,7 @@ export default class extends BaseSchema {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('gen_random_uuid()').knexQuery)
       table.uuid('store_id').references('id').inTable('stores').onDelete('CASCADE')
       table.uuid('order_id').references('id').inTable('orders').onDelete('CASCADE')
-      table.uuid('created_by').nullable().references('id').inTable('users').onDelete('SET NULL')
+      table.integer('created_by').unsigned().nullable().references('id').inTable('users').onDelete('SET NULL')
       table.enum('status', ['created', 'requested', 'confirmed', 'declined', 'cancelled']).defaultTo('created')
       table.text('internal_note').nullable()
       table.decimal('difference_amount', 12, 2).defaultTo(0)

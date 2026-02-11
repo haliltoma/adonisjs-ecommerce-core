@@ -4,27 +4,48 @@ import {
   type SendNotificationParams,
   type NotificationResult,
 } from '#contracts/notification_provider'
-import mail from '@adonisjs/core/services/mail'
 import logger from '@adonisjs/core/services/logger'
 import { randomUUID } from 'node:crypto'
 
 /**
  * Email Notification Provider
  *
- * Sends email notifications via AdonisJS Mail (SMTP/SES/Mailgun).
- * Supports Edge template rendering and HTML body.
+ * Sends email notifications. Requires @adonisjs/mail to be installed
+ * and configured. Falls back to logging when mail is not available.
  */
 export class EmailNotificationProvider extends NotificationProvider {
   readonly name = 'email'
   readonly channel: NotificationChannel = 'email'
 
+  private async getMailer(): Promise<any> {
+    try {
+      // @ts-ignore - @adonisjs/mail is an optional dependency
+      const mod = await import('@adonisjs/mail/services/main')
+      return mod.default
+    } catch {
+      return null
+    }
+  }
+
   async send(notification: SendNotificationParams): Promise<NotificationResult> {
     const messageId = randomUUID()
 
     try {
+      const mail = await this.getMailer()
+      if (!mail) {
+        logger.warn('[EmailProvider] @adonisjs/mail not installed, skipping email send')
+        return {
+          success: false,
+          messageId: null,
+          provider: this.name,
+          channel: this.channel,
+          errorMessage: '@adonisjs/mail package is not installed',
+        }
+      }
+
       const recipients = Array.isArray(notification.to) ? notification.to : [notification.to]
 
-      await mail.send((message) => {
+      await mail.send((message: any) => {
         for (const to of recipients) {
           message.to(to)
         }
@@ -41,7 +62,6 @@ export class EmailNotificationProvider extends NotificationProvider {
           message.replyTo(notification.replyTo)
         }
 
-        // Use Edge template if specified
         if (notification.template) {
           message.htmlView(`emails/${notification.template}`, {
             ...notification.templateData,
@@ -56,7 +76,6 @@ export class EmailNotificationProvider extends NotificationProvider {
           message.text(notification.body)
         }
 
-        // Add attachments
         if (notification.attachments) {
           for (const attachment of notification.attachments) {
             if (attachment.path) {
@@ -111,9 +130,11 @@ export class EmailNotificationProvider extends NotificationProvider {
 
   async healthCheck(): Promise<{ healthy: boolean; message?: string }> {
     try {
-      // Basic check — verify mail config exists
-      const mailer = mail.use()
-      return { healthy: !!mailer, message: 'Email provider is configured' }
+      const mail = await this.getMailer()
+      if (!mail) {
+        return { healthy: false, message: '@adonisjs/mail is not installed' }
+      }
+      return { healthy: true, message: 'Email provider is configured' }
     } catch (error) {
       return { healthy: false, message: (error as Error).message }
     }

@@ -65,7 +65,7 @@ export default class BlogController {
       await BlogPost.create({
         id: randomUUID(),
         storeId: store.id,
-        authorId: admin?.id || null,
+        authorId: admin?.id ? String(admin.id) : null,
         title: data.title,
         slug,
         excerpt: data.excerpt || null,

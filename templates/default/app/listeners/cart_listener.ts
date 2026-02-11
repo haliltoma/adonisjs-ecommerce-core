@@ -106,7 +106,7 @@ export default class CartListener {
               subject: 'You left something in your cart!',
               template: 'cart-abandoned',
               data: {
-                customerName: cart.customerName || 'there',
+                customerName: 'there',
                 cartUrl: `${process.env.APP_URL || ''}/cart`,
                 itemCount: cart.totalItems,
                 total: cart.grandTotal,

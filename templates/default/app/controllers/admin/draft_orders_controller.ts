@@ -101,7 +101,7 @@ export default class DraftOrdersController {
       await this.draftOrderService.create({
         storeId,
         ...data,
-        createdBy: admin?.id,
+        createdBy: admin?.id ? String(admin.id) : undefined,
       })
       session.flash('success', 'Draft order created')
       return response.redirect().toRoute('admin.draftOrders.index')

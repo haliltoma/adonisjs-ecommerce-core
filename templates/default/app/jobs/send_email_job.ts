@@ -1,6 +1,5 @@
 import type { JobContext } from '#contracts/queue_provider'
 import logger from '@adonisjs/core/services/logger'
-import mail from '@adonisjs/core/services/mail'
 
 export interface SendEmailData {
   to: string
@@ -27,7 +26,16 @@ export async function handleSendEmail(job: JobContext): Promise<void> {
   try {
     await job.updateProgress(10)
 
-    await mail.send((message) => {
+    let mail: any
+    try {
+      // @ts-ignore - @adonisjs/mail is an optional dependency
+      mail = (await import('@adonisjs/mail/services/main')).default
+    } catch {
+      logger.warn('[SendEmailJob] @adonisjs/mail not installed, skipping email')
+      return
+    }
+
+    await mail.send((message: any) => {
       message
         .to(payload.to)
         .subject(payload.subject)

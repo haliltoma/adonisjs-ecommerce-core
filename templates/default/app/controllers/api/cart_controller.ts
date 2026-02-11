@@ -323,6 +323,7 @@ export default class CartController {
 
     // Build discount context
     const items = cart.items.map((item) => ({
+      id: item.id,
       productId: item.productId,
       variantId: item.variantId || undefined,
       categoryIds: item.product.categories?.map((c) => c.id) || [],

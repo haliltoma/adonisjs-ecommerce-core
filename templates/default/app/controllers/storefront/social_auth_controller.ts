@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { DateTime } from 'luxon'
 import Customer from '#models/customer'
 import CartService from '#services/cart_service'
 
@@ -11,14 +12,16 @@ export default class SocialAuthController {
     this.cartService = new CartService()
   }
 
-  async redirect({ ally, params }: HttpContext) {
-    const provider = params.provider as SocialProvider
-    return ally.use(provider).redirect()
+  async redirect(ctx: HttpContext) {
+    const provider = ctx.params.provider as SocialProvider
+    return (ctx as any).ally.use(provider).redirect()
   }
 
-  async callback({ ally, params, session, response, store }: HttpContext) {
+  async callback(ctx: HttpContext) {
+    const { params, session, response } = ctx
+    const store = (ctx as any).store
     const provider = params.provider as SocialProvider
-    const social = ally.use(provider)
+    const social = (ctx as any).ally.use(provider)
 
     if (social.accessDenied()) {
       session.flash('error', 'Access denied. You cancelled the login.')
@@ -89,7 +92,7 @@ export default class SocialAuthController {
             totalSpent: 0,
             tags: [],
             metadata: {},
-            emailVerifiedAt: socialUser.emailVerificationState === 'verified' ? new Date() : null,
+            emailVerifiedAt: socialUser.emailVerificationState === 'verified' ? DateTime.now() : null,
           })
         }
       } else {

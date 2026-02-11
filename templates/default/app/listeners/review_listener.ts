@@ -115,8 +115,11 @@ export default class ReviewListener {
         .first()
 
       if (stats) {
-        product.averageRating = Number(stats.$extras.avgRating || 0)
-        product.reviewCount = Number(stats.$extras.totalReviews || 0)
+        product.customFields = {
+          ...product.customFields,
+          averageRating: Number(stats.$extras.avgRating || 0),
+          reviewCount: Number(stats.$extras.totalReviews || 0),
+        }
         await product.save()
       }
     } catch (err) {

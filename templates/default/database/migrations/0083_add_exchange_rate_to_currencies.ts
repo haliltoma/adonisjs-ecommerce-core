@@ -4,11 +4,14 @@ export default class extends BaseSchema {
   protected tableName = 'currencies'
 
   async up() {
-    this.schema.alterTable(this.tableName, (table) => {
-      table.decimal('exchange_rate', 16, 8).nullable()
-      table.string('base_currency', 3).nullable().defaultTo('USD')
-      table.timestamp('rate_updated_at').nullable()
-    })
+    const hasExchangeRate = await this.schema.hasColumn(this.tableName, 'exchange_rate')
+    if (!hasExchangeRate) {
+      this.schema.alterTable(this.tableName, (table) => {
+        table.decimal('exchange_rate', 16, 8).nullable()
+        table.string('base_currency', 3).nullable().defaultTo('USD')
+        table.timestamp('rate_updated_at').nullable()
+      })
+    }
   }
 
   async down() {

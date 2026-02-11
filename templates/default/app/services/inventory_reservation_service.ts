@@ -1,5 +1,4 @@
 import InventoryReservation from '#models/inventory_reservation'
-import db from '@adonisjs/lucid/services/db'
 
 interface CreateReservationDTO {
   storeId: string

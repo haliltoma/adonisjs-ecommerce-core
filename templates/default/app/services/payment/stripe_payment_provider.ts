@@ -31,7 +31,7 @@ export class StripePaymentProvider extends PaymentProvider {
   constructor() {
     super()
     const secretKey = env.get('STRIPE_SECRET_KEY', '')
-    this.stripe = new Stripe(secretKey, { apiVersion: '2024-12-18.acacia' })
+    this.stripe = new Stripe(secretKey)
   }
 
   /**
@@ -283,7 +283,7 @@ export class StripePaymentProvider extends PaymentProvider {
     )
 
     // Extract transaction ID from the event data
-    const data = event.data.object as Record<string, unknown>
+    const data = event.data.object as unknown as Record<string, unknown>
     let transactionId = ''
 
     if (event.type.startsWith('checkout.session')) {
