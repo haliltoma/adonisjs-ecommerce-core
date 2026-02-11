@@ -14,7 +14,7 @@ export default class AuthController {
   }
 
   async login({ request, response, auth, session }: HttpContext) {
-    const { email, password, remember } = request.only(['email', 'password', 'remember'])
+    const { email, password, remember: _remember } = request.only(['email', 'password', 'remember'])
 
     try {
       const user = await this.authService.authenticateAdmin({ email, password })
@@ -31,7 +31,7 @@ export default class AuthController {
       }
 
       session.put('adminId', user.id)
-      await auth.use('web').login(user, remember === 'on')
+      await auth.use('web').login(user, true)
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
     } catch (error) {
@@ -68,7 +68,7 @@ export default class AuthController {
       const user = await User.findOrFail(userId)
       session.forget('2fa_user_id')
       session.put('adminId', user.id)
-      await auth.use('web').login(user)
+      await auth.use('web').login(user, true)
 
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')

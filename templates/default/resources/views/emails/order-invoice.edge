@@ -1,0 +1,56 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Invoice for Order #{{ order.orderNumber }}</h1>
+  <p>Please find your invoice details below.</p>
+
+  <table class="info">
+    <tr>
+      <td class="label">Order Number</td>
+      <td><strong>#{{ order.orderNumber }}</strong></td>
+    </tr>
+    <tr>
+      <td class="label">Date</td>
+      <td>{{ order.createdAt }}</td>
+    </tr>
+    <tr>
+      <td class="label">Status</td>
+      <td>{{ order.paymentStatus }}</td>
+    </tr>
+  </table>
+
+  <hr class="divider">
+
+  <table class="info">
+    <tr>
+      <td class="label">Subtotal</td>
+      <td>${{ order.subtotal }}</td>
+    </tr>
+    @if(order.discountAmount)
+      <tr>
+        <td class="label">Discount</td>
+        <td>-${{ order.discountAmount }}</td>
+      </tr>
+    @end
+    @if(order.shippingAmount)
+      <tr>
+        <td class="label">Shipping</td>
+        <td>${{ order.shippingAmount }}</td>
+      </tr>
+    @end
+    @if(order.taxAmount)
+      <tr>
+        <td class="label">Tax</td>
+        <td>${{ order.taxAmount }}</td>
+      </tr>
+    @end
+    <tr>
+      <td class="label"><strong>Total</strong></td>
+      <td><strong>${{ order.grandTotal }}</strong></td>
+    </tr>
+  </table>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account/orders/{{ order.id }}" class="btn">View Order Details</a>
+  </p>
+@end

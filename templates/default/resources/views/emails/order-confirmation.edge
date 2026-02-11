@@ -1,0 +1,12 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Order Confirmed!</h1>
+  <p>Thank you for your order. We've received your order <strong>#{{ orderNumber }}</strong> and are getting it ready.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account/orders/{{ orderId }}" class="btn">View Order</a>
+  </p>
+
+  <p class="muted">If you have any questions about your order, please contact us at <a href="mailto:{{ storeEmail }}">{{ storeEmail }}</a>.</p>
+@end

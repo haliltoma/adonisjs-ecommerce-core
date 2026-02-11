@@ -1,0 +1,17 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Account Deactivated</h1>
+  <p>Hi {{ customerName }},</p>
+  <p>Your account has been deactivated.</p>
+
+  @if(reason)
+    <p><strong>Reason:</strong> {{ reason }}</p>
+  @end
+
+  <p>If you believe this was done in error, please contact our support team.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="mailto:{{ supportEmail }}" class="btn">Contact Support</a>
+  </p>
+@end

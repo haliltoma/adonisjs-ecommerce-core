@@ -1,10 +1,12 @@
-import { Head } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import {
   FolderOpen,
   Plus,
   Tag,
   Filter,
   Sparkles,
+  Pencil,
+  Trash,
 } from 'lucide-react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -32,14 +34,26 @@ interface Props {
 }
 
 export default function CollectionsIndex({ collections }: Props) {
+  const handleDelete = (id: string, name: string) => {
+    if (
+      confirm(
+        `Are you sure you want to delete "${name}"? This action cannot be undone.`
+      )
+    ) {
+      router.delete(`/admin/collections/${id}`)
+    }
+  }
+
   return (
     <AdminLayout
       title="Collections"
       description="Group products into curated collections"
       actions={
-        <Button disabled>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Collection
+        <Button asChild>
+          <Link href="/admin/collections/create">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Collection
+          </Link>
         </Button>
       }
     >
@@ -133,6 +147,18 @@ export default function CollectionsIndex({ collections }: Props) {
                       <span className="text-muted-foreground text-xs">
                         {collection.productCount} products
                       </span>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/admin/collections/${collection.id}/edit`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(collection.id, collection.name)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}

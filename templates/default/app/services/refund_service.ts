@@ -4,6 +4,8 @@ import Order from '#models/order'
 import OrderItem from '#models/order_item'
 import OrderTransaction from '#models/order_transaction'
 import db from '@adonisjs/lucid/services/db'
+import app from '@adonisjs/core/services/app'
+import { PaymentProvider } from '#contracts/payment_provider'
 import InventoryService from './inventory_service.js'
 
 interface CreateRefundDTO {
@@ -106,9 +108,36 @@ export default class RefundService {
         throw new Error('Refund has already been processed')
       }
 
-      // Process refund with payment provider
-      // This would integrate with your payment service
-      const transactionSuccess = true // Placeholder
+      // Find the capture transaction to get the gateway reference
+      const captureTransaction = await OrderTransaction.query({ client: trx })
+        .where('orderId', refund.orderId)
+        .where('type', 'capture')
+        .where('status', 'success')
+        .orderBy('createdAt', 'desc')
+        .first()
+
+      const paymentProvider = await app.container.make(PaymentProvider)
+      const gatewayTransactionId = captureTransaction?.gatewayTransactionId
+
+      let transactionSuccess = false
+      let gatewayResponse: Record<string, unknown> = {}
+      let refundGatewayId: string | null = null
+
+      if (gatewayTransactionId && paymentProvider.supportsRefunds) {
+        // Process refund via payment provider
+        const result = await paymentProvider.refundPayment(
+          gatewayTransactionId,
+          refund.amount,
+          refund.reason || undefined
+        )
+        transactionSuccess = result.success
+        gatewayResponse = result.gatewayResponse
+        refundGatewayId = result.refundId
+      } else {
+        // Manual provider or no gateway reference — auto-approve
+        transactionSuccess = true
+        gatewayResponse = { provider: 'manual', note: 'No gateway transaction to refund' }
+      }
 
       if (transactionSuccess) {
         refund.status = 'processed'
@@ -121,9 +150,10 @@ export default class RefundService {
             type: 'refund',
             amount: refund.amount,
             currencyCode: refund.order.currencyCode,
-            paymentMethod: 'manual', // Would come from payment provider
+            paymentMethod: refund.order.paymentMethod || paymentProvider.name,
+            gatewayTransactionId: refundGatewayId || undefined,
             status: 'success',
-            gatewayResponse: {},
+            gatewayResponse,
           },
           { client: trx }
         )

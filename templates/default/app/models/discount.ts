@@ -89,6 +89,26 @@ export default class Discount extends BaseModel {
   @column()
   declare isCombinable: boolean
 
+  // Campaign budget fields
+  @column()
+  declare campaignName: string | null
+
+  @column()
+  declare budgetType: 'spend' | 'usage' | null
+
+  @column()
+  declare budgetLimit: number | null
+
+  @column()
+  declare budgetUsed: number
+
+  // Additional targeting
+  @column()
+  declare customerGroupIds: string[] | null
+
+  @column()
+  declare regionIds: string[] | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react'
-import { useState } from 'react'
+import { Head, router, usePage } from '@inertiajs/react'
+import { useState, useRef } from 'react'
 import {
   Upload,
   FileSpreadsheet,
@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Download,
+  X,
 } from 'lucide-react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -20,11 +21,43 @@ import {
 } from '@/components/ui/card'
 
 export default function InventoryImport() {
+  const { props } = usePage<{ flash?: { success?: string; error?: string; importErrors?: string } }>()
   const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const parsedErrors: string[] = props.flash?.importErrors
+    ? JSON.parse(props.flash.importErrors)
+    : []
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
+    }
+  }
+
+  const handleUpload = () => {
+    if (!file) return
+    setUploading(true)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'inventory')
+
+    router.post('/admin/inventory/import/process', formData as any, {
+      forceFormData: true,
+      onFinish: () => setUploading(false),
+    })
+  }
+
+  const handleDownloadTemplate = () => {
+    window.location.href = '/admin/inventory/template?type=inventory'
+  }
+
+  const clearFile = () => {
+    setFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -36,6 +69,34 @@ export default function InventoryImport() {
       <Head title="Import Inventory - Admin" />
 
       <div className="animate-fade-in mx-auto max-w-2xl space-y-6">
+        {/* Success/Error Messages */}
+        {props.flash?.success && (
+          <div className="animate-fade-up rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950/50">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">{props.flash.success}</p>
+            </div>
+          </div>
+        )}
+        {props.flash?.error && (
+          <div className="animate-fade-up rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <p className="text-sm font-medium text-destructive">{props.flash.error}</p>
+            </div>
+          </div>
+        )}
+        {parsedErrors.length > 0 && (
+          <Card className="animate-fade-up border-amber-200 bg-amber-50/50">
+            <CardContent className="pt-6">
+              <ul className="space-y-1 text-sm text-amber-800">
+                {parsedErrors.map((err, i) => (
+                  <li key={i}>- {err}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
         {/* Instructions */}
         <Card className="animate-fade-up">
           <CardHeader>
@@ -87,7 +148,7 @@ export default function InventoryImport() {
               </div>
             </div>
             <div className="mt-6">
-              <Button variant="outline" disabled>
+              <Button variant="outline" onClick={handleDownloadTemplate}>
                 <Download className="mr-2 h-4 w-4" />
                 Download Template
               </Button>
@@ -119,8 +180,9 @@ export default function InventoryImport() {
                         {(file.size / 1024).toFixed(1)} KB
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <span>Choose different file</span>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.preventDefault(); clearFile() }}>
+                      <X className="mr-1 h-3 w-3" />
+                      Remove
                     </Button>
                   </>
                 ) : (
@@ -136,8 +198,9 @@ export default function InventoryImport() {
                 )}
                 <input
                   id="file-upload"
+                  ref={fileInputRef}
                   type="file"
-                  accept=".csv,.xlsx"
+                  accept=".csv"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -166,9 +229,9 @@ export default function InventoryImport() {
 
         {/* Import Button */}
         <div className="animate-fade-up delay-300 flex justify-end">
-          <Button size="lg" disabled={!file}>
+          <Button size="lg" disabled={!file || uploading} onClick={handleUpload}>
             <Upload className="mr-2 h-4 w-4" />
-            Upload and Review
+            {uploading ? 'Importing...' : 'Import Inventory'}
           </Button>
         </div>
       </div>

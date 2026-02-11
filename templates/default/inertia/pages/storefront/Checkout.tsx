@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency } from '@/lib/utils'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface CartItem {
   id: string
@@ -70,6 +71,8 @@ export default function Checkout({
   customer,
 }: Props) {
   const [step, setStep] = useState(1)
+  const { t, currency } = useTranslation()
+  const cur = cart?.currency || currency
 
   const { data, setData, post, processing, errors } = useForm({
     email: customer?.email || '',
@@ -120,7 +123,7 @@ export default function Checkout({
     cart.taxTotal +
     (selectedShipping?.price || 0)
 
-  const steps = ['Information', 'Shipping', 'Payment']
+  const steps = [t('storefront.checkoutPage.stepInformation'), t('storefront.checkoutPage.stepShipping'), t('storefront.checkoutPage.stepPayment')]
 
   return (
     <StorefrontLayout>
@@ -129,8 +132,8 @@ export default function Checkout({
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="animate-fade-up">
-          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Secure Checkout</span>
-          <h1 className="font-display text-3xl tracking-tight mt-2">Checkout</h1>
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.checkoutPage.secureCheckout')}</span>
+          <h1 className="font-display text-3xl tracking-tight mt-2">{t('storefront.checkoutPage.checkout')}</h1>
         </div>
 
         {/* Steps */}
@@ -173,16 +176,16 @@ export default function Checkout({
             {step === 1 && (
               <div className="space-y-8 animate-fade-up delay-200">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Step 1</span>
-                  <h2 className="font-display text-2xl tracking-tight mt-1">Contact Information</h2>
+                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.checkoutPage.step1')}</span>
+                  <h2 className="font-display text-2xl tracking-tight mt-1">{t('storefront.checkoutPage.contactInfo')}</h2>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    We'll use this to send you order updates
+                    {t('storefront.checkoutPage.contactInfoDesc')}
                   </p>
                 </div>
 
                 <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">Email</Label>
+                    <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.email')}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -198,7 +201,7 @@ export default function Checkout({
 
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground">First Name</Label>
+                      <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.firstName')}</Label>
                       <Input
                         id="firstName"
                         value={data.firstName}
@@ -208,7 +211,7 @@ export default function Checkout({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground">Last Name</Label>
+                      <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.lastName')}</Label>
                       <Input
                         id="lastName"
                         value={data.lastName}
@@ -220,7 +223,7 @@ export default function Checkout({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground">Phone (optional)</Label>
+                    <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.phone')}</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -234,17 +237,17 @@ export default function Checkout({
                 <Separator className="my-2" />
 
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Delivery</span>
-                  <h2 className="font-display text-2xl tracking-tight mt-1">Shipping Address</h2>
+                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.checkoutPage.deliveryLabel')}</span>
+                  <h2 className="font-display text-2xl tracking-tight mt-1">{t('storefront.checkoutPage.shippingAddress')}</h2>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Where should we send your order?
+                    {t('storefront.checkoutPage.shippingAddressDesc')}
                   </p>
                 </div>
 
                 <div className="space-y-5">
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">First Name</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.firstName')}</Label>
                       <Input
                         value={data.shippingAddress.firstName}
                         onChange={(e) =>
@@ -258,7 +261,7 @@ export default function Checkout({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Last Name</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.lastName')}</Label>
                       <Input
                         value={data.shippingAddress.lastName}
                         onChange={(e) =>
@@ -274,7 +277,7 @@ export default function Checkout({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Company (optional)</Label>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.company')}</Label>
                     <Input
                       value={data.shippingAddress.company}
                       onChange={(e) =>
@@ -288,7 +291,7 @@ export default function Checkout({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Address</Label>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.address')}</Label>
                     <Input
                       value={data.shippingAddress.address1}
                       onChange={(e) =>
@@ -303,7 +306,7 @@ export default function Checkout({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Apartment, suite, etc. (optional)</Label>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.apartment')}</Label>
                     <Input
                       value={data.shippingAddress.address2}
                       onChange={(e) =>
@@ -318,7 +321,7 @@ export default function Checkout({
 
                   <div className="grid gap-5 sm:grid-cols-3">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">City</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.city')}</Label>
                       <Input
                         value={data.shippingAddress.city}
                         onChange={(e) =>
@@ -332,7 +335,7 @@ export default function Checkout({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">State</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.state')}</Label>
                       <Input
                         value={data.shippingAddress.state}
                         onChange={(e) =>
@@ -346,7 +349,7 @@ export default function Checkout({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">ZIP Code</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.zipCode')}</Label>
                       <Input
                         value={data.shippingAddress.postalCode}
                         onChange={(e) =>
@@ -370,7 +373,7 @@ export default function Checkout({
                       }
                     />
                     <Label htmlFor="sameAsBilling" className="font-normal text-sm">
-                      Billing address same as shipping
+                      {t('storefront.checkoutPage.sameAsBilling')}
                     </Label>
                   </div>
                 </div>
@@ -381,7 +384,7 @@ export default function Checkout({
                     onClick={() => setStep(2)}
                     className="h-12 px-8 tracking-wide"
                   >
-                    Continue to Shipping
+                    {t('storefront.checkoutPage.continueToShipping')}
                   </Button>
                 </div>
               </div>
@@ -391,10 +394,10 @@ export default function Checkout({
             {step === 2 && (
               <div className="space-y-8 animate-fade-up delay-200">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Step 2</span>
-                  <h2 className="font-display text-2xl tracking-tight mt-1">Shipping Method</h2>
+                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.checkoutPage.step2')}</span>
+                  <h2 className="font-display text-2xl tracking-tight mt-1">{t('storefront.checkoutPage.shippingMethod')}</h2>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Choose how you'd like your order delivered
+                    {t('storefront.checkoutPage.shippingMethodDesc')}
                   </p>
                 </div>
 
@@ -439,7 +442,7 @@ export default function Checkout({
                         </div>
                       </div>
                       <div className="font-display text-lg">
-                        {method.price === 0 ? 'Free' : formatCurrency(method.price)}
+                        {method.price === 0 ? t('storefront.checkoutPage.free') : formatCurrency(method.price, cur)}
                       </div>
                     </label>
                   ))}
@@ -453,14 +456,14 @@ export default function Checkout({
                     className="tracking-wide"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
-                    Back
+                    {t('storefront.checkoutPage.back')}
                   </Button>
                   <Button
                     type="button"
                     onClick={() => setStep(3)}
                     className="h-12 px-8 tracking-wide"
                   >
-                    Continue to Payment
+                    {t('storefront.checkoutPage.continueToPayment')}
                   </Button>
                 </div>
               </div>
@@ -470,10 +473,10 @@ export default function Checkout({
             {step === 3 && (
               <div className="space-y-8 animate-fade-up delay-200">
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Step 3</span>
-                  <h2 className="font-display text-2xl tracking-tight mt-1">Payment</h2>
+                  <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.checkoutPage.step3')}</span>
+                  <h2 className="font-display text-2xl tracking-tight mt-1">{t('storefront.checkoutPage.payment')}</h2>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Select your payment method
+                    {t('storefront.checkoutPage.paymentDesc')}
                   </p>
                 </div>
 
@@ -512,13 +515,13 @@ export default function Checkout({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-xs uppercase tracking-wider text-muted-foreground">Order Notes (optional)</Label>
+                  <Label htmlFor="notes" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.orderNotes')}</Label>
                   <Textarea
                     id="notes"
                     value={data.notes}
                     onChange={(e) => setData('notes', e.target.value)}
                     rows={3}
-                    placeholder="Special instructions for your order..."
+                    placeholder={t('storefront.checkoutPage.orderNotesPlaceholder')}
                     className="border-border/60 transition-colors focus-visible:border-accent"
                   />
                 </div>
@@ -531,14 +534,14 @@ export default function Checkout({
                     className="tracking-wide"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
-                    Back
+                    {t('storefront.checkoutPage.back')}
                   </Button>
                   <Button
                     type="submit"
                     disabled={processing}
                     className="h-12 px-10 tracking-wide"
                   >
-                    {processing ? 'Processing...' : 'Place Order'}
+                    {processing ? t('storefront.checkoutPage.processing') : t('storefront.checkoutPage.placeOrder')}
                   </Button>
                 </div>
               </div>
@@ -549,7 +552,7 @@ export default function Checkout({
           <div className="mt-12 lg:col-span-5 lg:mt-0">
             <Card className="sticky top-[88px] animate-fade-up delay-300">
               <CardHeader>
-                <CardTitle className="font-display text-lg">Order Summary</CardTitle>
+                <CardTitle className="font-display text-lg">{t('storefront.checkoutPage.orderSummary')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="divide-y divide-border/60">
@@ -580,7 +583,7 @@ export default function Checkout({
                         )}
                       </div>
                       <div className="font-display text-sm">
-                        {formatCurrency(item.totalPrice)}
+                        {formatCurrency(item.totalPrice, cur)}
                       </div>
                     </div>
                   ))}
@@ -590,16 +593,16 @@ export default function Checkout({
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t('storefront.checkoutPage.subtotal')}</span>
                     <span className="font-medium">
-                      {formatCurrency(cart.subtotal)}
+                      {formatCurrency(cart.subtotal, cur)}
                     </span>
                   </div>
 
                   {cart.discountTotal > 0 && (
                     <div className="flex justify-between text-sm text-emerald-700">
                       <span className="flex items-center gap-2">
-                        Discount
+                        {t('storefront.checkoutPage.discount')}
                         {cart.discountCode && (
                           <Badge variant="secondary" className="text-[10px]">
                             {cart.discountCode}
@@ -607,27 +610,27 @@ export default function Checkout({
                         )}
                       </span>
                       <span className="font-medium">
-                        -{formatCurrency(cart.discountTotal)}
+                        -{formatCurrency(cart.discountTotal, cur)}
                       </span>
                     </div>
                   )}
 
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-muted-foreground">{t('storefront.checkoutPage.shipping')}</span>
                     <span className="font-medium">
                       {selectedShipping
                         ? selectedShipping.price === 0
-                          ? 'Free'
-                          : formatCurrency(selectedShipping.price)
-                        : 'Calculated next step'}
+                          ? t('storefront.checkoutPage.free')
+                          : formatCurrency(selectedShipping.price, cur)
+                        : t('storefront.checkoutPage.calculatedNextStep')}
                     </span>
                   </div>
 
                   {cart.taxTotal > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
+                      <span className="text-muted-foreground">{t('storefront.checkoutPage.tax')}</span>
                       <span className="font-medium">
-                        {formatCurrency(cart.taxTotal)}
+                        {formatCurrency(cart.taxTotal, cur)}
                       </span>
                     </div>
                   )}
@@ -635,13 +638,13 @@ export default function Checkout({
                   <Separator />
 
                   <div className="flex justify-between items-baseline">
-                    <span className="font-display text-lg">Total</span>
-                    <span className="font-display text-xl">{formatCurrency(total)}</span>
+                    <span className="font-display text-lg">{t('storefront.checkoutPage.total')}</span>
+                    <span className="font-display text-xl">{formatCurrency(total, cur)}</span>
                   </div>
                 </div>
 
                 <Button variant="ghost" asChild className="w-full text-sm">
-                  <Link href="/cart">Edit Cart</Link>
+                  <Link href="/cart">{t('storefront.checkoutPage.editCart')}</Link>
                 </Button>
               </CardContent>
             </Card>

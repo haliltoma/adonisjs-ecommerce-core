@@ -59,8 +59,8 @@ export default function Create({ categories, taxClasses, tags }: Props) {
     }
   }, [data.title])
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (e?: FormEvent) => {
+    e?.preventDefault()
     post('/admin/products')
   }
 
@@ -85,7 +85,7 @@ export default function Create({ categories, taxClasses, tags }: Props) {
       title="Create Product"
       description="Add a new product to your store"
       actions={
-        <Button onClick={handleSubmit} disabled={processing} className="tracking-wide">
+        <Button onClick={() => handleSubmit()} disabled={processing} className="tracking-wide">
           <Save className="h-4 w-4 mr-2" />
           Save Product
         </Button>

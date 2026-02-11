@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/utils'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface CartItem {
   id: string
@@ -43,6 +44,8 @@ interface Props {
 export default function CartPage({ cart }: Props) {
   const [discountCode, setDiscountCode] = useState('')
   const [applyingDiscount, setApplyingDiscount] = useState(false)
+  const { t, currency } = useTranslation()
+  const cur = cart?.currency || currency
 
   const updateQuantity = (itemId: string, quantity: number) => {
     router.patch(`/cart/item/${itemId}`, { quantity }, { preserveScroll: true })
@@ -75,19 +78,19 @@ export default function CartPage({ cart }: Props) {
         <Head title="Cart" />
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="animate-fade-up">
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Your Bag</span>
-            <h1 className="font-display text-3xl tracking-tight mt-2">Shopping Cart</h1>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.cartPage.yourBag')}</span>
+            <h1 className="font-display text-3xl tracking-tight mt-2">{t('storefront.cartPage.shoppingCart')}</h1>
           </div>
           <div className="mt-16 flex flex-col items-center justify-center py-16 text-center animate-fade-up delay-200">
             <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-border">
               <ShoppingBag className="text-muted-foreground/50 h-8 w-8" />
             </div>
-            <h2 className="mt-6 font-display text-xl">Your cart is empty</h2>
+            <h2 className="mt-6 font-display text-xl">{t('storefront.emptyCart')}</h2>
             <p className="text-muted-foreground mt-2 text-sm max-w-sm">
-              Browse our products and add items to your cart to get started.
+              {t('storefront.cartPage.emptyDesc')}
             </p>
             <Button asChild className="mt-8 px-8" size="lg">
-              <Link href="/products">Continue Shopping</Link>
+              <Link href="/products">{t('storefront.continueShopping')}</Link>
             </Button>
           </div>
         </div>
@@ -100,10 +103,10 @@ export default function CartPage({ cart }: Props) {
       <Head title="Cart" />
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="animate-fade-up">
-          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Your Bag</span>
-          <h1 className="font-display text-3xl tracking-tight mt-2">Shopping Cart</h1>
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.cartPage.yourBag')}</span>
+          <h1 className="font-display text-3xl tracking-tight mt-2">{t('storefront.cartPage.shoppingCart')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            {cart.itemCount} {cart.itemCount === 1 ? 'item' : 'items'}
+            {cart.itemCount} {cart.itemCount === 1 ? t('storefront.cartPage.item') : t('storefront.cartPage.items')}
           </p>
         </div>
 
@@ -151,7 +154,7 @@ export default function CartPage({ cart }: Props) {
                         )}
                       </div>
                       <p className="font-display text-lg">
-                        {formatCurrency(item.totalPrice)}
+                        {formatCurrency(item.totalPrice, cur)}
                       </p>
                     </div>
 
@@ -185,7 +188,7 @@ export default function CartPage({ cart }: Props) {
                         onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
-                        Remove
+                        {t('storefront.cartPage.remove')}
                       </Button>
                     </div>
                   </div>
@@ -196,7 +199,7 @@ export default function CartPage({ cart }: Props) {
             <Button variant="ghost" asChild className="mt-6 text-sm">
               <Link href="/products">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Continue Shopping
+                {t('storefront.continueShopping')}
               </Link>
             </Button>
           </div>
@@ -205,18 +208,18 @@ export default function CartPage({ cart }: Props) {
           <div className="mt-12 lg:col-span-5 lg:mt-0">
             <Card className="animate-fade-up delay-300 sticky top-[88px]">
               <CardHeader>
-                <CardTitle className="font-display text-lg">Order Summary</CardTitle>
+                <CardTitle className="font-display text-lg">{t('storefront.cartPage.orderSummary')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">{formatCurrency(cart.subtotal)}</span>
+                  <span className="text-muted-foreground">{t('storefront.subtotal')}</span>
+                  <span className="font-medium">{formatCurrency(cart.subtotal, cur)}</span>
                 </div>
 
                 {cart.discountTotal > 0 && (
                   <div className="flex justify-between text-sm text-emerald-700">
                     <span className="flex items-center gap-2">
-                      Discount
+                      {t('storefront.cartPage.discount')}
                       {cart.discountCode && (
                         <Badge variant="secondary" className="text-[10px]">
                           {cart.discountCode}
@@ -224,37 +227,37 @@ export default function CartPage({ cart }: Props) {
                       )}
                     </span>
                     <span className="font-medium">
-                      -{formatCurrency(cart.discountTotal)}
+                      -{formatCurrency(cart.discountTotal, cur)}
                     </span>
                   </div>
                 )}
 
                 {cart.taxTotal > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span className="font-medium">{formatCurrency(cart.taxTotal)}</span>
+                    <span className="text-muted-foreground">{t('storefront.tax')}</span>
+                    <span className="font-medium">{formatCurrency(cart.taxTotal, cur)}</span>
                   </div>
                 )}
 
                 <Separator />
 
                 <div className="flex justify-between items-baseline">
-                  <span className="font-display text-lg">Total</span>
-                  <span className="font-display text-xl">{formatCurrency(cart.total)}</span>
+                  <span className="font-display text-lg">{t('storefront.total')}</span>
+                  <span className="font-display text-xl">{formatCurrency(cart.total, cur)}</span>
                 </div>
 
                 {/* Discount Code */}
                 {!cart.discountCode ? (
                   <div className="pt-3">
                     <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
-                      Discount Code
+                      {t('storefront.cartPage.discountCode')}
                     </label>
                     <div className="mt-2 flex gap-2">
                       <Input
                         type="text"
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value)}
-                        placeholder="Enter code"
+                        placeholder={t('storefront.cartPage.enterCode')}
                         className="flex-1 text-sm"
                       />
                       <Button
@@ -263,7 +266,7 @@ export default function CartPage({ cart }: Props) {
                         onClick={applyDiscount}
                         disabled={applyingDiscount}
                       >
-                        {applyingDiscount ? 'Applying...' : 'Apply'}
+                        {applyingDiscount ? t('storefront.cartPage.applying') : t('storefront.cartPage.apply')}
                       </Button>
                     </div>
                   </div>
@@ -274,7 +277,7 @@ export default function CartPage({ cart }: Props) {
                         Code: {cart.discountCode}
                       </p>
                       <p className="text-xs text-emerald-600 dark:text-emerald-500">
-                        -{formatCurrency(cart.discountTotal)}
+                        -{formatCurrency(cart.discountTotal, cur)}
                       </p>
                     </div>
                     <Button
@@ -290,10 +293,10 @@ export default function CartPage({ cart }: Props) {
               </CardContent>
               <CardFooter className="flex-col gap-3">
                 <Button asChild className="w-full h-12 text-sm tracking-wide" size="lg">
-                  <Link href="/checkout">Proceed to Checkout</Link>
+                  <Link href="/checkout">{t('storefront.checkout')}</Link>
                 </Button>
                 <p className="text-muted-foreground text-center text-xs">
-                  Shipping calculated at checkout
+                  {t('storefront.cartPage.shippingCalc')}
                 </p>
               </CardFooter>
             </Card>

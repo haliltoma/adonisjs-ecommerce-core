@@ -1,8 +1,16 @@
 import Discount from '#models/discount'
+import Order from '#models/order'
 import Cart from '#models/cart'
+import CartItem from '#models/cart_item'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
+import {
+  discountEngine,
+  type DiscountContext,
+  type DiscountItem,
+  type CartDiscountResult,
+} from '#helpers/discount_engine'
 
 interface CreateDiscountDTO {
   storeId: string
@@ -11,18 +19,35 @@ interface CreateDiscountDTO {
   type: 'percentage' | 'fixed_amount' | 'free_shipping' | 'buy_x_get_y'
   value: number
   minimumOrderAmount?: number
+  maximumOrderAmount?: number
   maximumDiscountAmount?: number
+  minimumQuantity?: number
   usageLimit?: number
   usageLimitPerCustomer?: number
   startsAt?: DateTime
   endsAt?: DateTime
   isActive?: boolean
+  isPublic?: boolean
+  firstOrderOnly?: boolean
   appliesTo?: 'all' | 'specific_products' | 'specific_categories'
   productIds?: string[]
   categoryIds?: string[]
   customerIds?: string[]
-  isPublic?: boolean
-  firstOrderOnly?: boolean
+  // Buy X Get Y
+  buyQuantity?: number
+  getQuantity?: number
+  getDiscountPercentage?: number
+  // Automatic / combinability
+  isAutomatic?: boolean
+  priority?: number
+  isCombinable?: boolean
+  // Campaign budget
+  campaignName?: string
+  budgetType?: 'spend' | 'usage'
+  budgetLimit?: number
+  // Additional targeting
+  customerGroupIds?: string[]
+  regionIds?: string[]
 }
 
 interface DiscountFilters {
@@ -32,20 +57,24 @@ interface DiscountFilters {
   search?: string
   startsAfter?: DateTime
   endsBefore?: DateTime
+  isAutomatic?: boolean
   page?: number
   limit?: number
 }
 
-interface DiscountResult {
+interface DiscountValidationResult {
   valid: boolean
   discount?: Discount
   discountAmount: number
+  freeShipping: boolean
+  itemDiscounts: Record<string, number>
   error?: string
 }
 
 export default class DiscountService {
+  // ── CRUD ─────────────────────────────────────────────────
+
   async create(data: CreateDiscountDTO): Promise<Discount> {
-    // Check for duplicate code
     const existing = await Discount.query()
       .where('storeId', data.storeId)
       .where('code', data.code.toUpperCase())
@@ -55,14 +84,16 @@ export default class DiscountService {
       throw new Error('Discount code already exists')
     }
 
-    return await Discount.create({
+    return Discount.create({
       storeId: data.storeId,
       name: data.name,
       code: data.code.toUpperCase(),
       type: data.type,
       value: data.value,
       minimumOrderAmount: data.minimumOrderAmount,
+      maximumOrderAmount: data.maximumOrderAmount,
       maximumDiscountAmount: data.maximumDiscountAmount,
+      minimumQuantity: data.minimumQuantity,
       usageLimit: data.usageLimit,
       usageLimitPerCustomer: data.usageLimitPerCustomer,
       usageCount: 0,
@@ -75,6 +106,22 @@ export default class DiscountService {
       productIds: data.productIds || null,
       categoryIds: data.categoryIds || null,
       customerIds: data.customerIds || null,
+      // Buy X Get Y
+      buyQuantity: data.buyQuantity,
+      getQuantity: data.getQuantity,
+      getDiscountPercentage: data.getDiscountPercentage,
+      // Auto / combinability
+      isAutomatic: data.isAutomatic ?? false,
+      priority: data.priority ?? 0,
+      isCombinable: data.isCombinable ?? true,
+      // Campaign budget
+      campaignName: data.campaignName,
+      budgetType: data.budgetType,
+      budgetLimit: data.budgetLimit,
+      budgetUsed: 0,
+      // Targeting
+      customerGroupIds: data.customerGroupIds || null,
+      regionIds: data.regionIds || null,
     })
   }
 
@@ -99,7 +146,9 @@ export default class DiscountService {
       type: data.type,
       value: data.value,
       minimumOrderAmount: data.minimumOrderAmount,
+      maximumOrderAmount: data.maximumOrderAmount,
       maximumDiscountAmount: data.maximumDiscountAmount,
+      minimumQuantity: data.minimumQuantity,
       usageLimit: data.usageLimit,
       usageLimitPerCustomer: data.usageLimitPerCustomer,
       startsAt: data.startsAt,
@@ -111,6 +160,17 @@ export default class DiscountService {
       productIds: data.productIds,
       categoryIds: data.categoryIds,
       customerIds: data.customerIds,
+      buyQuantity: data.buyQuantity,
+      getQuantity: data.getQuantity,
+      getDiscountPercentage: data.getDiscountPercentage,
+      isAutomatic: data.isAutomatic,
+      priority: data.priority,
+      isCombinable: data.isCombinable,
+      campaignName: data.campaignName,
+      budgetType: data.budgetType,
+      budgetLimit: data.budgetLimit,
+      customerGroupIds: data.customerGroupIds,
+      regionIds: data.regionIds,
     })
 
     await discount.save()
@@ -123,11 +183,11 @@ export default class DiscountService {
   }
 
   async findById(discountId: string): Promise<Discount | null> {
-    return await Discount.find(discountId)
+    return Discount.find(discountId)
   }
 
   async findByCode(storeId: string, code: string): Promise<Discount | null> {
-    return await Discount.query()
+    return Discount.query()
       .where('storeId', storeId)
       .where('code', code.toUpperCase())
       .first()
@@ -144,6 +204,10 @@ export default class DiscountService {
       query.where('type', filters.type)
     }
 
+    if (filters.isAutomatic !== undefined) {
+      query.where('isAutomatic', filters.isAutomatic)
+    }
+
     if (filters.search) {
       query.where((builder) => {
         builder.whereILike('name', `%${filters.search}%`).orWhereILike('code', `%${filters.search}%`)
@@ -158,89 +222,90 @@ export default class DiscountService {
       query.where('endsAt', '<=', filters.endsBefore.toISO()!)
     }
 
-    return await query.orderBy('createdAt', 'desc').paginate(filters.page || 1, filters.limit || 20)
+    return query.orderBy('priority', 'asc').orderBy('createdAt', 'desc').paginate(filters.page || 1, filters.limit || 20)
   }
 
+  // ── Validation & Application (delegates to DiscountEngine) ──
+
+  /**
+   * Validate a coupon code against a cart and return the result.
+   * This is the primary entry point for the storefront coupon flow.
+   */
   async validateAndApply(
     storeId: string,
     code: string,
     cart: Cart,
     customerId?: string
-  ): Promise<DiscountResult> {
-    const discount = await this.findByCode(storeId, code)
+  ): Promise<DiscountValidationResult> {
+    // Build context from cart
+    const context = await this.buildContextFromCart(cart, storeId, customerId)
 
-    if (!discount) {
-      return { valid: false, discountAmount: 0, error: 'Discount code not found' }
-    }
+    // Delegate to engine
+    const result = await discountEngine.applyDiscount(code, context)
 
-    // Check if active
-    if (!discount.isActive) {
-      return { valid: false, discountAmount: 0, error: 'Discount code is not active' }
-    }
-
-    // Check date range
-    const now = DateTime.now()
-    if (discount.startsAt && discount.startsAt > now) {
-      return { valid: false, discountAmount: 0, error: 'Discount code is not yet valid' }
-    }
-    if (discount.endsAt && discount.endsAt < now) {
-      return { valid: false, discountAmount: 0, error: 'Discount code has expired' }
-    }
-
-    // Check usage limit
-    if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
-      return { valid: false, discountAmount: 0, error: 'Discount code usage limit reached' }
-    }
-
-    // Check per-customer usage limit
-    if (discount.usageLimitPerCustomer && customerId) {
-      const customerUsage = await this.getCustomerUsageCount(discount.id, customerId)
-      if (customerUsage >= discount.usageLimitPerCustomer) {
-        return { valid: false, discountAmount: 0, error: 'You have already used this discount' }
-      }
-    }
-
-    // Check minimum purchase
-    if (discount.minimumOrderAmount && cart.subtotal < discount.minimumOrderAmount) {
+    if (!result.isValid) {
       return {
         valid: false,
         discountAmount: 0,
-        error: `Minimum purchase of ${discount.minimumOrderAmount} required`,
+        freeShipping: false,
+        itemDiscounts: {},
+        error: result.errors[0] || 'Invalid discount code',
       }
     }
 
-    // Check customer restriction
-    if (discount.customerIds && discount.customerIds.length > 0 && customerId) {
-      if (!discount.customerIds.includes(customerId)) {
-        return { valid: false, discountAmount: 0, error: 'Discount not available for your account' }
-      }
+    // Find the discount model for the caller
+    const discount = await this.findByCode(storeId, code)
+
+    return {
+      valid: true,
+      discount: discount || undefined,
+      discountAmount: result.discountAmount,
+      freeShipping: result.freeShipping,
+      itemDiscounts: result.itemDiscounts,
     }
-
-    // Calculate discount amount
-    const discountAmount = this.calculateDiscountAmount(discount, cart)
-
-    return { valid: true, discount, discountAmount }
   }
 
-  async incrementUsage(discountId: string, customerId?: string): Promise<void> {
+  /**
+   * Apply all eligible discounts (automatic + coupon) to a cart.
+   * Returns the full cart discount breakdown.
+   */
+  async applyAllDiscounts(
+    cart: Cart,
+    storeId: string,
+    customerId?: string
+  ): Promise<CartDiscountResult> {
+    const context = await this.buildContextFromCart(cart, storeId, customerId)
+    return discountEngine.applyToCart(context, cart.couponCode)
+  }
+
+  /**
+   * Increment discount usage and campaign budget after order placement.
+   */
+  async incrementUsage(discountId: string, customerId?: string, orderTotal?: number): Promise<void> {
     await db.transaction(async (trx) => {
       const discount = await Discount.query({ client: trx }).where('id', discountId).firstOrFail()
 
       discount.usageCount += 1
+
+      // Campaign budget tracking
+      if (discount.budgetType === 'usage') {
+        discount.budgetUsed = (discount.budgetUsed || 0) + 1
+      } else if (discount.budgetType === 'spend' && orderTotal) {
+        discount.budgetUsed = Math.round(((discount.budgetUsed || 0) + orderTotal) * 100) / 100
+      }
+
       await discount.useTransaction(trx).save()
 
-      // Track per-customer usage if needed
-      if (customerId && discount.usageLimitPerCustomer) {
-        // This would be stored in a separate table like discount_usages
-        // For simplicity, we're just incrementing the total count
-      }
+      // Track per-customer usage (via order.discountId set at order creation)
+      // No separate table needed — we query orders with discountId + customerId
+      void customerId
     })
   }
 
   async getActiveDiscounts(storeId: string): Promise<Discount[]> {
     const now = DateTime.now()
 
-    return await Discount.query()
+    return Discount.query()
       .where('storeId', storeId)
       .where('isActive', true)
       .where((query) => {
@@ -252,40 +317,61 @@ export default class DiscountService {
       .where((query) => {
         query.whereNull('usageLimit').orWhereRaw('usage_count < usage_limit')
       })
+      .orderBy('priority', 'asc')
       .orderBy('createdAt', 'desc')
   }
 
-  private calculateDiscountAmount(discount: Discount, cart: Cart): number {
-    let amount = 0
+  async getCustomerUsageCount(discountId: string, customerId: string): Promise<number> {
+    const row = await Order.query()
+      .where('customerId', customerId)
+      .where('discountId', discountId)
+      .whereNot('status', 'cancelled')
+      .count('* as total')
+      .first()
 
-    switch (discount.type) {
-      case 'percentage':
-        amount = (cart.subtotal * discount.value) / 100
-        break
-      case 'fixed_amount':
-        amount = Math.min(discount.value, cart.subtotal)
-        break
-      case 'free_shipping':
-        // This would be handled separately in shipping calculation
-        amount = 0
-        break
-      case 'buy_x_get_y':
-        // Complex logic would go here
-        amount = 0
-        break
-    }
-
-    // Apply max discount cap
-    if (discount.maximumDiscountAmount && amount > discount.maximumDiscountAmount) {
-      amount = discount.maximumDiscountAmount
-    }
-
-    return Math.round(amount * 100) / 100
+    return Number(row?.$extras.total || 0)
   }
 
-  private async getCustomerUsageCount(_discountId: string, _customerId: string): Promise<number> {
-    // This would query a discount_usages table
-    // For now, return 0
-    return 0
+  // ── Context builder ──────────────────────────────────────
+
+  /**
+   * Build a DiscountContext from a Cart model (with items preloaded).
+   */
+  private async buildContextFromCart(
+    cart: Cart,
+    storeId: string,
+    customerId?: string
+  ): Promise<DiscountContext> {
+    // Ensure items are loaded with product+categories for targeting
+    const hasItemsWithProducts =
+      cart.items &&
+      cart.items.length > 0 &&
+      (cart.items[0] as any).$preloaded?.product
+
+    if (!cart.items || cart.items.length === 0 || !hasItemsWithProducts) {
+      await cart.load('items', (q) => {
+        q.preload('product', (pq) => pq.preload('categories'))
+      })
+    }
+
+    const items: DiscountItem[] = (cart.items || []).map((item: CartItem) => ({
+      id: item.id,
+      productId: item.productId,
+      variantId: item.variantId || undefined,
+      categoryIds: (item as any).product?.categories?.map((c: any) => c.id) || [],
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      totalPrice: Number(item.totalPrice),
+    }))
+
+    const subtotal = items.reduce((sum, i) => sum + i.totalPrice, 0)
+
+    return {
+      storeId,
+      customerId,
+      items,
+      subtotal,
+      shippingAmount: Number(cart.shippingTotal) || 0,
+    }
   }
 }

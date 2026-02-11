@@ -30,6 +30,12 @@ export default class Currency extends BaseModel {
   declare exchangeRate: number
 
   @column()
+  declare baseCurrency: string | null
+
+  @column.dateTime()
+  declare rateUpdatedAt: DateTime | null
+
+  @column()
   declare isDefault: boolean
 
   @column()

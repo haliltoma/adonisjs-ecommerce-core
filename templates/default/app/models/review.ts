@@ -9,6 +9,9 @@ export default class Review extends BaseModel {
   declare id: string
 
   @column()
+  declare storeId: string
+
+  @column()
   declare productId: string
 
   @column()

@@ -2,8 +2,11 @@ import Cart from '#models/cart'
 import CartItem from '#models/cart_item'
 import ProductVariant from '#models/product_variant'
 import Product from '#models/product'
+import CustomerAddress from '#models/customer_address'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import { taxCalculator } from '#helpers/tax_calculator'
+import DiscountService from '#services/discount_service'
 
 interface AddToCartDTO {
   productId: string
@@ -18,6 +21,12 @@ interface UpdateCartItemDTO {
 }
 
 export default class CartService {
+  private discountService: DiscountService
+
+  constructor() {
+    this.discountService = new DiscountService()
+  }
+
   async getOrCreateCart(storeId: string, customerId?: string, sessionId?: string): Promise<Cart> {
     let cart: Cart | null = null
 
@@ -100,8 +109,8 @@ export default class CartService {
         .first()
 
       if (existingItem) {
-        existingItem.quantity += data.quantity
-        existingItem.totalPrice = existingItem.quantity * existingItem.unitPrice
+        existingItem.quantity = Number(existingItem.quantity) + data.quantity
+        existingItem.totalPrice = existingItem.quantity * Number(existingItem.unitPrice)
         await existingItem.useTransaction(trx).save()
       } else {
         await CartItem.create(
@@ -139,7 +148,7 @@ export default class CartService {
         await item.useTransaction(trx).delete()
       } else {
         item.quantity = data.quantity
-        item.totalPrice = item.quantity * item.unitPrice
+        item.totalPrice = data.quantity * Number(item.unitPrice)
         if (data.metadata) {
           item.metadata = data.metadata
         }
@@ -175,24 +184,55 @@ export default class CartService {
       cart.taxTotal = 0
       cart.grandTotal = 0
       cart.totalItems = 0
+      cart.couponCode = null
+      cart.discountId = null
       await cart.useTransaction(trx).save()
 
       return cart
     })
   }
 
-  async applyDiscount(cartId: string, discountCode: string): Promise<Cart> {
+  async applyDiscount(cartId: string, discountCode: string, customerId?: string): Promise<Cart> {
     const cart = await Cart.findOrFail(cartId)
-    cart.couponCode = discountCode
-    // Discount calculation would be done by DiscountService
-    await cart.save()
+    await cart.load('items', (q) => {
+      q.preload('product', (pq) => pq.preload('categories'))
+    })
+
+    // Validate the code first
+    const result = await this.discountService.validateAndApply(
+      cart.storeId,
+      discountCode,
+      cart,
+      customerId
+    )
+
+    if (!result.valid) {
+      throw new Error(result.error || 'Invalid discount code')
+    }
+
+    // Store the coupon code and discount id on the cart
+    cart.couponCode = discountCode.toUpperCase()
+    cart.discountId = result.discount?.id || null
+
+    // Recalculate with discount engine (handles auto + coupon + per-item)
+    await this.recalculateCart(cart)
+
     return cart
   }
 
   async removeDiscount(cartId: string): Promise<Cart> {
     const cart = await Cart.findOrFail(cartId)
     cart.couponCode = null
+    cart.discountId = null
     cart.discountTotal = 0
+
+    // Reset per-item discount amounts
+    const items = await CartItem.query().where('cartId', cartId)
+    for (const item of items) {
+      item.discountAmount = 0
+      await item.save()
+    }
+
     await this.recalculateCart(cart)
     return cart
   }
@@ -232,8 +272,8 @@ export default class CartService {
         )
 
         if (existingItem) {
-          existingItem.quantity += guestItem.quantity
-          existingItem.totalPrice = existingItem.quantity * existingItem.unitPrice
+          existingItem.quantity = Number(existingItem.quantity) + Number(guestItem.quantity)
+          existingItem.totalPrice = existingItem.quantity * Number(existingItem.unitPrice)
           await existingItem.useTransaction(trx).save()
         } else {
           await CartItem.create(
@@ -269,20 +309,93 @@ export default class CartService {
     await cart.save()
   }
 
+  /**
+   * Recalculate cart totals: Subtotal → Discount → Tax → GrandTotal
+   */
   private async recalculateCart(cart: Cart, trx?: any): Promise<void> {
-    const items = await CartItem.query(trx ? { client: trx } : {}).where('cartId', cart.id)
+    const queryOpts = trx ? { client: trx } : {}
 
+    const items = await CartItem.query(queryOpts).where('cartId', cart.id)
+
+    // 1. Subtotal
     let subtotal = 0
     let totalItems = 0
 
     for (const item of items) {
-      subtotal += item.totalPrice
-      totalItems += item.quantity
+      subtotal += Number(item.totalPrice) || 0
+      totalItems += Number(item.quantity) || 0
     }
 
     cart.subtotal = subtotal
     cart.totalItems = totalItems
-    cart.grandTotal = subtotal - cart.discountTotal + cart.taxTotal
+
+    // 2. Discount — run the engine (auto discounts + coupon)
+    let discountTotal = 0
+
+    if (items.length > 0) {
+      try {
+        // Temporarily save items on cart for the discount service context builder
+        ;(cart as any).items = items
+        const discountResult = await this.discountService.applyAllDiscounts(
+          cart,
+          cart.storeId,
+          cart.customerId || undefined
+        )
+
+        discountTotal = discountResult.totalDiscount
+
+        // Cap discount at subtotal (can't go negative)
+        if (discountTotal > subtotal) {
+          discountTotal = subtotal
+        }
+
+        // If free shipping, zero out shipping
+        if (discountResult.freeShipping) {
+          cart.shippingTotal = 0
+        }
+
+        // Write per-item discount amounts
+        for (const item of items) {
+          const itemDiscount = discountResult.itemDiscounts[item.id] || 0
+          if (Number(item.discountAmount) !== itemDiscount) {
+            item.discountAmount = itemDiscount
+            if (trx) {
+              await item.useTransaction(trx).save()
+            } else {
+              await item.save()
+            }
+          }
+        }
+      } catch {
+        // Discount engine errors should not prevent cart updates
+        discountTotal = 0
+      }
+    }
+
+    cart.discountTotal = discountTotal
+
+    // 3. Tax
+    let taxTotal = 0
+    if (cart.shippingAddressId) {
+      try {
+        const address = await CustomerAddress.find(cart.shippingAddressId)
+        if (address?.countryCode) {
+          const taxResult = await taxCalculator.calculateTax(
+            subtotal - discountTotal,
+            { country: address.countryCode, state: address.state || undefined },
+            cart.storeId
+          )
+          taxTotal = taxResult.taxAmount
+        }
+      } catch {
+        taxTotal = 0
+      }
+    }
+
+    cart.taxTotal = taxTotal
+
+    // 4. Grand total
+    cart.grandTotal = subtotal - discountTotal + taxTotal + (Number(cart.shippingTotal) || 0)
 
     if (trx) {
       await cart.useTransaction(trx).save()

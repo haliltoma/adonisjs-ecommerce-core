@@ -1,0 +1,25 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Your Order Has Been Shipped!</h1>
+  <p>Great news! Your order <strong>#{{ orderNumber }}</strong> is on its way.</p>
+
+  @if(trackingNumber)
+    <table class="info">
+      <tr>
+        <td class="label">Tracking Number</td>
+        <td><strong>{{ trackingNumber }}</strong></td>
+      </tr>
+      @if(carrier)
+        <tr>
+          <td class="label">Carrier</td>
+          <td>{{ carrier }}</td>
+        </tr>
+      @end
+    </table>
+  @end
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account/orders/{{ orderId }}" class="btn">Track Order</a>
+  </p>
+@end

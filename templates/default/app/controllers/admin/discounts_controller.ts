@@ -16,10 +16,12 @@ export default class DiscountsController {
     const isActive = request.input('isActive')
     const type = request.input('type')
     const search = request.input('search')
+    const isAutomatic = request.input('isAutomatic')
 
     const discounts = await this.discountService.list({
       storeId,
       isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      isAutomatic: isAutomatic === 'true' ? true : isAutomatic === 'false' ? false : undefined,
       type,
       search,
       page,
@@ -37,13 +39,20 @@ export default class DiscountsController {
           usageCount: d.usageCount,
           usageLimit: d.usageLimit,
           isActive: d.isActive,
+          isAutomatic: d.isAutomatic,
+          isCombinable: d.isCombinable,
+          priority: d.priority,
+          campaignName: d.campaignName,
+          budgetType: d.budgetType,
+          budgetLimit: d.budgetLimit,
+          budgetUsed: d.budgetUsed,
           startsAt: d.startsAt?.toISO(),
           endsAt: d.endsAt?.toISO(),
           createdAt: d.createdAt.toISO(),
         })),
         meta: discounts.getMeta(),
       },
-      filters: { isActive, type, search },
+      filters: { isActive, type, search, isAutomatic },
     })
   }
 
@@ -53,13 +62,15 @@ export default class DiscountsController {
 
   async store({ request, response, session, store }: HttpContext) {
     const storeId = store.id
-    const data = request.only([
+    const raw = request.only([
       'name',
       'code',
       'type',
       'value',
       'minimumOrderAmount',
+      'maximumOrderAmount',
       'maximumDiscountAmount',
+      'minimumQuantity',
       'usageLimit',
       'usageLimitPerCustomer',
       'startsAt',
@@ -71,14 +82,58 @@ export default class DiscountsController {
       'productIds',
       'categoryIds',
       'customerIds',
+      // Buy X Get Y
+      'buyQuantity',
+      'getQuantity',
+      'getDiscountPercentage',
+      // Auto / combinability
+      'isAutomatic',
+      'priority',
+      'isCombinable',
+      // Campaign
+      'campaignName',
+      'budgetType',
+      'budgetLimit',
+      // Targeting
+      'customerGroupIds',
+      'regionIds',
     ])
+
+    const toNum = (v: any) => (v !== '' && v != null ? Number(v) : undefined)
 
     try {
       const discount = await this.discountService.create({
         storeId,
-        ...data,
-        startsAt: data.startsAt ? DateTime.fromISO(data.startsAt) : undefined,
-        endsAt: data.endsAt ? DateTime.fromISO(data.endsAt) : undefined,
+        name: raw.name,
+        code: raw.code,
+        type: raw.type,
+        value: Number(raw.value) || 0,
+        minimumOrderAmount: toNum(raw.minimumOrderAmount),
+        maximumOrderAmount: toNum(raw.maximumOrderAmount),
+        maximumDiscountAmount: toNum(raw.maximumDiscountAmount),
+        minimumQuantity: toNum(raw.minimumQuantity),
+        usageLimit: toNum(raw.usageLimit),
+        usageLimitPerCustomer: toNum(raw.usageLimitPerCustomer),
+        startsAt: raw.startsAt ? DateTime.fromISO(raw.startsAt) : undefined,
+        endsAt: raw.endsAt ? DateTime.fromISO(raw.endsAt) : undefined,
+        isActive: raw.isActive,
+        isPublic: raw.isPublic,
+        firstOrderOnly: raw.firstOrderOnly,
+        appliesTo: raw.appliesTo,
+        productIds: raw.productIds,
+        categoryIds: raw.categoryIds,
+        customerIds: raw.customerIds,
+        buyQuantity: toNum(raw.buyQuantity),
+        getQuantity: toNum(raw.getQuantity),
+        getDiscountPercentage: toNum(raw.getDiscountPercentage),
+        isAutomatic: raw.isAutomatic,
+        priority: toNum(raw.priority),
+        isCombinable: raw.isCombinable,
+        campaignName: raw.campaignName,
+        budgetType: raw.budgetType,
+        budgetLimit: toNum(raw.budgetLimit),
+        customerGroupIds: raw.customerGroupIds,
+        regionIds: raw.regionIds,
       })
 
       session.flash('success', 'Discount created successfully')
@@ -104,7 +159,9 @@ export default class DiscountsController {
         type: discount.type,
         value: discount.value,
         minimumOrderAmount: discount.minimumOrderAmount,
+        maximumOrderAmount: discount.maximumOrderAmount,
         maximumDiscountAmount: discount.maximumDiscountAmount,
+        minimumQuantity: discount.minimumQuantity,
         usageLimit: discount.usageLimit,
         usageLimitPerCustomer: discount.usageLimitPerCustomer,
         usageCount: discount.usageCount,
@@ -117,6 +174,22 @@ export default class DiscountsController {
         productIds: discount.productIds,
         categoryIds: discount.categoryIds,
         customerIds: discount.customerIds,
+        // Buy X Get Y
+        buyQuantity: discount.buyQuantity,
+        getQuantity: discount.getQuantity,
+        getDiscountPercentage: discount.getDiscountPercentage,
+        // Auto / combinability
+        isAutomatic: discount.isAutomatic,
+        priority: discount.priority,
+        isCombinable: discount.isCombinable,
+        // Campaign
+        campaignName: discount.campaignName,
+        budgetType: discount.budgetType,
+        budgetLimit: discount.budgetLimit,
+        budgetUsed: discount.budgetUsed,
+        // Targeting
+        customerGroupIds: discount.customerGroupIds,
+        regionIds: discount.regionIds,
         createdAt: discount.createdAt.toISO(),
         updatedAt: discount.updatedAt.toISO(),
       },
@@ -124,13 +197,15 @@ export default class DiscountsController {
   }
 
   async update({ params, request, response, session }: HttpContext) {
-    const data = request.only([
+    const raw = request.only([
       'name',
       'code',
       'type',
       'value',
       'minimumOrderAmount',
+      'maximumOrderAmount',
       'maximumDiscountAmount',
+      'minimumQuantity',
       'usageLimit',
       'usageLimitPerCustomer',
       'startsAt',
@@ -142,13 +217,53 @@ export default class DiscountsController {
       'productIds',
       'categoryIds',
       'customerIds',
+      'buyQuantity',
+      'getQuantity',
+      'getDiscountPercentage',
+      'isAutomatic',
+      'priority',
+      'isCombinable',
+      'campaignName',
+      'budgetType',
+      'budgetLimit',
+      'customerGroupIds',
+      'regionIds',
     ])
+
+    const toNum = (v: any) => (v !== '' && v != null ? Number(v) : undefined)
 
     try {
       await this.discountService.update(params.id, {
-        ...data,
-        startsAt: data.startsAt ? DateTime.fromISO(data.startsAt) : undefined,
-        endsAt: data.endsAt ? DateTime.fromISO(data.endsAt) : undefined,
+        name: raw.name,
+        code: raw.code,
+        type: raw.type,
+        value: toNum(raw.value),
+        minimumOrderAmount: toNum(raw.minimumOrderAmount),
+        maximumOrderAmount: toNum(raw.maximumOrderAmount),
+        maximumDiscountAmount: toNum(raw.maximumDiscountAmount),
+        minimumQuantity: toNum(raw.minimumQuantity),
+        usageLimit: toNum(raw.usageLimit),
+        usageLimitPerCustomer: toNum(raw.usageLimitPerCustomer),
+        startsAt: raw.startsAt ? DateTime.fromISO(raw.startsAt) : undefined,
+        endsAt: raw.endsAt ? DateTime.fromISO(raw.endsAt) : undefined,
+        isActive: raw.isActive,
+        isPublic: raw.isPublic,
+        firstOrderOnly: raw.firstOrderOnly,
+        appliesTo: raw.appliesTo,
+        productIds: raw.productIds,
+        categoryIds: raw.categoryIds,
+        customerIds: raw.customerIds,
+        buyQuantity: toNum(raw.buyQuantity),
+        getQuantity: toNum(raw.getQuantity),
+        getDiscountPercentage: toNum(raw.getDiscountPercentage),
+        isAutomatic: raw.isAutomatic,
+        priority: toNum(raw.priority),
+        isCombinable: raw.isCombinable,
+        campaignName: raw.campaignName,
+        budgetType: raw.budgetType,
+        budgetLimit: toNum(raw.budgetLimit),
+        customerGroupIds: raw.customerGroupIds,
+        regionIds: raw.regionIds,
       })
 
       session.flash('success', 'Discount updated successfully')

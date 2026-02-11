@@ -3,19 +3,86 @@ import CartService from '#services/cart_service'
 import OrderService from '#services/order_service'
 import CustomerService from '#services/customer_service'
 import DiscountService from '#services/discount_service'
+import StoreService from '#services/store_service'
+import { PaymentProvider } from '#contracts/payment_provider'
 import Customer from '#models/customer'
+import app from '@adonisjs/core/services/app'
+import emitter from '@adonisjs/core/services/emitter'
+import { PaymentCaptured, PaymentFailed } from '#events/payment_events'
 
 export default class CheckoutController {
   private cartService: CartService
   private orderService: OrderService
   private customerService: CustomerService
   private discountService: DiscountService
+  private storeService: StoreService
 
   constructor() {
     this.cartService = new CartService()
     this.orderService = new OrderService()
     this.customerService = new CustomerService()
     this.discountService = new DiscountService()
+    this.storeService = new StoreService()
+  }
+
+  private async getShippingMethods(storeId: string) {
+    const settings = await this.storeService.getSettingsByGroup(storeId, 'shipping')
+    const methods: Array<{ id: string; name: string; price: number; estimatedDays: string }> = []
+
+    // Look for shipping methods stored in settings
+    for (const [key, value] of Object.entries(settings)) {
+      if (key.startsWith('method_') && value) {
+        const method = typeof value === 'string' ? JSON.parse(value) : value
+        if (method.enabled !== false) {
+          methods.push({
+            id: method.id || key.replace('method_', ''),
+            name: method.name || key.replace('method_', ''),
+            price: Number(method.price) || 0,
+            estimatedDays: method.estimatedDays || '5-7',
+          })
+        }
+      }
+    }
+
+    // Fallback to defaults if no methods configured
+    if (methods.length === 0) {
+      return [
+        { id: 'standard', name: 'Standard Shipping', price: 9.99, estimatedDays: '5-7' },
+        { id: 'express', name: 'Express Shipping', price: 19.99, estimatedDays: '2-3' },
+        { id: 'overnight', name: 'Overnight Shipping', price: 29.99, estimatedDays: '1' },
+      ]
+    }
+
+    return methods
+  }
+
+  private async getPaymentMethods(storeId: string) {
+    const settings = await this.storeService.getSettingsByGroup(storeId, 'payments')
+    const methods: Array<{ id: string; name: string; icon: string }> = []
+
+    for (const [key, value] of Object.entries(settings)) {
+      if (key.startsWith('provider_') && value) {
+        const provider = typeof value === 'string' ? JSON.parse(value) : value
+        if (provider.enabled) {
+          const id = key.replace('provider_', '')
+          methods.push({
+            id,
+            name: provider.name || id,
+            icon: provider.icon || id,
+          })
+        }
+      }
+    }
+
+    // Fallback to defaults if no providers configured
+    if (methods.length === 0) {
+      return [
+        { id: 'card', name: 'Credit/Debit Card', icon: 'credit-card' },
+        { id: 'paypal', name: 'PayPal', icon: 'paypal' },
+      ]
+    }
+
+    return methods
   }
 
   async index({ inertia, session, response, store }: HttpContext) {
@@ -69,11 +136,7 @@ export default class CheckoutController {
         country: a.countryCode,
         phone: a.phone,
       })),
-      shippingMethods: [
-        { id: 'standard', name: 'Standard Shipping', price: 9.99, estimatedDays: '5-7' },
-        { id: 'express', name: 'Express Shipping', price: 19.99, estimatedDays: '2-3' },
-        { id: 'overnight', name: 'Overnight Shipping', price: 29.99, estimatedDays: '1' },
-      ],
+      shippingMethods: await this.getShippingMethods(storeId),
     })
   }
 
@@ -148,13 +211,10 @@ export default class CheckoutController {
         }
       }
 
-      // Get shipping cost
-      const shippingCosts: Record<string, number> = {
-        standard: 9.99,
-        express: 19.99,
-        overnight: 29.99,
-      }
-      const shippingCost = shippingCosts[data.shippingMethod] || 0
+      // Get shipping cost from configured methods
+      const shippingMethods = await this.getShippingMethods(storeId)
+      const selectedMethod = shippingMethods.find((m) => m.id === data.shippingMethod)
+      const shippingCost = selectedMethod?.price || 0
 
       // Update cart with email
       cart.email = data.email
@@ -172,12 +232,13 @@ export default class CheckoutController {
         notes: data.notes,
       })
 
-      // Increment discount usage if applicable
-      if (cart.couponCode) {
-        const discount = await this.discountService.findByCode(storeId, cart.couponCode)
-        if (discount) {
-          await this.discountService.incrementUsage(discount.id, customerId)
-        }
+      // Increment discount usage + campaign budget if applicable
+      if (cart.discountId) {
+        await this.discountService.incrementUsage(
+          cart.discountId,
+          customerId,
+          order.grandTotal
+        )
       }
 
       // Redirect to payment page
@@ -200,6 +261,8 @@ export default class CheckoutController {
       return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
     }
 
+    const paymentProvider = await app.container.make(PaymentProvider)
+
     return inertia.render('storefront/checkout/Payment', {
       order: {
         id: order.id,
@@ -207,10 +270,11 @@ export default class CheckoutController {
         total: order.grandTotal,
         currency: order.currencyCode,
       },
-      paymentMethods: [
-        { id: 'card', name: 'Credit/Debit Card', icon: 'credit-card' },
-        { id: 'paypal', name: 'PayPal', icon: 'paypal' },
-      ],
+      paymentMethods: await this.getPaymentMethods(order.storeId),
+      paymentProvider: paymentProvider.name,
+      stripePublicKey: paymentProvider.name === 'stripe'
+        ? (process.env.STRIPE_PUBLIC_KEY || '')
+        : undefined,
     })
   }
 
@@ -223,30 +287,103 @@ export default class CheckoutController {
     }
 
     const { paymentMethod } = request.only(['paymentMethod'])
+    const paymentProvider = await app.container.make(PaymentProvider)
 
     try {
-      // In a real implementation, this would integrate with a payment provider
-      // For now, we'll simulate successful payment
+      const baseUrl = request.completeUrl().split('/checkout')[0]
 
-      // Create payment transaction
-      await this.orderService.addTransaction(order.id, {
-        type: 'capture',
+      // Create payment via provider
+      const result = await paymentProvider.createPayment({
+        orderId: order.id,
         amount: order.grandTotal,
-        currencyCode: order.currencyCode,
-        paymentMethod,
-        status: 'success',
+        currency: order.currencyCode,
+        customerEmail: order.email,
+        customerName: order.billingAddress?.firstName
+          ? `${order.billingAddress.firstName} ${order.billingAddress.lastName || ''}`
+          : undefined,
+        description: `Order ${order.orderNumber}`,
+        returnUrl: `${baseUrl}/checkout/confirmation/${order.id}`,
+        cancelUrl: `${baseUrl}/checkout/payment/${order.id}`,
+        metadata: { orderNumber: order.orderNumber },
       })
 
-      // Update order status
-      await this.orderService.updatePaymentStatus(order.id, 'paid')
-      await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received')
+      if (!result.success) {
+        // Record the failed attempt
+        await this.orderService.addTransaction(order.id, {
+          type: 'capture',
+          amount: order.grandTotal,
+          currencyCode: order.currencyCode,
+          paymentMethod: paymentMethod || paymentProvider.name,
+          gatewayTransactionId: result.transactionId || undefined,
+          status: 'failed',
+          gatewayResponse: result.gatewayResponse,
+        })
 
-      // Update customer stats
-      if (order.customerId) {
-        await this.customerService.incrementOrderStats(order.customerId, order.grandTotal)
+        await emitter.emit('payment:failed', new PaymentFailed(
+          order,
+          result.errorMessage || 'Payment failed',
+          result.errorCode
+        ))
+
+        session.flash('error', result.errorMessage || 'Payment failed. Please try again.')
+        return response.redirect().back()
       }
 
-      session.flash('success', 'Payment successful!')
+      // Record the pending/authorized transaction
+      const transaction = await this.orderService.addTransaction(order.id, {
+        type: result.status === 'captured' ? 'capture' : 'authorization',
+        amount: order.grandTotal,
+        currencyCode: order.currencyCode,
+        paymentMethod: paymentMethod || paymentProvider.name,
+        gatewayTransactionId: result.transactionId || undefined,
+        status: result.status === 'captured' ? 'success' : 'pending',
+        gatewayResponse: result.gatewayResponse,
+      })
+
+      // If provider returned a redirect URL (Stripe Checkout, PayPal, etc.)
+      if (result.redirectUrl) {
+        // Store transaction reference on order for webhook matching
+        order.paymentMethod = paymentProvider.name
+        order.paymentMethodTitle = paymentProvider.displayName
+        await order.save()
+
+        return response.redirect(result.redirectUrl)
+      }
+
+      // If payment was captured immediately (manual provider, etc.)
+      if (result.status === 'captured') {
+        await this.orderService.updatePaymentStatus(order.id, 'paid')
+        await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received')
+
+        if (order.customerId) {
+          await this.customerService.incrementOrderStats(order.customerId, order.grandTotal)
+        }
+
+        const updatedOrder = await this.orderService.findById(order.id)
+        if (updatedOrder) {
+          await emitter.emit('payment:captured', new PaymentCaptured(updatedOrder, transaction))
+        }
+
+        session.flash('success', 'Payment successful!')
+        return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
+      }
+
+      // If authorized (auth-then-capture flow), update status and go to confirmation
+      if (result.status === 'authorized') {
+        await this.orderService.updatePaymentStatus(order.id, 'authorized')
+        order.paymentMethod = paymentProvider.name
+        order.paymentMethodTitle = paymentProvider.displayName
+        await order.save()
+
+        return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
+      }
+
+      // Pending (e.g. async webhook will confirm later)
+      order.paymentMethod = paymentProvider.name
+      order.paymentMethodTitle = paymentProvider.displayName
+      await order.save()
+
+      session.flash('info', 'Payment is being processed. You will receive a confirmation email.')
       return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
     } catch (error) {
       session.flash('error', `Payment failed: ${error.message}`)

@@ -7,6 +7,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface Category {
   id: string
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function Categories({ categories }: Props) {
+  const { t } = useTranslation()
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   // Build a tree structure from the flat list
@@ -32,7 +34,7 @@ export default function Categories({ categories }: Props) {
   return (
     <StorefrontLayout>
       <Seo
-        title="All Categories"
+        title={t('storefront.categoriesPage.title')}
         description="Browse all product categories. Find exactly what you're looking for."
         storeName="AdonisCommerce"
         baseUrl={baseUrl}
@@ -44,13 +46,13 @@ export default function Categories({ categories }: Props) {
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-up">
             <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-              Browse
+              {t('storefront.categoriesPage.browse')}
             </span>
             <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">
-              All Categories
+              {t('storefront.categoriesPage.title')}
             </h1>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Explore our full range of product categories and find what you need.
+              {t('storefront.categoriesPage.subtitle')}
             </p>
           </div>
         </div>
@@ -106,7 +108,7 @@ export default function Categories({ categories }: Props) {
                         </div>
                         <CardContent className="pt-4">
                           <p className="font-display group-hover:text-accent transition-colors">
-                            View All {root.name}
+                            {t('storefront.categoriesPage.viewAll')} {root.name}
                           </p>
                         </CardContent>
                       </Card>
@@ -140,7 +142,7 @@ export default function Categories({ categories }: Props) {
                               </p>
                               {grandchildren.length > 0 && (
                                 <p className="text-muted-foreground mt-1 text-xs">
-                                  {grandchildren.length} subcategor{grandchildren.length === 1 ? 'y' : 'ies'}
+                                  {grandchildren.length === 1 ? t('storefront.categoriesPage.subcategoryCountSingle', { count: '1' }) : t('storefront.categoriesPage.subcategoryCount', { count: String(grandchildren.length) })}
                                 </p>
                               )}
                               {child.description && (
@@ -164,12 +166,12 @@ export default function Categories({ categories }: Props) {
           <Card className="border-dashed border-border/60 animate-fade-up delay-200">
             <CardContent className="flex flex-col items-center justify-center py-20 text-center">
               <Package className="text-muted-foreground h-12 w-12" />
-              <h3 className="font-display mt-4 text-lg">No categories yet</h3>
+              <h3 className="font-display mt-4 text-lg">{t('storefront.categoriesPage.noCategories')}</h3>
               <p className="text-muted-foreground mt-1 max-w-sm">
-                Categories will appear here once they are set up. In the meantime, browse all of our products.
+                {t('storefront.categoriesPage.noCategoriesDesc')}
               </p>
               <Button asChild className="mt-6">
-                <Link href="/products">Browse All Products</Link>
+                <Link href="/products">{t('storefront.categoriesPage.browseAllProducts')}</Link>
               </Button>
             </CardContent>
           </Card>

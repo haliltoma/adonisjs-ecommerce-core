@@ -1,14 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import CartService from '#services/cart_service'
-import DiscountService from '#services/discount_service'
 
 export default class CartController {
   private cartService: CartService
-  private discountService: DiscountService
 
   constructor() {
     this.cartService = new CartService()
-    this.discountService = new DiscountService()
   }
 
   async index({ inertia, session, store }: HttpContext) {
@@ -44,8 +41,7 @@ export default class CartController {
 
       session.flash('success', 'Item added to cart')
 
-      // For AJAX requests, return JSON
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         await cart.load('items')
         return response.json({
           success: true,
@@ -55,7 +51,7 @@ export default class CartController {
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -77,7 +73,7 @@ export default class CartController {
         quantity: Number(quantity),
       })
 
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         await cart.load('items', (query) => {
           query.preload('product', (q) => q.preload('images')).preload('variant')
         })
@@ -89,7 +85,7 @@ export default class CartController {
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -109,7 +105,7 @@ export default class CartController {
 
       session.flash('success', 'Item removed from cart')
 
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         await cart.load('items', (query) => {
           query.preload('product', (q) => q.preload('images')).preload('variant')
         })
@@ -121,7 +117,7 @@ export default class CartController {
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -140,13 +136,13 @@ export default class CartController {
 
       session.flash('success', 'Cart cleared')
 
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.json({ success: true, cart: null })
       }
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -164,43 +160,24 @@ export default class CartController {
     try {
       const cart = await this.cartService.getOrCreateCart(storeId, customerId, sessionId)
 
-      const result = await this.discountService.validateAndApply(storeId, code, cart, customerId)
-
-      if (!result.valid) {
-        if (request.ajax()) {
-          return response.status(400).json({ error: result.error || 'Invalid discount code' })
-        }
-        session.flash('error', result.error || 'Invalid discount code')
-        return response.redirect().back()
-      }
-
-      // Apply discount to cart
-      cart.couponCode = code.toUpperCase()
-      cart.discountTotal = result.discountAmount
-      cart.grandTotal = cart.subtotal - result.discountAmount + cart.taxTotal
-      await cart.save()
+      // CartService.applyDiscount validates, sets couponCode, and recalculates everything
+      const updatedCart = await this.cartService.applyDiscount(cart.id, code, customerId)
 
       session.flash('success', 'Discount applied')
 
-      if (request.ajax()) {
-        await cart.load('items', (query) => {
+      if (this.isApiRequest(request)) {
+        await updatedCart.load('items', (query) => {
           query.preload('product', (q) => q.preload('images')).preload('variant')
         })
         return response.json({
           success: true,
-          cart: this.serializeCart(cart),
-          discount: {
-            code: result.discount!.code,
-            type: result.discount!.type,
-            value: result.discount!.value,
-            amount: result.discountAmount,
-          },
+          cart: this.serializeCart(updatedCart),
         })
       }
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -219,7 +196,7 @@ export default class CartController {
 
       session.flash('success', 'Discount removed')
 
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         await cart.load('items', (query) => {
           query.preload('product', (q) => q.preload('images')).preload('variant')
         })
@@ -231,7 +208,7 @@ export default class CartController {
 
       return response.redirect().back()
     } catch (error) {
-      if (request.ajax()) {
+      if (this.isApiRequest(request)) {
         return response.status(400).json({ error: error.message })
       }
       session.flash('error', error.message)
@@ -252,15 +229,23 @@ export default class CartController {
     return response.json(this.serializeCart(cart))
   }
 
+  /**
+   * Check if request is a non-Inertia AJAX call (e.g. fetch/axios from JS).
+   * Inertia requests also have X-Requested-With but must receive redirects, not JSON.
+   */
+  private isApiRequest(request: any): boolean {
+    return !request.header('x-inertia') && request.ajax()
+  }
+
   private serializeCart(cart: any) {
     return {
       id: cart.id,
-      itemCount: cart.totalItems,
-      subtotal: cart.subtotal,
-      discountTotal: cart.discountTotal,
+      itemCount: Number(cart.totalItems) || 0,
+      subtotal: Number(cart.subtotal) || 0,
+      discountTotal: Number(cart.discountTotal) || 0,
       discountCode: cart.couponCode,
-      taxTotal: cart.taxTotal,
-      total: cart.grandTotal,
+      taxTotal: Number(cart.taxTotal) || 0,
+      total: Number(cart.grandTotal) || 0,
       currency: cart.currencyCode,
       items: cart.items?.map((item: any) => ({
         id: item.id,
@@ -269,9 +254,9 @@ export default class CartController {
         title: item.title,
         variantTitle: item.variantTitle,
         sku: item.sku,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice,
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.totalPrice),
         thumbnail: item.product?.images?.[0]?.url,
         productSlug: item.product?.slug,
       })),

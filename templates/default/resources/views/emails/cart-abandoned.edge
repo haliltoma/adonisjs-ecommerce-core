@@ -1,0 +1,13 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>You Left Something Behind!</h1>
+  <p>Hi {{ customerName }},</p>
+  <p>We noticed you left {{ itemCount }} item{{ itemCount > 1 ? 's' : '' }} in your cart. Don't worry, we saved them for you.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ cartUrl }}" class="btn">Complete Your Order</a>
+  </p>
+
+  <p class="muted">If you need help or have questions about your order, feel free to reply to this email.</p>
+@end

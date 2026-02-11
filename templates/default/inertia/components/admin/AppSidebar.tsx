@@ -3,21 +3,40 @@ import {
   BookOpen,
   ChevronRight,
   ChevronsUpDown,
+  Coins,
   Command,
   CreditCard,
+  ClipboardList,
+  DollarSign,
+  Gift,
+  KeyRound,
+  FileText,
   Folder,
   Frame,
+  Globe,
+  Languages,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Package,
   Percent,
   PieChart,
+  Plug,
+  Puzzle,
+  Radio,
+  RotateCcw,
+  Search,
   Settings2,
+  Shield,
   ShoppingCart,
   Sparkles,
+  Star,
+  Store,
   Tag,
   Users,
+  UsersRound,
   Warehouse,
+  Webhook,
 } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -63,7 +82,10 @@ const mainNav = [
     title: 'Orders',
     url: '/admin/orders',
     icon: ShoppingCart,
-    badge: '12',
+    items: [
+      { title: 'All Orders', url: '/admin/orders' },
+      { title: 'Draft Orders', url: '/admin/draft-orders' },
+    ],
   },
   {
     title: 'Products',
@@ -87,6 +109,31 @@ const mainNav = [
     icon: Percent,
   },
   {
+    title: 'Price Lists',
+    url: '/admin/price-lists',
+    icon: DollarSign,
+  },
+  {
+    title: 'Gift Cards',
+    url: '/admin/gift-cards',
+    icon: Gift,
+  },
+  {
+    title: 'Reviews',
+    url: '/admin/reviews',
+    icon: Star,
+  },
+  {
+    title: 'Marketing',
+    url: '/admin/marketing',
+    icon: Megaphone,
+    items: [
+      { title: 'Overview', url: '/admin/marketing' },
+      { title: 'Email Campaigns', url: '/admin/marketing/email-campaigns' },
+      { title: 'Abandoned Carts', url: '/admin/marketing/abandoned-carts' },
+    ],
+  },
+  {
     title: 'Analytics',
     url: '/admin/analytics',
     icon: PieChart,
@@ -97,6 +144,11 @@ const mainNav = [
       { title: 'Customers', url: '/admin/analytics/customers' },
     ],
   },
+  {
+    title: 'Plugins',
+    url: '/admin/plugins',
+    icon: Puzzle,
+  },
 ]
 
 const contentNav = [
@@ -104,6 +156,11 @@ const contentNav = [
     title: 'Pages',
     url: '/admin/content/pages',
     icon: BookOpen,
+  },
+  {
+    title: 'Blog',
+    url: '/admin/blog',
+    icon: FileText,
   },
   {
     title: 'Menus',
@@ -124,6 +181,26 @@ const settingsNav = [
     icon: Settings2,
   },
   {
+    title: 'Store',
+    url: '/admin/settings/store',
+    icon: Store,
+  },
+  {
+    title: 'Regions',
+    url: '/admin/settings/regions',
+    icon: Globe,
+  },
+  {
+    title: 'Sales Channels',
+    url: '/admin/settings/sales-channels',
+    icon: Radio,
+  },
+  {
+    title: 'Customer Groups',
+    url: '/admin/settings/customer-groups',
+    icon: UsersRound,
+  },
+  {
     title: 'Payments',
     url: '/admin/settings/payments',
     icon: CreditCard,
@@ -134,9 +211,64 @@ const settingsNav = [
     icon: Warehouse,
   },
   {
+    title: 'Shipping Profiles',
+    url: '/admin/settings/shipping-profiles',
+    icon: ClipboardList,
+  },
+  {
     title: 'Taxes',
     url: '/admin/settings/taxes',
     icon: Tag,
+  },
+  {
+    title: 'Return Reasons',
+    url: '/admin/settings/return-reasons',
+    icon: RotateCcw,
+  },
+  {
+    title: 'Locales',
+    url: '/admin/settings/locales',
+    icon: Languages,
+  },
+  {
+    title: 'Currencies',
+    url: '/admin/settings/currencies',
+    icon: Coins,
+  },
+  {
+    title: 'Attributes',
+    url: '/admin/settings/attributes',
+    icon: ClipboardList,
+  },
+  {
+    title: 'Users',
+    url: '/admin/settings/users',
+    icon: Users,
+  },
+  {
+    title: 'Roles',
+    url: '/admin/settings/roles',
+    icon: Shield,
+  },
+  {
+    title: 'Webhooks',
+    url: '/admin/settings/webhooks',
+    icon: Webhook,
+  },
+  {
+    title: 'Integrations',
+    url: '/admin/settings/integrations',
+    icon: Plug,
+  },
+  {
+    title: 'SEO',
+    url: '/admin/settings/seo',
+    icon: Search,
+  },
+  {
+    title: 'API Keys',
+    url: '/admin/settings/api-keys',
+    icon: KeyRound,
   },
 ]
 

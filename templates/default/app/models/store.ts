@@ -12,6 +12,10 @@ import Banner from './banner.js'
 import Discount from './discount.js'
 import Webhook from './webhook.js'
 import Setting from './setting.js'
+import Region from './region.js'
+import SalesChannel from './sales_channel.js'
+import CustomerGroup from './customer_group.js'
+import PriceList from './price_list.js'
 
 export default class Store extends BaseModel {
   @column({ isPrimary: true })
@@ -85,4 +89,16 @@ export default class Store extends BaseModel {
 
   @hasMany(() => Setting)
   declare settings: HasMany<typeof Setting>
+
+  @hasMany(() => Region)
+  declare regions: HasMany<typeof Region>
+
+  @hasMany(() => SalesChannel)
+  declare salesChannels: HasMany<typeof SalesChannel>
+
+  @hasMany(() => CustomerGroup)
+  declare customerGroups: HasMany<typeof CustomerGroup>
+
+  @hasMany(() => PriceList)
+  declare priceLists: HasMany<typeof PriceList>
 }

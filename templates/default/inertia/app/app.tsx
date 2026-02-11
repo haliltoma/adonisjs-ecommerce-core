@@ -21,8 +21,21 @@ createInertiaApp({
   },
 
   setup({ el, App, props }) {
-    
     hydrateRoot(el, <App {...props} />)
-    
+  },
+
+  defaults: {
+    visitOptions: (_href, options) => {
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      if (token) {
+        return {
+          headers: {
+            ...options.headers,
+            'x-csrf-token': token,
+          },
+        }
+      }
+      return {}
+    },
   },
 });

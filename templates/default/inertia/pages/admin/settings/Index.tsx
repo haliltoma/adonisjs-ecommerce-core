@@ -1,13 +1,17 @@
-import { Head, useForm } from '@inertiajs/react'
+import { Head, useForm, router, usePage } from '@inertiajs/react'
+import { useState } from 'react'
 import {
   Box,
+  Database,
   DollarSign,
   Globe,
+  Loader2,
   Package,
   Receipt,
   Search,
   Settings,
   Store,
+  Trash2,
   Truck,
 } from 'lucide-react'
 
@@ -26,6 +30,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 
 interface Settings {
   storeName: string
@@ -56,11 +61,21 @@ interface Props {
 }
 
 export default function SettingsIndex({ settings, currencies, timezones, locales }: Props) {
-  const { data, setData, post, processing, errors } = useForm(settings)
+  const { data, setData, patch, processing, errors } = useForm(settings)
+  const { props } = usePage<{ flash?: { success?: string; error?: string } }>()
+  const [clearingCache, setClearingCache] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    post('/admin/settings')
+    patch('/admin/settings')
+  }
+
+  const handleClearCache = (scope: string) => {
+    setClearingCache(scope)
+    router.post('/admin/settings/cache/clear', { scope }, {
+      preserveScroll: true,
+      onFinish: () => setClearingCache(null),
+    })
   }
 
   return (
@@ -68,7 +83,7 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
       title="Settings"
       description="Configure your store settings"
       actions={
-        <Button onClick={() => post('/admin/settings')} disabled={processing}>
+        <Button onClick={() => patch('/admin/settings')} disabled={processing}>
           {processing ? 'Saving...' : 'Save Changes'}
         </Button>
       }
@@ -78,7 +93,7 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
       <div className="animate-fade-in">
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="general" className="gap-2 text-sm">
                 <Store className="h-4 w-4" />
                 <span className="hidden sm:inline">General</span>
@@ -98,6 +113,10 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
               <TabsTrigger value="seo" className="gap-2 text-sm">
                 <Search className="h-4 w-4" />
                 <span className="hidden sm:inline">SEO</span>
+              </TabsTrigger>
+              <TabsTrigger value="system" className="gap-2 text-sm">
+                <Database className="h-4 w-4" />
+                <span className="hidden sm:inline">System</span>
               </TabsTrigger>
             </TabsList>
 
@@ -433,6 +452,110 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="system" className="animate-fade-up">
+              <div className="space-y-6">
+                {(props.flash?.success || props.flash?.error) && (
+                  <div className={`rounded-lg border p-4 text-sm ${props.flash?.success ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200' : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'}`}>
+                    {props.flash?.success || props.flash?.error}
+                  </div>
+                )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-display text-lg">Cache Management</CardTitle>
+                    <CardDescription className="text-sm">
+                      Clear cached data to ensure your store displays the latest information.
+                      Cache is automatically invalidated when you update products, orders, or inventory.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium">All Cache</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Clear all cached data for your store
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleClearCache('all')}
+                        disabled={clearingCache !== null}
+                      >
+                        {clearingCache === 'all' ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Clear All
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {[
+                        { scope: 'products', label: 'Product Cache', description: 'Product listings, details, and featured items' },
+                        { scope: 'categories', label: 'Category Cache', description: 'Category trees and navigation menus' },
+                        { scope: 'orders', label: 'Order Cache', description: 'Order details and customer order history' },
+                        { scope: 'analytics', label: 'Analytics Cache', description: 'Dashboard statistics and reports' },
+                      ].map((item) => (
+                        <div key={item.scope} className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium">{item.label}</p>
+                            <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleClearCache(item.scope)}
+                            disabled={clearingCache !== null}
+                          >
+                            {clearingCache === item.scope ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              'Clear'
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-display text-lg">System Information</CardTitle>
+                    <CardDescription className="text-sm">
+                      Technical details about your store configuration
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg border p-3">
+                        <p className="text-[11px] text-muted-foreground">Framework</p>
+                        <p className="text-sm font-medium">AdonisJS v6</p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-[11px] text-muted-foreground">Frontend</p>
+                        <p className="text-sm font-medium">React + InertiaJS</p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-[11px] text-muted-foreground">Cache Driver</p>
+                        <p className="text-sm font-medium">
+                          <Badge variant="secondary" className="text-xs">Redis</Badge>
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-[11px] text-muted-foreground">Search Driver</p>
+                        <p className="text-sm font-medium">
+                          <Badge variant="secondary" className="text-xs">Configurable</Badge>
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </form>

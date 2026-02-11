@@ -13,6 +13,17 @@ import TaxClass from '#models/tax_class'
 import TaxRate from '#models/tax_rate'
 import InventoryLocation from '#models/inventory_location'
 import InventoryItem from '#models/inventory_item'
+import Currency from '#models/currency'
+import Locale from '#models/locale'
+import Page from '#models/page'
+import _Menu from '#models/menu'
+import Banner from '#models/banner'
+import Setting from '#models/setting'
+import BlogCategory from '#models/blog_category'
+import BlogPost from '#models/blog_post'
+import Tag from '#models/tag'
+import _Collection from '#models/collection'
+import NotificationTemplate from '#models/notification_template'
 import hash from '@adonisjs/core/services/hash'
 import { randomUUID } from 'crypto'
 
@@ -77,6 +88,30 @@ export default class MainSeeder extends BaseSeeder {
 
     // Create tax class and rates
     await this.createTaxRates(store.id)
+
+    // Create currencies
+    await this.createCurrencies(store.id)
+
+    // Create locales
+    await this.createLocales(store.id)
+
+    // Create tags
+    await this.createTags(store.id)
+
+    // Create pages
+    await this.createPages(store.id)
+
+    // Create banners
+    await this.createBanners(store.id)
+
+    // Create settings
+    await this.createSettings(store.id)
+
+    // Create notification templates
+    await this.createNotificationTemplates(store.id)
+
+    // Create blog posts
+    await this.createBlogPosts(store.id)
 
     console.log('✅ Database seeded successfully!')
   }
@@ -560,6 +595,339 @@ export default class MainSeeder extends BaseSeeder {
       isActive: true,
       isCompound: false,
       priority: 1,
+    })
+  }
+
+  private async createCurrencies(_storeId: string) {
+    await Currency.create({
+      id: randomUUID(),
+      code: 'USD',
+      name: 'US Dollar',
+      symbol: '$',
+      symbolPosition: 'before',
+      decimalPlaces: 2,
+      decimalSeparator: '.',
+      thousandsSeparator: ',',
+      exchangeRate: 1,
+      isDefault: true,
+      isActive: true,
+    })
+
+    await Currency.create({
+      id: randomUUID(),
+      code: 'EUR',
+      name: 'Euro',
+      symbol: '€',
+      symbolPosition: 'after',
+      decimalPlaces: 2,
+      decimalSeparator: ',',
+      thousandsSeparator: '.',
+      exchangeRate: 0.92,
+      isDefault: false,
+      isActive: true,
+    })
+
+    await Currency.create({
+      id: randomUUID(),
+      code: 'TRY',
+      name: 'Turkish Lira',
+      symbol: '₺',
+      symbolPosition: 'after',
+      decimalPlaces: 2,
+      decimalSeparator: ',',
+      thousandsSeparator: '.',
+      exchangeRate: 32.5,
+      isDefault: false,
+      isActive: true,
+    })
+  }
+
+  private async createLocales(_storeId: string) {
+    await Locale.create({
+      id: randomUUID(),
+      code: 'en',
+      name: 'English',
+      nativeName: 'English',
+      direction: 'ltr',
+      isDefault: true,
+      isActive: true,
+    })
+
+    await Locale.create({
+      id: randomUUID(),
+      code: 'tr',
+      name: 'Turkish',
+      nativeName: 'Türkçe',
+      direction: 'ltr',
+      isDefault: false,
+      isActive: true,
+    })
+  }
+
+  private async createTags(storeId: string) {
+    const tagNames = ['new-arrival', 'bestseller', 'sale', 'featured', 'limited-edition']
+    for (const name of tagNames) {
+      await Tag.create({
+        id: randomUUID(),
+        storeId,
+        name: name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        slug: name,
+      })
+    }
+  }
+
+  private async createPages(storeId: string) {
+    await Page.create({
+      id: randomUUID(),
+      storeId,
+      title: 'About Us',
+      slug: 'about',
+      content: {
+        blocks: [
+          {
+            type: 'text',
+            data: { text: '<h2>About Our Store</h2><p>Welcome to AdonisCommerce Store. We are dedicated to providing the best products and services to our customers.</p>' },
+          },
+        ],
+      },
+      template: 'default',
+      status: 'published',
+      isSystem: false,
+      metaTitle: 'About Us - AdonisCommerce Store',
+      metaDescription: 'Learn about our store, our mission, and our team.',
+    })
+
+    await Page.create({
+      id: randomUUID(),
+      storeId,
+      title: 'Contact Us',
+      slug: 'contact',
+      content: {
+        blocks: [
+          {
+            type: 'text',
+            data: { text: '<h2>Contact Us</h2><p>Email: support@example.com</p><p>Phone: +1 (555) 123-4567</p>' },
+          },
+        ],
+      },
+      template: 'default',
+      status: 'published',
+      isSystem: false,
+    })
+
+    await Page.create({
+      id: randomUUID(),
+      storeId,
+      title: 'Privacy Policy',
+      slug: 'privacy-policy',
+      content: {
+        blocks: [
+          {
+            type: 'text',
+            data: { text: '<h2>Privacy Policy</h2><p>Your privacy is important to us. This policy outlines how we collect, use, and protect your personal information.</p>' },
+          },
+        ],
+      },
+      template: 'default',
+      status: 'published',
+      isSystem: true,
+    })
+
+    await Page.create({
+      id: randomUUID(),
+      storeId,
+      title: 'Terms of Service',
+      slug: 'terms-of-service',
+      content: {
+        blocks: [
+          {
+            type: 'text',
+            data: { text: '<h2>Terms of Service</h2><p>By using our website, you agree to the following terms and conditions.</p>' },
+          },
+        ],
+      },
+      template: 'default',
+      status: 'published',
+      isSystem: true,
+    })
+  }
+
+  private async createBanners(storeId: string) {
+    await Banner.create({
+      id: randomUUID(),
+      storeId,
+      title: 'Summer Sale',
+      subtitle: 'Up to 50% off on selected items',
+      imageUrl: '/images/banners/summer-sale.jpg',
+      linkUrl: '/collections/sale',
+      position: 'home',
+      sortOrder: 1,
+      isActive: true,
+    })
+
+    await Banner.create({
+      id: randomUUID(),
+      storeId,
+      title: 'New Arrivals',
+      subtitle: 'Check out our latest products',
+      imageUrl: '/images/banners/new-arrivals.jpg',
+      linkUrl: '/collections/new-arrivals',
+      position: 'home',
+      sortOrder: 2,
+      isActive: true,
+    })
+  }
+
+  private async createSettings(storeId: string) {
+    const settings = [
+      { group: 'general', key: 'store_name', value: 'AdonisCommerce Store', type: 'string' },
+      { group: 'general', key: 'store_email', value: 'support@example.com', type: 'string' },
+      { group: 'general', key: 'store_phone', value: '+1 (555) 123-4567', type: 'string' },
+      { group: 'checkout', key: 'guest_checkout_enabled', value: true, type: 'boolean' },
+      { group: 'checkout', key: 'minimum_order_amount', value: 0, type: 'number' },
+      { group: 'shipping', key: 'free_shipping_threshold', value: 75, type: 'number' },
+      { group: 'shipping', key: 'default_shipping_rate', value: 9.99, type: 'number' },
+      { group: 'inventory', key: 'low_stock_threshold', value: 10, type: 'number' },
+      { group: 'inventory', key: 'track_inventory', value: true, type: 'boolean' },
+      { group: 'email', key: 'order_confirmation_enabled', value: true, type: 'boolean' },
+      { group: 'email', key: 'shipping_notification_enabled', value: true, type: 'boolean' },
+    ]
+
+    for (const setting of settings) {
+      await Setting.create({
+        storeId,
+        group: setting.group,
+        key: setting.key,
+        value: setting.value,
+        type: setting.type as any,
+        isPublic: setting.group === 'general',
+      })
+    }
+  }
+
+  private async createNotificationTemplates(storeId: string) {
+    const templates = [
+      {
+        name: 'Order Confirmation',
+        slug: 'order-confirmation',
+        subject: 'Order Confirmed - #{{orderNumber}}',
+        body: 'Thank you for your order #{{orderNumber}}. Your order total is {{total}}.',
+        channel: 'email' as const,
+        variables: ['orderNumber', 'total', 'customerName', 'items'],
+      },
+      {
+        name: 'Shipping Notification',
+        slug: 'shipping-notification',
+        subject: 'Your Order Has Shipped - #{{orderNumber}}',
+        body: 'Your order #{{orderNumber}} has been shipped. Tracking: {{trackingNumber}}',
+        channel: 'email' as const,
+        variables: ['orderNumber', 'trackingNumber', 'carrier', 'estimatedDelivery'],
+      },
+      {
+        name: 'Password Reset',
+        slug: 'password-reset',
+        subject: 'Reset Your Password',
+        body: 'Click the link to reset your password: {{resetLink}}',
+        channel: 'email' as const,
+        variables: ['resetLink', 'customerName'],
+      },
+      {
+        name: 'Welcome Email',
+        slug: 'welcome',
+        subject: 'Welcome to {{storeName}}!',
+        body: 'Welcome {{customerName}}! Thank you for creating an account.',
+        channel: 'email' as const,
+        variables: ['storeName', 'customerName'],
+      },
+    ]
+
+    for (const template of templates) {
+      await NotificationTemplate.create({
+        id: randomUUID(),
+        storeId,
+        name: template.name,
+        slug: template.slug,
+        subject: template.subject,
+        body: template.body,
+        channel: template.channel,
+        variables: template.variables,
+        isActive: true,
+      })
+    }
+  }
+
+  private async createBlogPosts(storeId: string) {
+    const newsCategory = await BlogCategory.create({
+      id: randomUUID(),
+      storeId,
+      name: 'News',
+      slug: 'news',
+      description: 'Latest store news and announcements',
+      sortOrder: 1,
+    })
+
+    const guidesCategory = await BlogCategory.create({
+      id: randomUUID(),
+      storeId,
+      name: 'Guides',
+      slug: 'guides',
+      description: 'Helpful guides and how-tos',
+      sortOrder: 2,
+    })
+
+    await BlogCategory.create({
+      id: randomUUID(),
+      storeId,
+      name: 'Style',
+      slug: 'style',
+      description: 'Style tips and inspiration',
+      sortOrder: 3,
+    })
+
+    const now = new Date().toISOString()
+
+    await BlogPost.create({
+      id: randomUUID(),
+      storeId,
+      blogCategoryId: newsCategory.id,
+      title: 'Welcome to Our Blog',
+      slug: 'welcome-to-our-blog',
+      excerpt: 'We are excited to launch our blog where we will share news, guides, and style tips.',
+      content: '<h2>Hello and Welcome!</h2><p>We are thrilled to launch our new blog. Here you will find the latest news about our store, helpful guides, and style inspiration.</p><p>Stay tuned for more content coming soon!</p>',
+      status: 'published',
+      tags: ['announcement', 'welcome'],
+      isFeatured: true,
+      viewCount: 42,
+      publishedAt: now as any,
+    })
+
+    await BlogPost.create({
+      id: randomUUID(),
+      storeId,
+      blogCategoryId: guidesCategory.id,
+      title: 'How to Choose the Perfect Gift',
+      slug: 'how-to-choose-the-perfect-gift',
+      excerpt: 'Finding the right gift can be challenging. Here are our top tips for choosing something special.',
+      content: '<h2>Gift-Giving Made Easy</h2><p>Whether it is a birthday, anniversary, or holiday, finding the perfect gift does not have to be stressful.</p><h3>1. Consider Their Interests</h3><p>Think about what the recipient enjoys. Are they into tech, fashion, or home decor?</p><h3>2. Set a Budget</h3><p>Decide on a budget before you start shopping to narrow down your options.</p><h3>3. Add a Personal Touch</h3><p>Consider personalization or a handwritten note to make it extra special.</p>',
+      status: 'published',
+      tags: ['guide', 'gifts', 'tips'],
+      isFeatured: false,
+      viewCount: 18,
+      publishedAt: now as any,
+    })
+
+    await BlogPost.create({
+      id: randomUUID(),
+      storeId,
+      blogCategoryId: newsCategory.id,
+      title: 'Summer Collection Now Available',
+      slug: 'summer-collection-now-available',
+      excerpt: 'Our new summer collection has arrived with fresh styles and vibrant colors.',
+      content: '<h2>Summer is Here!</h2><p>We are excited to announce the arrival of our summer collection. Browse our latest products for the season.</p>',
+      status: 'draft',
+      tags: ['collection', 'summer'],
+      isFeatured: false,
+      viewCount: 0,
     })
   }
 }

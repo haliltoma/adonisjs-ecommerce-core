@@ -67,6 +67,12 @@ interface LowStockProduct {
   }>
 }
 
+interface ChartDataPoint {
+  date: string
+  revenue: number
+  orders: number
+}
+
 interface Props {
   user: { displayName: string; email: string }
   stats: {
@@ -83,27 +89,8 @@ interface Props {
     total_sold: number
     total_revenue: number
   }>
+  revenueChart: ChartDataPoint[]
 }
-
-const revenueData = [
-  { date: 'Mon', revenue: 2400 },
-  { date: 'Tue', revenue: 1398 },
-  { date: 'Wed', revenue: 9800 },
-  { date: 'Thu', revenue: 3908 },
-  { date: 'Fri', revenue: 4800 },
-  { date: 'Sat', revenue: 3800 },
-  { date: 'Sun', revenue: 4300 },
-]
-
-const ordersData = [
-  { date: 'Mon', orders: 12 },
-  { date: 'Tue', orders: 8 },
-  { date: 'Wed', orders: 24 },
-  { date: 'Thu', orders: 15 },
-  { date: 'Fri', orders: 18 },
-  { date: 'Sat', orders: 22 },
-  { date: 'Sun', orders: 16 },
-]
 
 const CHART_COLOR = '#d4872e'
 const CHART_COLOR_SOFT = '#e9b96e'
@@ -113,7 +100,13 @@ export default function Dashboard({
   recentOrders,
   lowStockProducts,
   topProducts,
+  revenueChart,
 }: Props) {
+  const chartData = (revenueChart || []).map((d) => ({
+    date: d.date,
+    revenue: Number(d.revenue) || 0,
+    orders: Number(d.orders) || 0,
+  }))
   const calcChange = (current: number, previous: number) => {
     if (previous === 0) return 0
     return ((current - previous) / previous) * 100
@@ -227,12 +220,12 @@ export default function Dashboard({
           <Card className="animate-fade-up delay-500">
             <CardHeader>
               <CardTitle className="text-base">Revenue Overview</CardTitle>
-              <CardDescription>Daily revenue for the past week</CardDescription>
+              <CardDescription>Daily revenue for the past 30 days</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueData}>
+                  <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={CHART_COLOR} stopOpacity={0.2} />
@@ -267,12 +260,12 @@ export default function Dashboard({
           <Card className="animate-fade-up delay-600">
             <CardHeader>
               <CardTitle className="text-base">Orders Overview</CardTitle>
-              <CardDescription>Daily orders for the past week</CardDescription>
+              <CardDescription>Daily orders for the past 30 days</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ordersData}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" />
                     <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 12, fill: '#9a948e' }} axisLine={false} tickLine={false} />

@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react'
 import { ArrowLeft } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function Profile({ customer }: Props) {
+  const { t } = useTranslation()
   const profileForm = useForm({
     firstName: customer.firstName || '',
     lastName: customer.lastName || '',
@@ -50,38 +52,38 @@ export default function Profile({ customer }: Props) {
 
   return (
     <StorefrontLayout>
-      <Head title="Profile" />
+      <Head title={t('storefront.profilePage.profileSettings')} />
 
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
         <div className="animate-fade-up mb-8">
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
             <Link href="/account">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Account
+              {t('storefront.profilePage.backToAccount')}
             </Link>
           </Button>
         </div>
 
         <div className="animate-fade-up delay-100">
-          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Settings</span>
-          <h1 className="font-display text-3xl tracking-tight mt-2">Profile Settings</h1>
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.profilePage.settings')}</span>
+          <h1 className="font-display text-3xl tracking-tight mt-2">{t('storefront.profilePage.profileSettings')}</h1>
           <p className="text-muted-foreground mt-2">
-            Manage your account details and password.
+            {t('storefront.profilePage.profileDesc')}
           </p>
         </div>
 
         {/* Profile Form */}
         <Card className="animate-fade-up delay-200 mt-8 border-border/60">
           <CardHeader>
-            <CardTitle className="font-display text-xl tracking-tight">Personal Information</CardTitle>
-            <CardDescription>Update your name and contact details.</CardDescription>
+            <CardTitle className="font-display text-xl tracking-tight">{t('storefront.profilePage.personalInfo')}</CardTitle>
+            <CardDescription>{t('storefront.profilePage.personalInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleProfileSubmit} className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground">
-                    First Name
+                    {t('storefront.profilePage.firstName')}
                   </Label>
                   <Input
                     id="firstName"
@@ -95,7 +97,7 @@ export default function Profile({ customer }: Props) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Last Name
+                    {t('storefront.profilePage.lastName')}
                   </Label>
                   <Input
                     id="lastName"
@@ -111,7 +113,7 @@ export default function Profile({ customer }: Props) {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Email
+                  {t('storefront.profilePage.email')}
                 </Label>
                 <Input
                   id="email"
@@ -121,13 +123,13 @@ export default function Profile({ customer }: Props) {
                   className="h-11 border-border/60"
                 />
                 <p className="text-muted-foreground text-xs">
-                  Email cannot be changed.
+                  {t('storefront.profilePage.emailCannotChange')}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Phone
+                  {t('storefront.profilePage.phone')}
                 </Label>
                 <Input
                   id="phone"
@@ -146,7 +148,7 @@ export default function Profile({ customer }: Props) {
                 className="h-11 text-sm font-medium tracking-wide"
                 disabled={profileForm.processing}
               >
-                {profileForm.processing ? 'Saving...' : 'Save Changes'}
+                {profileForm.processing ? t('storefront.profilePage.saving') : t('storefront.profilePage.saveChanges')}
               </Button>
             </form>
           </CardContent>
@@ -155,14 +157,14 @@ export default function Profile({ customer }: Props) {
         {/* Password Form */}
         <Card className="animate-fade-up delay-300 mt-6 border-border/60">
           <CardHeader>
-            <CardTitle className="font-display text-xl tracking-tight">Change Password</CardTitle>
-            <CardDescription>Update your password to keep your account secure.</CardDescription>
+            <CardTitle className="font-display text-xl tracking-tight">{t('storefront.profilePage.changePassword')}</CardTitle>
+            <CardDescription>{t('storefront.profilePage.changePasswordDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Current Password
+                  {t('storefront.profilePage.currentPassword')}
                 </Label>
                 <Input
                   id="currentPassword"
@@ -179,7 +181,7 @@ export default function Profile({ customer }: Props) {
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  New Password
+                  {t('storefront.profilePage.newPassword')}
                 </Label>
                 <Input
                   id="newPassword"
@@ -196,7 +198,7 @@ export default function Profile({ customer }: Props) {
 
               <div className="space-y-2">
                 <Label htmlFor="newPasswordConfirmation" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Confirm New Password
+                  {t('storefront.profilePage.confirmNewPassword')}
                 </Label>
                 <Input
                   id="newPasswordConfirmation"
@@ -213,7 +215,7 @@ export default function Profile({ customer }: Props) {
                 className="h-11 text-sm font-medium tracking-wide"
                 disabled={passwordForm.processing}
               >
-                {passwordForm.processing ? 'Updating...' : 'Update Password'}
+                {passwordForm.processing ? t('storefront.profilePage.updating') : t('storefront.profilePage.updatePassword')}
               </Button>
             </form>
           </CardContent>

@@ -1,4 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react'
+import { useState } from 'react'
 import { Shield, User } from 'lucide-react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -204,59 +205,189 @@ export default function Profile({ user }: Props) {
         </Card>
 
         {/* Two-Factor Authentication */}
-        <Card className="animate-fade-up delay-300">
-          <CardHeader>
-            <CardTitle className="font-display text-lg">Two-Factor Authentication</CardTitle>
-            <CardDescription>
-              Add an extra layer of security to your account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {user.twoFactorEnabled ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
-                    <Shield className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">2FA is enabled</p>
-                    <p className="text-muted-foreground text-sm">
-                      Your account is protected with two-factor authentication.
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => router.post('/admin/profile/2fa/disable')}
-                >
-                  Disable
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#e9b96e20' }}>
-                    <Shield className="h-5 w-5" style={{ color: '#d4872e' }} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">2FA is not enabled</p>
-                    <p className="text-muted-foreground text-sm">
-                      Enable two-factor authentication for additional security.
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => router.post('/admin/profile/2fa/enable')}
-                >
-                  Enable
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <TwoFactorCard twoFactorEnabled={user.twoFactorEnabled} />
       </div>
     </AdminLayout>
+  )
+}
+
+function TwoFactorCard({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
+  const [setupData, setSetupData] = useState<{ qrCode: string; secret: string } | null>(null)
+  const [confirmCode, setConfirmCode] = useState('')
+  const [disableCode, setDisableCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showDisable, setShowDisable] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleEnable = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch('/admin/profile/2fa/enable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
+        },
+      })
+      const data = await response.json()
+      if (data.qrCode) {
+        setSetupData(data)
+      } else {
+        setError(data.error || 'Failed to enable 2FA')
+      }
+    } catch {
+      setError('Failed to initialize 2FA setup')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConfirm = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch('/admin/profile/2fa/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
+        },
+        body: JSON.stringify({ code: confirmCode }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        setSetupData(null)
+        setConfirmCode('')
+        router.reload()
+      } else {
+        setError(data.error || 'Invalid verification code')
+      }
+    } catch {
+      setError('Verification failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDisable = () => {
+    router.post('/admin/profile/2fa/disable', { code: disableCode } as any)
+  }
+
+  return (
+    <Card className="animate-fade-up delay-300">
+      <CardHeader>
+        <CardTitle className="font-display text-lg">Two-Factor Authentication</CardTitle>
+        <CardDescription>Add an extra layer of security to your account.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {twoFactorEnabled && !showDisable ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                <Shield className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">2FA is enabled</p>
+                <p className="text-muted-foreground text-sm">
+                  Your account is protected with two-factor authentication.
+                </p>
+              </div>
+            </div>
+            <Button variant="destructive" size="sm" onClick={() => setShowDisable(true)}>
+              Disable
+            </Button>
+          </div>
+        ) : twoFactorEnabled && showDisable ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Enter your authenticator code to disable two-factor authentication.
+            </p>
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
+            <div className="flex gap-3">
+              <Input
+                value={disableCode}
+                onChange={(e) => setDisableCode(e.target.value)}
+                placeholder="000000"
+                maxLength={6}
+                className="h-10 w-40 text-center tracking-widest border-border/60"
+              />
+              <Button variant="destructive" size="sm" onClick={handleDisable}>
+                Confirm Disable
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowDisable(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : setupData ? (
+          <div className="space-y-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-4">
+                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+              </p>
+              <div className="inline-block rounded-lg border border-border/60 bg-white p-4">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(setupData.qrCode)}`}
+                  alt="2FA QR Code"
+                  className="h-48 w-48"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Or enter this secret manually:
+              </p>
+              <code className="block rounded border border-border/60 bg-muted/50 px-3 py-2 text-xs font-mono break-all select-all">
+                {setupData.secret}
+              </code>
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Enter verification code
+              </Label>
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+              <div className="flex gap-3">
+                <Input
+                  value={confirmCode}
+                  onChange={(e) => setConfirmCode(e.target.value)}
+                  placeholder="000000"
+                  maxLength={6}
+                  className="h-10 w-40 text-center tracking-widest border-border/60"
+                />
+                <Button onClick={handleConfirm} disabled={loading || confirmCode.length !== 6}>
+                  {loading ? 'Verifying...' : 'Verify & Enable'}
+                </Button>
+                <Button variant="ghost" onClick={() => setSetupData(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#e9b96e20' }}>
+                <Shield className="h-5 w-5" style={{ color: '#d4872e' }} />
+              </div>
+              <div>
+                <p className="text-sm font-medium">2FA is not enabled</p>
+                <p className="text-muted-foreground text-sm">
+                  Enable two-factor authentication for additional security.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={handleEnable} disabled={loading}>
+              {loading ? 'Setting up...' : 'Enable'}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

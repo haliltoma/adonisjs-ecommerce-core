@@ -11,6 +11,8 @@ import TaxClass from './tax_class.js'
 import Review from './review.js'
 import Collection from './collection.js'
 import ProductAttributeValue from './product_attribute_value.js'
+import SalesChannel from './sales_channel.js'
+import ShippingProfile from './shipping_profile.js'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -60,6 +62,9 @@ export default class Product extends BaseModel {
 
   @column()
   declare taxClassId: string | null
+
+  @column()
+  declare shippingProfileId: string | null
 
   @column()
   declare weight: number | null
@@ -146,6 +151,15 @@ export default class Product extends BaseModel {
     pivotColumns: ['sort_order'],
   })
   declare collections: ManyToMany<typeof Collection>
+
+  @manyToMany(() => SalesChannel, {
+    pivotTable: 'product_sales_channels',
+    pivotTimestamps: { createdAt: 'created_at', updatedAt: false },
+  })
+  declare salesChannels: ManyToMany<typeof SalesChannel>
+
+  @belongsTo(() => ShippingProfile)
+  declare shippingProfile: BelongsTo<typeof ShippingProfile>
 
   // Alias for backward compatibility
   get name(): string {

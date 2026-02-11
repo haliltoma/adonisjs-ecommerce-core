@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react'
 import { ArrowLeft, Package, Truck } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -87,6 +88,8 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 }
 
 export default function OrderDetail({ order }: Props) {
+  const { t } = useTranslation()
+
   const formatAddress = (address: Address) => {
     if (!address) return null
     const lines = [
@@ -102,26 +105,26 @@ export default function OrderDetail({ order }: Props) {
 
   return (
     <StorefrontLayout>
-      <Head title={`Order #${order.orderNumber}`} />
+      <Head title={`${t('storefront.orderDetailPage.order')} #${order.orderNumber}`} />
 
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="animate-fade-up mb-8">
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
             <Link href="/account/orders">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Orders
+              {t('storefront.orderDetailPage.backToOrders')}
             </Link>
           </Button>
         </div>
 
         <div className="animate-fade-up delay-100 flex items-start justify-between">
           <div>
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Order Details</span>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.orderDetailPage.orderDetails')}</span>
             <h1 className="font-display text-3xl tracking-tight mt-2">
-              Order #{order.orderNumber}
+              {t('storefront.orderDetailPage.order')} #{order.orderNumber}
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              Placed on {formatDate(order.createdAt)}
+              {t('storefront.orderDetailPage.placedOn')} {formatDate(order.createdAt)}
             </p>
           </div>
           <div className="flex gap-2">
@@ -139,17 +142,17 @@ export default function OrderDetail({ order }: Props) {
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2 text-xl tracking-tight">
               <Package className="h-5 w-5 text-accent" />
-              Items
+              {t('storefront.orderDetailPage.items')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow className="border-border/40">
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Product</TableHead>
-                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground">Qty</TableHead>
-                  <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">Price</TableHead>
-                  <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">Total</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.orderDetailPage.product')}</TableHead>
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.orderDetailPage.qty')}</TableHead>
+                  <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.orderDetailPage.price')}</TableHead>
+                  <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.orderDetailPage.total')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -181,28 +184,28 @@ export default function OrderDetail({ order }: Props) {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t('storefront.orderDetailPage.subtotal')}</span>
                 <span>{formatCurrency(order.subtotal)}</span>
               </div>
               {order.discountTotal > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-muted-foreground">{t('storefront.orderDetailPage.discount')}</span>
                   <span className="text-green-600">
                     -{formatCurrency(order.discountTotal)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
+                <span className="text-muted-foreground">{t('storefront.orderDetailPage.shipping')}</span>
                 <span>{formatCurrency(order.shippingTotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax</span>
+                <span className="text-muted-foreground">{t('storefront.orderDetailPage.tax')}</span>
                 <span>{formatCurrency(order.taxTotal)}</span>
               </div>
               <Separator className="bg-border/40" />
               <div className="flex justify-between text-base font-semibold">
-                <span>Total</span>
+                <span>{t('storefront.orderDetailPage.total')}</span>
                 <span className="font-display">{formatCurrency(order.total)}</span>
               </div>
             </div>
@@ -215,7 +218,7 @@ export default function OrderDetail({ order }: Props) {
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2 text-xl tracking-tight">
                 <Truck className="h-5 w-5 text-accent" />
-                Shipping Updates
+                {t('storefront.orderDetailPage.shippingUpdates')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -233,7 +236,7 @@ export default function OrderDetail({ order }: Props) {
                   </div>
                   {fulfillment.trackingNumber && (
                     <p className="mt-2 text-sm">
-                      Tracking:{' '}
+                      {t('storefront.orderDetailPage.tracking')}{' '}
                       {fulfillment.trackingUrl ? (
                         <a
                           href={fulfillment.trackingUrl}
@@ -250,10 +253,10 @@ export default function OrderDetail({ order }: Props) {
                   )}
                   <div className="text-muted-foreground mt-2 space-y-1 text-xs">
                     {fulfillment.shippedAt && (
-                      <p>Shipped: {formatDate(fulfillment.shippedAt)}</p>
+                      <p>{t('storefront.orderDetailPage.shipped')} {formatDate(fulfillment.shippedAt)}</p>
                     )}
                     {fulfillment.deliveredAt && (
-                      <p>Delivered: {formatDate(fulfillment.deliveredAt)}</p>
+                      <p>{t('storefront.orderDetailPage.delivered')} {formatDate(fulfillment.deliveredAt)}</p>
                     )}
                   </div>
                 </div>
@@ -266,7 +269,7 @@ export default function OrderDetail({ order }: Props) {
         <div className="animate-fade-up delay-400 mt-6 grid gap-6 sm:grid-cols-2">
           <Card className="border-border/60">
             <CardHeader>
-              <CardTitle className="font-display text-base tracking-tight">Shipping Address</CardTitle>
+              <CardTitle className="font-display text-base tracking-tight">{t('storefront.orderDetailPage.shippingAddress')}</CardTitle>
             </CardHeader>
             <CardContent>
               {order.shippingAddress ? (
@@ -276,14 +279,14 @@ export default function OrderDetail({ order }: Props) {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No shipping address</p>
+                <p className="text-muted-foreground text-sm">{t('storefront.orderDetailPage.noShippingAddress')}</p>
               )}
             </CardContent>
           </Card>
 
           <Card className="border-border/60">
             <CardHeader>
-              <CardTitle className="font-display text-base tracking-tight">Billing Address</CardTitle>
+              <CardTitle className="font-display text-base tracking-tight">{t('storefront.orderDetailPage.billingAddress')}</CardTitle>
             </CardHeader>
             <CardContent>
               {order.billingAddress ? (
@@ -293,7 +296,7 @@ export default function OrderDetail({ order }: Props) {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No billing address</p>
+                <p className="text-muted-foreground text-sm">{t('storefront.orderDetailPage.noBillingAddress')}</p>
               )}
             </CardContent>
           </Card>

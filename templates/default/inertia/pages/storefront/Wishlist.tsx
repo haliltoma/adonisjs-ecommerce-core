@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react'
 import { Heart, Package, ShoppingBag, Trash2 } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import Seo from '@/components/shared/Seo'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function Wishlist({ items }: Props) {
+  const { t } = useTranslation()
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   return (
@@ -47,15 +49,15 @@ export default function Wishlist({ items }: Props) {
           <div className="animate-fade-up">
             <Heart className="text-accent mx-auto mb-3 h-8 w-8" />
             <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-              Saved Items
+              {t('storefront.wishlistPage.savedItems')}
             </span>
             <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">
-              My Wishlist
+              {t('storefront.wishlistPage.myWishlist')}
             </h1>
             <p className="text-muted-foreground mt-3">
               {items.length > 0
-                ? `${items.length} item${items.length !== 1 ? 's' : ''} saved`
-                : 'Your wishlist is empty'}
+                ? t('storefront.wishlistPage.itemsSaved', { count: items.length, plural: items.length !== 1 ? 's' : '' })
+                : t('storefront.wishlistPage.emptyWishlist')}
             </p>
           </div>
         </div>
@@ -76,7 +78,7 @@ export default function Wishlist({ items }: Props) {
                   className="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-background/80 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100"
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
-                  <span className="sr-only">Remove from wishlist</span>
+                  <span className="sr-only">{t('storefront.wishlistPage.removeFromWishlist')}</span>
                 </Button>
 
                 <Link href={`/products/${item.product.slug}`}>
@@ -101,7 +103,7 @@ export default function Wishlist({ items }: Props) {
                     )}
                     {!item.product.inStock && (
                       <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-                        <Badge variant="secondary">Out of Stock</Badge>
+                        <Badge variant="secondary">{t('storefront.wishlistPage.outOfStock')}</Badge>
                       </div>
                     )}
                   </div>
@@ -131,7 +133,7 @@ export default function Wishlist({ items }: Props) {
                     disabled={!item.product.inStock}
                   >
                     <ShoppingBag className="mr-2 h-4 w-4" />
-                    {item.product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    {item.product.inStock ? t('storefront.wishlistPage.addToCart') : t('storefront.wishlistPage.outOfStock')}
                   </Button>
                 </div>
               </Card>
@@ -141,15 +143,14 @@ export default function Wishlist({ items }: Props) {
           <Card className="border-dashed border-border/60 animate-fade-up delay-200">
             <CardContent className="flex flex-col items-center justify-center py-20 text-center">
               <Heart className="text-muted-foreground h-16 w-16" />
-              <h3 className="font-display mt-6 text-xl">Your wishlist is empty</h3>
+              <h3 className="font-display mt-6 text-xl">{t('storefront.wishlistPage.emptyTitle')}</h3>
               <p className="text-muted-foreground mt-2 max-w-md">
-                Save your favorite items to your wishlist by clicking the heart icon on any
-                product. Your wishlist makes it easy to find and purchase items you love.
+                {t('storefront.wishlistPage.emptyDesc')}
               </p>
               <Button asChild className="mt-6" size="lg">
                 <Link href="/products">
                   <ShoppingBag className="mr-2 h-4 w-4" />
-                  Browse Products
+                  {t('storefront.wishlistPage.browseProducts')}
                 </Link>
               </Button>
             </CardContent>

@@ -2,33 +2,41 @@ import { DateTime } from 'luxon'
 import Discount from '#models/discount'
 import { money } from './money.js'
 
-interface DiscountContext {
+// ── Public interfaces ──────────────────────────────────────
+
+export interface DiscountContext {
   storeId: string
   customerId?: string
   customerEmail?: string
+  customerGroupIds?: string[]
+  regionId?: string
   items: DiscountItem[]
   subtotal: number
   shippingAmount?: number
 }
 
-interface DiscountItem {
+export interface DiscountItem {
+  id: string
   productId: string
   variantId?: string
   categoryIds?: string[]
+  collectionIds?: string[]
   quantity: number
   unitPrice: number
   totalPrice: number
 }
 
-interface DiscountResult {
+export interface DiscountResult {
   isValid: boolean
   discountAmount: number
   freeShipping: boolean
   appliedDiscount?: AppliedDiscount
+  /** Per-item breakdown: itemId → discount cents */
+  itemDiscounts: Record<string, number>
   errors: string[]
 }
 
-interface AppliedDiscount {
+export interface AppliedDiscount {
   id: string
   code: string
   name: string
@@ -37,18 +45,31 @@ interface AppliedDiscount {
   discountAmount: number
 }
 
+export interface CartDiscountResult {
+  totalDiscount: number
+  freeShipping: boolean
+  /** All discounts that were applied (may be >1 if combinable) */
+  appliedDiscounts: AppliedDiscount[]
+  /** Per-item breakdown: itemId → total discount */
+  itemDiscounts: Record<string, number>
+}
+
+// ── Engine ─────────────────────────────────────────────────
+
 /**
  * DiscountEngine
  *
- * Validates and applies discount codes to orders.
- * Supports percentage, fixed amount, free shipping, and buy X get Y discounts.
+ * Validates and applies discount codes + automatic discounts to carts.
+ * Supports percentage, fixed amount, free shipping, and buy X get Y.
+ * Handles combinability, campaign budgets, customer groups, and regions.
  */
 export class DiscountEngine {
+  // ── Single code validation ───────────────────────────────
+
   /**
-   * Apply a discount code to a cart/order
+   * Validate and calculate a single coupon code
    */
   async applyDiscount(code: string, context: DiscountContext): Promise<DiscountResult> {
-    // Find the discount
     const discount = await Discount.query()
       .where('code', code.toUpperCase())
       .where('storeId', context.storeId)
@@ -56,27 +77,25 @@ export class DiscountEngine {
       .first()
 
     if (!discount) {
-      return {
-        isValid: false,
-        discountAmount: 0,
-        freeShipping: false,
-        errors: ['Invalid discount code'],
-      }
+      return this.invalid(['Invalid discount code'])
     }
 
-    // Validate discount
-    const validationErrors = await this.validateDiscount(discount, context)
-    if (validationErrors.length > 0) {
-      return {
-        isValid: false,
-        discountAmount: 0,
-        freeShipping: false,
-        errors: validationErrors,
-      }
+    return this.evaluateDiscount(discount, context)
+  }
+
+  /**
+   * Evaluate a single discount against context
+   */
+  async evaluateDiscount(discount: Discount, context: DiscountContext): Promise<DiscountResult> {
+    const errors = await this.validateDiscount(discount, context)
+    if (errors.length > 0) {
+      return this.invalid(errors)
     }
 
-    // Calculate discount
-    const { discountAmount, freeShipping } = this.calculateDiscount(discount, context)
+    const { discountAmount, freeShipping, itemDiscounts } = this.calculateDiscount(
+      discount,
+      context
+    )
 
     return {
       isValid: true,
@@ -90,92 +109,162 @@ export class DiscountEngine {
         value: discount.value,
         discountAmount,
       },
+      itemDiscounts,
       errors: [],
     }
   }
 
-  /**
-   * Validate a discount against context
-   */
-  private async validateDiscount(
-    discount: Discount,
-    context: DiscountContext
-  ): Promise<string[]> {
-    const errors: string[] = []
+  // ── Full cart evaluation (auto + coupon + stacking) ──────
 
-    // Check date range
-    if (discount.startsAt && discount.startsAt > DateTime.now()) {
-      errors.push('This discount is not yet active')
+  /**
+   * Apply all eligible discounts to a cart.
+   * 1. Gather automatic discounts
+   * 2. Add the manual coupon code (if any)
+   * 3. Resolve combinability / pick best
+   * 4. Return aggregated result
+   */
+  async applyToCart(
+    context: DiscountContext,
+    couponCode?: string | null
+  ): Promise<CartDiscountResult> {
+    const candidates: Array<{ discount: Discount; result: DiscountResult }> = []
+
+    // 1. Evaluate automatic discounts
+    const autoDiscounts = await this.getAutomaticDiscounts(context.storeId)
+    for (const disc of autoDiscounts) {
+      const result = await this.evaluateDiscount(disc, context)
+      if (result.isValid && result.discountAmount > 0) {
+        candidates.push({ discount: disc, result })
+      }
     }
 
-    if (discount.endsAt && discount.endsAt < DateTime.now()) {
+    // 2. Evaluate coupon code (if provided)
+    if (couponCode) {
+      const couponDiscount = await Discount.query()
+        .where('code', couponCode.toUpperCase())
+        .where('storeId', context.storeId)
+        .where('isActive', true)
+        .first()
+
+      if (couponDiscount) {
+        const result = await this.evaluateDiscount(couponDiscount, context)
+        if (result.isValid && result.discountAmount > 0) {
+          candidates.push({ discount: couponDiscount, result })
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      return { totalDiscount: 0, freeShipping: false, appliedDiscounts: [], itemDiscounts: {} }
+    }
+
+    // 3. Sort by priority (lower = higher priority), then by discount amount desc
+    candidates.sort((a, b) => {
+      if (a.discount.priority !== b.discount.priority) {
+        return a.discount.priority - b.discount.priority
+      }
+      return b.result.discountAmount - a.result.discountAmount
+    })
+
+    // 4. Resolve combinability
+    return this.resolveCombinability(candidates, context)
+  }
+
+  // ── Validation ───────────────────────────────────────────
+
+  private async validateDiscount(discount: Discount, context: DiscountContext): Promise<string[]> {
+    const errors: string[] = []
+
+    // Date range
+    const now = DateTime.now()
+    if (discount.startsAt && discount.startsAt > now) {
+      errors.push('This discount is not yet active')
+    }
+    if (discount.endsAt && discount.endsAt < now) {
       errors.push('This discount has expired')
     }
 
-    // Check usage limits
+    // Global usage limit
     if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
       errors.push('This discount has reached its usage limit')
     }
 
-    // Check per-customer usage
+    // Per-customer usage
     if (discount.usageLimitPerCustomer && context.customerId) {
-      const customerUsage = await this.getCustomerUsageCount(
-        discount.id,
-        context.customerId
-      )
-      if (customerUsage >= discount.usageLimitPerCustomer) {
+      const usage = await this.getCustomerUsageCount(discount.id, context.customerId)
+      if (usage >= discount.usageLimitPerCustomer) {
         errors.push('You have already used this discount the maximum number of times')
       }
     }
 
-    // Check minimum order amount
+    // Campaign budget
+    if (discount.budgetType && discount.budgetLimit) {
+      if (discount.budgetType === 'usage' && discount.budgetUsed >= discount.budgetLimit) {
+        errors.push('This campaign has reached its budget limit')
+      }
+      if (discount.budgetType === 'spend' && discount.budgetUsed >= discount.budgetLimit) {
+        errors.push('This campaign has reached its spend limit')
+      }
+    }
+
+    // Minimum order amount
     if (discount.minimumOrderAmount && context.subtotal < discount.minimumOrderAmount) {
-      errors.push(
-        `Minimum order amount of ${money.format(discount.minimumOrderAmount)} required`
-      )
+      errors.push(`Minimum order amount of ${money.format(discount.minimumOrderAmount)} required`)
     }
 
-    // Check maximum order amount
+    // Maximum order amount
     if (discount.maximumOrderAmount && context.subtotal > discount.maximumOrderAmount) {
-      errors.push(
-        `Maximum order amount of ${money.format(discount.maximumOrderAmount)} exceeded`
-      )
+      errors.push(`Maximum order amount of ${money.format(discount.maximumOrderAmount)} exceeded`)
     }
 
-    // Check minimum quantity
-    const totalQuantity = context.items.reduce((sum, item) => sum + item.quantity, 0)
-    if (discount.minimumQuantity && totalQuantity < discount.minimumQuantity) {
+    // Minimum quantity
+    const totalQty = context.items.reduce((sum, i) => sum + i.quantity, 0)
+    if (discount.minimumQuantity && totalQty < discount.minimumQuantity) {
       errors.push(`Minimum ${discount.minimumQuantity} items required`)
     }
 
-    // Check product restrictions
+    // Product restrictions
     if (discount.appliesTo === 'specific_products' && discount.productIds) {
-      const hasEligibleProduct = context.items.some((item) =>
-        discount.productIds!.includes(item.productId)
-      )
-      if (!hasEligibleProduct) {
+      const hasEligible = context.items.some((i) => discount.productIds!.includes(i.productId))
+      if (!hasEligible) {
         errors.push('No eligible products in cart for this discount')
       }
     }
 
-    // Check category restrictions
+    // Category restrictions
     if (discount.appliesTo === 'specific_categories' && discount.categoryIds) {
-      const hasEligibleCategory = context.items.some((item) =>
-        item.categoryIds?.some((catId) => discount.categoryIds!.includes(catId))
+      const hasEligible = context.items.some((i) =>
+        i.categoryIds?.some((cid) => discount.categoryIds!.includes(cid))
       )
-      if (!hasEligibleCategory) {
+      if (!hasEligible) {
         errors.push('No eligible products in cart for this discount')
       }
     }
 
-    // Check customer restrictions
+    // Customer restrictions
     if (discount.customerIds && discount.customerIds.length > 0) {
       if (!context.customerId || !discount.customerIds.includes(context.customerId)) {
         errors.push('This discount is not available for your account')
       }
     }
 
-    // Check first order only
+    // Customer group restrictions
+    if (discount.customerGroupIds && discount.customerGroupIds.length > 0) {
+      const customerGroups = context.customerGroupIds || []
+      const hasGroup = discount.customerGroupIds.some((gid) => customerGroups.includes(gid))
+      if (!hasGroup) {
+        errors.push('This discount is not available for your customer group')
+      }
+    }
+
+    // Region restrictions
+    if (discount.regionIds && discount.regionIds.length > 0) {
+      if (!context.regionId || !discount.regionIds.includes(context.regionId)) {
+        errors.push('This discount is not available in your region')
+      }
+    }
+
+    // First order only
     if (discount.firstOrderOnly && context.customerId) {
       const hasOrders = await this.customerHasOrders(context.customerId)
       if (hasOrders) {
@@ -186,127 +275,255 @@ export class DiscountEngine {
     return errors
   }
 
-  /**
-   * Calculate discount amount
-   */
+  // ── Calculation ──────────────────────────────────────────
+
   private calculateDiscount(
     discount: Discount,
     context: DiscountContext
-  ): { discountAmount: number; freeShipping: boolean } {
+  ): { discountAmount: number; freeShipping: boolean; itemDiscounts: Record<string, number> } {
     let discountAmount = 0
     let freeShipping = false
+    const itemDiscounts: Record<string, number> = {}
 
-    // Get eligible amount based on applies_to
-    const eligibleAmount = this.getEligibleAmount(discount, context)
+    const eligibleItems = this.getEligibleItems(discount, context)
+    const eligibleAmount = eligibleItems.reduce((sum, i) => money.add(sum, i.totalPrice), 0)
 
     switch (discount.type) {
-      case 'percentage':
+      case 'percentage': {
         discountAmount = money.percentage(eligibleAmount, discount.value)
+        // Distribute proportionally across eligible items
+        this.distributeProportionally(eligibleItems, discountAmount, itemDiscounts)
         break
+      }
 
-      case 'fixed_amount':
+      case 'fixed_amount': {
         discountAmount = Math.min(discount.value, eligibleAmount)
+        this.distributeProportionally(eligibleItems, discountAmount, itemDiscounts)
         break
+      }
 
-      case 'free_shipping':
+      case 'free_shipping': {
         freeShipping = true
         discountAmount = context.shippingAmount || 0
         break
+      }
 
-      case 'buy_x_get_y':
-        discountAmount = this.calculateBuyXGetY(discount, context)
+      case 'buy_x_get_y': {
+        const bxgy = this.calculateBuyXGetY(discount, context)
+        discountAmount = bxgy.amount
+        Object.assign(itemDiscounts, bxgy.itemDiscounts)
         break
+      }
     }
 
     // Apply maximum discount cap
     if (discount.maximumDiscountAmount && discountAmount > discount.maximumDiscountAmount) {
+      const ratio = discount.maximumDiscountAmount / discountAmount
       discountAmount = discount.maximumDiscountAmount
+      // Scale item discounts proportionally
+      for (const id of Object.keys(itemDiscounts)) {
+        itemDiscounts[id] = money.round(itemDiscounts[id] * ratio)
+      }
     }
 
-    return { discountAmount: money.round(discountAmount), freeShipping }
+    return { discountAmount: money.round(discountAmount), freeShipping, itemDiscounts }
   }
 
   /**
-   * Get eligible amount for discount calculation
+   * Get items eligible for this discount based on appliesTo
    */
-  private getEligibleAmount(discount: Discount, context: DiscountContext): number {
+  private getEligibleItems(discount: Discount, context: DiscountContext): DiscountItem[] {
     if (discount.appliesTo === 'all') {
-      return context.subtotal
+      return context.items
     }
 
     if (discount.appliesTo === 'specific_products' && discount.productIds) {
-      return context.items
-        .filter((item) => discount.productIds!.includes(item.productId))
-        .reduce((sum, item) => money.add(sum, item.totalPrice), 0)
+      return context.items.filter((i) => discount.productIds!.includes(i.productId))
     }
 
     if (discount.appliesTo === 'specific_categories' && discount.categoryIds) {
-      return context.items
-        .filter((item) =>
-          item.categoryIds?.some((catId) => discount.categoryIds!.includes(catId))
-        )
-        .reduce((sum, item) => money.add(sum, item.totalPrice), 0)
-    }
-
-    return context.subtotal
-  }
-
-  /**
-   * Calculate buy X get Y discount
-   */
-  private calculateBuyXGetY(discount: Discount, context: DiscountContext): number {
-    if (!discount.buyQuantity || !discount.getQuantity) {
-      return 0
-    }
-
-    // Find eligible items
-    let eligibleItems = context.items
-    if (discount.appliesTo === 'specific_products' && discount.productIds) {
-      eligibleItems = eligibleItems.filter((item) =>
-        discount.productIds!.includes(item.productId)
+      return context.items.filter((i) =>
+        i.categoryIds?.some((cid) => discount.categoryIds!.includes(cid))
       )
     }
 
-    // Calculate how many free items
-    const totalQuantity = eligibleItems.reduce((sum, item) => sum + item.quantity, 0)
-    const setsOfBuyX = Math.floor(totalQuantity / discount.buyQuantity)
-    const freeItems = setsOfBuyX * discount.getQuantity
-
-    // Get the cheapest items as free
-    const allItems = eligibleItems.flatMap((item) =>
-      Array(item.quantity).fill(item.unitPrice)
-    )
-    allItems.sort((a, b) => a - b)
-
-    const freeItemPrices = allItems.slice(0, freeItems)
-    const freeAmount = freeItemPrices.reduce((sum, price) => money.add(sum, price), 0)
-
-    // Apply get discount percentage (default 100% = free)
-    const getDiscount = discount.getDiscountPercentage || 100
-    return money.percentage(freeAmount, getDiscount)
+    return context.items
   }
 
   /**
-   * Get customer's usage count for a discount
+   * Distribute a total discount amount proportionally across items
    */
-  private async getCustomerUsageCount(
-    discountId: string,
-    customerId: string
-  ): Promise<number> {
+  private distributeProportionally(
+    items: DiscountItem[],
+    totalDiscount: number,
+    out: Record<string, number>
+  ): void {
+    if (items.length === 0 || totalDiscount <= 0) return
+
+    const totalPrice = items.reduce((sum, i) => money.add(sum, i.totalPrice), 0)
+    if (totalPrice <= 0) return
+
+    let remaining = totalDiscount
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx]
+      if (idx === items.length - 1) {
+        // Last item gets the remainder to avoid rounding errors
+        out[item.id] = money.add(out[item.id] || 0, money.round(remaining))
+      } else {
+        const share = money.round((item.totalPrice / totalPrice) * totalDiscount)
+        out[item.id] = money.add(out[item.id] || 0, share)
+        remaining = money.subtract(remaining, share)
+      }
+    }
+  }
+
+  /**
+   * Calculate buy X get Y discount with per-item tracking
+   */
+  private calculateBuyXGetY(
+    discount: Discount,
+    context: DiscountContext
+  ): { amount: number; itemDiscounts: Record<string, number> } {
+    const itemDiscounts: Record<string, number> = {}
+
+    if (!discount.buyQuantity || !discount.getQuantity) {
+      return { amount: 0, itemDiscounts }
+    }
+
+    const eligibleItems = this.getEligibleItems(discount, context)
+
+    // Flatten to individual units: { itemId, unitPrice }
+    const units: Array<{ itemId: string; unitPrice: number }> = []
+    for (const item of eligibleItems) {
+      for (let i = 0; i < item.quantity; i++) {
+        units.push({ itemId: item.id, unitPrice: item.unitPrice })
+      }
+    }
+
+    const totalQty = units.length
+    const requiredQty = discount.buyQuantity + discount.getQuantity
+    const sets = Math.floor(totalQty / requiredQty)
+    const freeCount = sets * discount.getQuantity
+
+    if (freeCount <= 0) {
+      return { amount: 0, itemDiscounts }
+    }
+
+    // Sort by price ascending — cheapest items are the "free" ones
+    const sorted = [...units].sort((a, b) => a.unitPrice - b.unitPrice)
+    const freeUnits = sorted.slice(0, freeCount)
+
+    const discountPct = discount.getDiscountPercentage || 100
+    let totalAmount = 0
+
+    for (const unit of freeUnits) {
+      const discountPerUnit = money.percentage(unit.unitPrice, discountPct)
+      itemDiscounts[unit.itemId] = money.add(itemDiscounts[unit.itemId] || 0, discountPerUnit)
+      totalAmount = money.add(totalAmount, discountPerUnit)
+    }
+
+    return { amount: totalAmount, itemDiscounts }
+  }
+
+  // ── Combinability resolver ───────────────────────────────
+
+  private resolveCombinability(
+    candidates: Array<{ discount: Discount; result: DiscountResult }>,
+    _context: DiscountContext
+  ): CartDiscountResult {
+    let totalDiscount = 0
+    let freeShipping = false
+    const appliedDiscounts: AppliedDiscount[] = []
+    const itemDiscounts: Record<string, number> = {}
+
+    // Separate combinable vs non-combinable
+    const combinable = candidates.filter((c) => c.discount.isCombinable)
+    const nonCombinable = candidates.filter((c) => !c.discount.isCombinable)
+
+    // Pick the best non-combinable (if any)
+    const bestNonCombinable = nonCombinable.length > 0 ? nonCombinable[0] : null
+
+    // Calculate total from combinable discounts
+    let combinableTotal = 0
+    for (const c of combinable) {
+      combinableTotal = money.add(combinableTotal, c.result.discountAmount)
+    }
+
+    // If the best non-combinable beats all combinable together, use it alone
+    if (bestNonCombinable && bestNonCombinable.result.discountAmount >= combinableTotal) {
+      totalDiscount = bestNonCombinable.result.discountAmount
+      freeShipping = bestNonCombinable.result.freeShipping
+      appliedDiscounts.push(bestNonCombinable.result.appliedDiscount!)
+      Object.assign(itemDiscounts, bestNonCombinable.result.itemDiscounts)
+    } else if (combinable.length > 0) {
+      // Use all combinable discounts
+      for (const c of combinable) {
+        totalDiscount = money.add(totalDiscount, c.result.discountAmount)
+        freeShipping = freeShipping || c.result.freeShipping
+        appliedDiscounts.push(c.result.appliedDiscount!)
+        // Merge per-item discounts
+        for (const [itemId, amount] of Object.entries(c.result.itemDiscounts)) {
+          itemDiscounts[itemId] = money.add(itemDiscounts[itemId] || 0, amount)
+        }
+      }
+    } else if (bestNonCombinable) {
+      // Only non-combinable available
+      totalDiscount = bestNonCombinable.result.discountAmount
+      freeShipping = bestNonCombinable.result.freeShipping
+      appliedDiscounts.push(bestNonCombinable.result.appliedDiscount!)
+      Object.assign(itemDiscounts, bestNonCombinable.result.itemDiscounts)
+    }
+
+    return {
+      totalDiscount: money.round(totalDiscount),
+      freeShipping,
+      appliedDiscounts,
+      itemDiscounts,
+    }
+  }
+
+  // ── Automatic discounts ──────────────────────────────────
+
+  /**
+   * Fetch all active automatic discounts for a store
+   */
+  private async getAutomaticDiscounts(storeId: string): Promise<Discount[]> {
+    const now = DateTime.now().toSQL()
+
+    return Discount.query()
+      .where('storeId', storeId)
+      .where('isActive', true)
+      .where('isAutomatic', true)
+      .where((q) => {
+        q.whereNull('startsAt').orWhere('startsAt', '<=', now!)
+      })
+      .where((q) => {
+        q.whereNull('endsAt').orWhere('endsAt', '>=', now!)
+      })
+      .where((q) => {
+        q.whereNull('usageLimit').orWhereRaw('usage_count < usage_limit')
+      })
+      .orderBy('priority', 'asc')
+      .exec()
+  }
+
+  // ── Usage tracking ───────────────────────────────────────
+
+  /**
+   * Get how many times a customer used a specific discount
+   */
+  private async getCustomerUsageCount(discountId: string, customerId: string): Promise<number> {
     const { default: Order } = await import('#models/order')
-    const count = await Order.query()
+    const row = await Order.query()
       .where('customerId', customerId)
       .where('discountId', discountId)
       .whereNot('status', 'cancelled')
       .count('* as total')
       .first()
 
-    return Number(count?.$extras.total || 0)
+    return Number(row?.$extras.total || 0)
   }
 
-  /**
-   * Check if customer has any previous orders
-   */
   private async customerHasOrders(customerId: string): Promise<boolean> {
     const { default: Order } = await import('#models/order')
     const order = await Order.query()
@@ -318,66 +535,37 @@ export class DiscountEngine {
   }
 
   /**
-   * Increment discount usage count
+   * Increment usage count + campaign budget after a successful order
    */
-  async incrementUsage(discountId: string): Promise<void> {
+  async incrementUsage(discountId: string, orderTotal?: number): Promise<void> {
     const discount = await Discount.find(discountId)
-    if (discount) {
-      discount.usageCount = (discount.usageCount || 0) + 1
-      await discount.save()
-    }
-  }
+    if (!discount) return
 
-  /**
-   * Validate multiple discount codes (for stacking)
-   */
-  async validateMultiple(
-    codes: string[],
-    context: DiscountContext
-  ): Promise<DiscountResult[]> {
-    const results: DiscountResult[] = []
+    discount.usageCount = (discount.usageCount || 0) + 1
 
-    for (const code of codes) {
-      const result = await this.applyDiscount(code, context)
-      results.push(result)
+    // Update campaign budget
+    if (discount.budgetType === 'usage') {
+      discount.budgetUsed = (discount.budgetUsed || 0) + 1
+    } else if (discount.budgetType === 'spend' && orderTotal) {
+      discount.budgetUsed = money.add(discount.budgetUsed || 0, orderTotal)
     }
 
-    return results
+    await discount.save()
   }
 
-  /**
-   * Find best discount from multiple codes
-   */
-  async findBestDiscount(
-    codes: string[],
-    context: DiscountContext
-  ): Promise<DiscountResult | null> {
-    const results = await this.validateMultiple(codes, context)
-    const validResults = results.filter((r) => r.isValid)
-
-    if (validResults.length === 0) {
-      return null
-    }
-
-    // Return the one with highest discount amount
-    return validResults.reduce((best, current) =>
-      current.discountAmount > best.discountAmount ? current : best
-    )
-  }
+  // ── Public convenience methods ───────────────────────────
 
   /**
-   * Get available discounts for a customer
+   * Get available public discounts for a customer (for display)
    */
-  async getAvailableDiscounts(
-    storeId: string,
-    customerId?: string
-  ): Promise<Discount[]> {
+  async getAvailableDiscounts(storeId: string, customerId?: string): Promise<Discount[]> {
     const now = DateTime.now().toSQL()
 
     const query = Discount.query()
       .where('storeId', storeId)
       .where('isActive', true)
       .where('isPublic', true)
+      .where('isAutomatic', false)
       .where((q) => {
         q.whereNull('startsAt').orWhere('startsAt', '<=', now!)
       })
@@ -388,34 +576,26 @@ export class DiscountEngine {
         q.whereNull('usageLimit').orWhereRaw('usage_count < usage_limit')
       })
 
-    // Filter by customer if provided
     if (customerId) {
       query.where((q) => {
-        q.whereNull('customerIds')
-          .orWhereRaw('? = ANY(customer_ids)', [customerId])
+        q.whereNull('customerIds').orWhereRaw('? = ANY(customer_ids)', [customerId])
       })
     }
 
-    return await query.orderBy('value', 'desc').exec()
+    return query.orderBy('priority', 'asc').exec()
   }
 
-  /**
-   * Auto-apply best available discount
-   */
-  async autoApply(context: DiscountContext): Promise<DiscountResult | null> {
-    const discounts = await this.getAvailableDiscounts(
-      context.storeId,
-      context.customerId
-    )
+  // ── Helpers ──────────────────────────────────────────────
 
-    if (discounts.length === 0) {
-      return null
+  private invalid(errors: string[]): DiscountResult {
+    return {
+      isValid: false,
+      discountAmount: 0,
+      freeShipping: false,
+      itemDiscounts: {},
+      errors,
     }
-
-    const codes = discounts.map((d) => d.code)
-    return this.findBestDiscount(codes, context)
   }
 }
 
-// Singleton instance
 export const discountEngine = new DiscountEngine()

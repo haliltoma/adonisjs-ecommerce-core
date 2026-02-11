@@ -3,7 +3,6 @@ import { useState } from 'react'
 import {
   Download,
   FileSpreadsheet,
-  FileText,
   CheckCircle2,
 } from 'lucide-react'
 
@@ -27,7 +26,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 
 export default function InventoryExport() {
-  const [format, setFormat] = useState('csv')
   const [includeFields, setIncludeFields] = useState({
     productTitle: true,
     variantTitle: true,
@@ -37,6 +35,8 @@ export default function InventoryExport() {
     price: false,
     barcode: false,
   })
+  const [stockFilter, setStockFilter] = useState('all')
+  const [exporting, setExporting] = useState(false)
 
   const toggleField = (field: string) => {
     setIncludeFields((prev) => ({
@@ -55,6 +55,54 @@ export default function InventoryExport() {
     { key: 'barcode', label: 'Barcode' },
   ]
 
+  const handleExport = () => {
+    setExporting(true)
+    const selectedFields = Object.entries(includeFields)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/admin/inventory/export/download'
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]')
+    if (csrfMeta) {
+      const csrfInput = document.createElement('input')
+      csrfInput.type = 'hidden'
+      csrfInput.name = '_csrf'
+      csrfInput.value = csrfMeta.getAttribute('content') || ''
+      form.appendChild(csrfInput)
+    }
+
+    const typeInput = document.createElement('input')
+    typeInput.type = 'hidden'
+    typeInput.name = 'type'
+    typeInput.value = 'inventory'
+    form.appendChild(typeInput)
+
+    selectedFields.forEach((field) => {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = 'fields[]'
+      input.value = field
+      form.appendChild(input)
+    })
+
+    if (stockFilter !== 'all') {
+      const filterInput = document.createElement('input')
+      filterInput.type = 'hidden'
+      filterInput.name = 'filters[stockStatus]'
+      filterInput.value = stockFilter
+      form.appendChild(filterInput)
+    }
+
+    document.body.appendChild(form)
+    form.submit()
+    document.body.removeChild(form)
+
+    setTimeout(() => setExporting(false), 2000)
+  }
+
   return (
     <AdminLayout
       title="Export Inventory"
@@ -63,54 +111,6 @@ export default function InventoryExport() {
       <Head title="Export Inventory - Admin" />
 
       <div className="animate-fade-in mx-auto max-w-2xl space-y-6">
-        {/* Format Selection */}
-        <Card className="animate-fade-up">
-          <CardHeader>
-            <CardTitle className="font-display text-lg">Export Format</CardTitle>
-            <CardDescription>
-              Choose the file format for your inventory export
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <button
-                onClick={() => setFormat('csv')}
-                className={`flex items-center gap-3 rounded-lg border-2 p-4 text-left transition-colors ${
-                  format === 'csv'
-                    ? 'border-accent bg-accent/5'
-                    : 'border-muted hover:border-muted-foreground/25'
-                }`}
-              >
-                <FileSpreadsheet className={`h-8 w-8 ${format === 'csv' ? 'text-accent' : 'text-muted-foreground'}`} />
-                <div>
-                  <div className="font-medium">CSV</div>
-                  <div className="text-muted-foreground text-sm">
-                    Comma-separated values, compatible with Excel
-                  </div>
-                </div>
-                {format === 'csv' && <CheckCircle2 className="text-accent ml-auto h-5 w-5" />}
-              </button>
-              <button
-                onClick={() => setFormat('xlsx')}
-                className={`flex items-center gap-3 rounded-lg border-2 p-4 text-left transition-colors ${
-                  format === 'xlsx'
-                    ? 'border-accent bg-accent/5'
-                    : 'border-muted hover:border-muted-foreground/25'
-                }`}
-              >
-                <FileText className={`h-8 w-8 ${format === 'xlsx' ? 'text-accent' : 'text-muted-foreground'}`} />
-                <div>
-                  <div className="font-medium">XLSX</div>
-                  <div className="text-muted-foreground text-sm">
-                    Excel spreadsheet format with formatting
-                  </div>
-                </div>
-                {format === 'xlsx' && <CheckCircle2 className="text-accent ml-auto h-5 w-5" />}
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Fields to Include */}
         <Card className="animate-fade-up delay-100">
           <CardHeader>
@@ -149,7 +149,7 @@ export default function InventoryExport() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wider text-muted-foreground">Stock Status</Label>
-                <Select defaultValue="all">
+                <Select value={stockFilter} onValueChange={setStockFilter}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select stock status" />
                   </SelectTrigger>
@@ -167,9 +167,9 @@ export default function InventoryExport() {
 
         {/* Export Button */}
         <div className="animate-fade-up delay-300 flex justify-end">
-          <Button size="lg" disabled>
+          <Button size="lg" onClick={handleExport} disabled={exporting}>
             <Download className="mr-2 h-4 w-4" />
-            Export Inventory
+            {exporting ? 'Preparing...' : 'Export Inventory'}
           </Button>
         </div>
       </div>

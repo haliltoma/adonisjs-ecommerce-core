@@ -3,8 +3,10 @@ import { Head, Link, useForm } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from '@/hooks/use-translation'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const { data, setData, post, processing, errors } = useForm({
     email: '',
   })
@@ -27,10 +29,10 @@ export default function ForgotPassword() {
           </h1>
           <div className="animate-fade-up delay-200 mt-4 h-px w-16 bg-accent opacity-60" />
           <p className="animate-fade-up delay-300 mt-6 text-lg leading-relaxed opacity-70">
-            No worries -- we all forget sometimes. Let us help you get back to your account.
+            {t('storefront.forgotPasswordPage.brandTagline')}
           </p>
           <p className="animate-fade-up delay-400 mt-10 text-xs uppercase tracking-[0.25em] opacity-40">
-            Account Recovery
+            {t('storefront.forgotPasswordPage.accountRecovery')}
           </p>
         </div>
       </div>
@@ -43,17 +45,17 @@ export default function ForgotPassword() {
             <h1 className="font-display text-3xl tracking-tight text-foreground">
               AdonisCommerce
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">Account Recovery</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t('storefront.forgotPasswordPage.accountRecovery')}</p>
           </div>
 
           {/* Form header */}
           <div className="animate-fade-up delay-100">
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Recovery</span>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.forgotPasswordPage.recoveryLabel')}</span>
             <h2 className="font-display text-2xl tracking-tight text-foreground mt-2">
-              Forgot Password
+              {t('storefront.forgotPasswordPage.title')}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Enter your email address and we'll send you a link to reset your password.
+              {t('storefront.forgotPasswordPage.description')}
             </p>
           </div>
 
@@ -61,12 +63,12 @@ export default function ForgotPassword() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="animate-fade-up delay-200 space-y-2">
               <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">
-                Email
+                {t('storefront.forgotPasswordPage.email')}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('storefront.forgotPasswordPage.emailPlaceholder')}
                 value={data.email}
                 onChange={(e) => setData('email', e.target.value)}
                 required
@@ -85,15 +87,15 @@ export default function ForgotPassword() {
                 className="h-11 w-full text-sm font-medium tracking-wide"
                 disabled={processing}
               >
-                {processing ? 'Sending...' : 'Send Reset Link'}
+                {processing ? t('storefront.forgotPasswordPage.sending') : t('storefront.forgotPasswordPage.sendResetLink')}
               </Button>
             </div>
 
             <div className="animate-fade-up delay-400 border-t border-border/40 pt-5 text-center">
               <p className="text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {t('storefront.forgotPasswordPage.rememberPassword')}{' '}
                 <Link href="/account/login" className="text-accent hover:underline">
-                  Sign in
+                  {t('storefront.forgotPasswordPage.signIn')}
                 </Link>
               </p>
             </div>

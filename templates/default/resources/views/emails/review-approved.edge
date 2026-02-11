@@ -1,0 +1,13 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Your Review Has Been Published!</h1>
+  <p>Hi {{ customerName }},</p>
+  <p>Thank you for reviewing <strong>{{ productName }}</strong>. Your {{ rating }}-star review has been approved and is now live on our store.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ productUrl }}" class="btn">View Your Review</a>
+  </p>
+
+  <p class="muted">Your feedback helps other customers make informed decisions. Thank you!</p>
+@end

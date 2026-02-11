@@ -62,6 +62,15 @@ export default class Customer extends BaseModel {
   @column()
   declare metadata: Record<string, unknown>
 
+  @column()
+  declare oauthProvider: string | null
+
+  @column()
+  declare oauthProviderId: string | null
+
+  @column()
+  declare oauthAvatarUrl: string | null
+
   @column.dateTime()
   declare emailVerifiedAt: DateTime | null
 

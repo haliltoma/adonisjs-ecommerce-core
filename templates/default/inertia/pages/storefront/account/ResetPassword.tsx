@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react'
 
+import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function ResetPassword({ token }: Props) {
+  const { t } = useTranslation()
   const { data, setData, post, processing, errors } = useForm({
     token,
     password: '',
@@ -33,10 +35,10 @@ export default function ResetPassword({ token }: Props) {
           </h1>
           <div className="animate-fade-up delay-200 mt-4 h-px w-16 bg-accent opacity-60" />
           <p className="animate-fade-up delay-300 mt-6 text-lg leading-relaxed opacity-70">
-            Almost there. Choose a strong new password and you'll be back to shopping in no time.
+            {t('storefront.resetPasswordPage.brandTagline')}
           </p>
           <p className="animate-fade-up delay-400 mt-10 text-xs uppercase tracking-[0.25em] opacity-40">
-            Secure Your Account
+            {t('storefront.resetPasswordPage.secureAccount')}
           </p>
         </div>
       </div>
@@ -49,17 +51,17 @@ export default function ResetPassword({ token }: Props) {
             <h1 className="font-display text-3xl tracking-tight text-foreground">
               AdonisCommerce
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">Secure Your Account</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t('storefront.resetPasswordPage.secureAccount')}</p>
           </div>
 
           {/* Form header */}
           <div className="animate-fade-up delay-100">
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Security</span>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.resetPasswordPage.security')}</span>
             <h2 className="font-display text-2xl tracking-tight text-foreground mt-2">
-              Reset Password
+              {t('storefront.resetPasswordPage.title')}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Enter your new password below.
+              {t('storefront.resetPasswordPage.description')}
             </p>
           </div>
 
@@ -67,12 +69,12 @@ export default function ResetPassword({ token }: Props) {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="animate-fade-up delay-200 space-y-2">
               <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground">
-                New Password
+                {t('storefront.resetPasswordPage.newPassword')}
               </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t('storefront.resetPasswordPage.newPasswordPlaceholder')}
                 value={data.password}
                 onChange={(e) => setData('password', e.target.value)}
                 required
@@ -86,12 +88,12 @@ export default function ResetPassword({ token }: Props) {
 
             <div className="animate-fade-up delay-300 space-y-2">
               <Label htmlFor="passwordConfirmation" className="text-xs uppercase tracking-wider text-muted-foreground">
-                Confirm Password
+                {t('storefront.resetPasswordPage.confirmPassword')}
               </Label>
               <Input
                 id="passwordConfirmation"
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t('storefront.resetPasswordPage.confirmPasswordPlaceholder')}
                 value={data.passwordConfirmation}
                 onChange={(e) => setData('passwordConfirmation', e.target.value)}
                 required
@@ -105,7 +107,7 @@ export default function ResetPassword({ token }: Props) {
                 className="h-11 w-full text-sm font-medium tracking-wide"
                 disabled={processing}
               >
-                {processing ? 'Resetting...' : 'Reset Password'}
+                {processing ? t('storefront.resetPasswordPage.resetting') : t('storefront.resetPasswordPage.resetPassword')}
               </Button>
             </div>
           </form>

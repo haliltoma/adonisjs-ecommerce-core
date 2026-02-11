@@ -18,8 +18,18 @@ export default class AdminAuthMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     const { session, response, request } = ctx
 
-    // Get admin ID from session
-    const adminId = session?.get('adminId')
+    // Try to restore from remember me token if session lacks adminId
+    let adminId = session?.get('adminId')
+
+    if (!adminId) {
+      try {
+        await ctx.auth.use('web').check()
+        if (ctx.auth.use('web').isAuthenticated && ctx.auth.use('web').user) {
+          adminId = ctx.auth.use('web').user!.id
+          session?.put('adminId', adminId)
+        }
+      } catch {}
+    }
 
     if (!adminId) {
       // For API requests, return JSON error

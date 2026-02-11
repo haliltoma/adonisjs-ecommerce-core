@@ -6,6 +6,9 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  server: {
+    allowedHosts: true,
+  },
   plugins: [
     adonisjs({
       entrypoints: ['inertia/app/app.tsx', 'inertia/css/app.css'],
@@ -19,5 +22,6 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, './inertia'),
     },
+    dedupe: ['react', 'react-dom'],
   },
 })

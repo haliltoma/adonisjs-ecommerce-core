@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react'
 import { useState } from 'react'
 import {
   Copy,
+  Download,
   Edit,
   MoreHorizontal,
   Package,
@@ -9,6 +10,7 @@ import {
   Search,
   Star,
   Trash,
+  Upload,
 } from 'lucide-react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -159,12 +161,36 @@ export default function ProductsIndex({
       title="Products"
       description={`Manage your ${products.meta.total} products`}
       actions={
-        <Button asChild>
-          <Link href="/admin/products/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal className="mr-2 h-4 w-4" />
+                More
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href="/admin/products/import">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import Products
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/products/export">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Products
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button asChild>
+            <Link href="/admin/products/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Link>
+          </Button>
+        </div>
       }
     >
       <Head title="Products - Admin" />

@@ -1,8 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
+import vine from '@vinejs/vine'
 import ProductService from '#services/product_service'
 import CategoryService from '#services/category_service'
 import Product from '#models/product'
+import Collection from '#models/collection'
 import Review from '#models/review'
 
 export default class ProductsController {
@@ -117,6 +119,47 @@ export default class ProductsController {
     })
   }
 
+  async submitReview({ params, request, response, session, store }: HttpContext) {
+    const reviewValidator = vine.compile(
+      vine.object({
+        rating: vine.number().min(1).max(5),
+        title: vine.string().trim().maxLength(200).optional(),
+        content: vine.string().trim().minLength(1).maxLength(5000),
+      })
+    )
+
+    try {
+      const payload = await request.validateUsing(reviewValidator)
+
+      const product = await this.productService.findBySlug(store.id, params.slug)
+      if (!product || product.status !== 'active') {
+        session.flash('error', 'Product not found.')
+        return response.redirect().back()
+      }
+
+      const customerId = session.get('customer_id') || null
+
+      await Review.create({
+        storeId: store.id,
+        productId: product.id,
+        customerId,
+        rating: payload.rating,
+        title: payload.title || null,
+        content: payload.content,
+        status: 'pending',
+        isVerifiedPurchase: false,
+        helpfulCount: 0,
+        reportCount: 0,
+      })
+
+      session.flash('success', 'Your review has been submitted and is pending approval.')
+      return response.redirect().back()
+    } catch (error) {
+      session.flash('error', 'There was a problem submitting your review. Please try again.')
+      return response.redirect().back()
+    }
+  }
+
   async byCategory({ params, inertia, request, store }: HttpContext) {
     const storeId = store.id
     const category = await this.categoryService.findBySlug(storeId, params.slug)
@@ -185,6 +228,59 @@ export default class ProductsController {
         imageUrl: c.imageUrl,
       })),
     })
+  }
+
+  async showCollection({ params, inertia, request, store }: HttpContext) {
+    const collection = await Collection.query()
+      .where('storeId', store.id)
+      .where('slug', params.slug)
+      .where('isActive', true)
+      .first()
+
+    if (!collection) {
+      return inertia.render('storefront/errors/NotFound', { resource: 'Collection' })
+    }
+
+    const page = request.input('page', 1)
+    const sortBy = request.input('sort', 'newest')
+
+    const productsQuery = collection
+      .related('products')
+      .query()
+      .where('status', 'active')
+      .preload('images', (q) => q.orderBy('position', 'asc'))
+      .preload('variants', (q) => q.orderBy('position', 'asc'))
+
+    if (sortBy === 'price-asc') {
+      productsQuery.orderBy('price', 'asc')
+    } else if (sortBy === 'price-desc') {
+      productsQuery.orderBy('price', 'desc')
+    } else {
+      productsQuery.orderBy('createdAt', 'desc')
+    }
+
+    const products = await productsQuery.paginate(page, 24)
+
+    return inertia.render('storefront/products/Category', {
+      category: {
+        id: collection.id,
+        name: collection.name,
+        slug: collection.slug,
+        description: collection.description,
+        imageUrl: collection.imageUrl,
+      },
+      products: {
+        data: products.all().map((p) => this.serializeProductCard(p)),
+        meta: products.getMeta(),
+      },
+      filters: { sortBy },
+      breadcrumb: [{ name: 'Collections', slug: 'collections' }],
+      subcategories: [],
+    })
+  }
+
+  async compare({ inertia }: HttpContext) {
+    return inertia.render('storefront/Compare')
   }
 
   async allCategories({ inertia, store }: HttpContext) {

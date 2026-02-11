@@ -1,6 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 import ProductService from '#services/product_service'
 import CategoryService from '#services/category_service'
+import CustomerService from '#services/customer_service'
+import { SearchProvider } from '#contracts/search_provider'
 import Banner from '#models/banner'
 import Collection from '#models/collection'
 import { DateTime } from 'luxon'
@@ -8,10 +11,12 @@ import { DateTime } from 'luxon'
 export default class HomeController {
   private productService: ProductService
   private categoryService: CategoryService
+  private customerService: CustomerService
 
   constructor() {
     this.productService = new ProductService()
     this.categoryService = new CategoryService()
+    this.customerService = new CustomerService()
   }
 
   async index({ inertia, store }: HttpContext) {
@@ -135,6 +140,54 @@ export default class HomeController {
         slug: c.slug,
       })),
     })
+  }
+
+  async searchSuggestions({ request, response, store }: HttpContext) {
+    const query = request.input('q', '')
+
+    if (!query || query.length < 2) {
+      return response.json({ suggestions: [] })
+    }
+
+    try {
+      const search = await app.container.make(SearchProvider)
+      const suggestions = await search.getSuggestions(query, store.id, 6)
+      return response.json({ suggestions })
+    } catch {
+      return response.json({ suggestions: [] })
+    }
+  }
+
+  async subscribe({ request, response, session, store }: HttpContext) {
+    const { email } = request.only(['email'])
+
+    if (!email) {
+      session.flash('error', 'Email is required')
+      return response.redirect().back()
+    }
+
+    try {
+      const existing = await this.customerService.findByEmail(store.id, email)
+
+      if (existing) {
+        existing.acceptsMarketing = true
+        await existing.save()
+      } else {
+        await this.customerService.create({
+          storeId: store.id,
+          email,
+          firstName: '',
+          lastName: '',
+          acceptsMarketing: true,
+        })
+      }
+
+      session.flash('success', 'Thank you for subscribing!')
+      return response.redirect().back()
+    } catch (error) {
+      session.flash('error', 'Failed to subscribe. Please try again.')
+      return response.redirect().back()
+    }
   }
 
   private serializeProductCard(product: any) {

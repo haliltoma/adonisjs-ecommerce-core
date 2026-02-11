@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ArrowLeft, MapPin, Plus, Trash2 } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,6 +45,7 @@ interface Props {
 }
 
 export default function Addresses({ addresses }: Props) {
+  const { t } = useTranslation()
   const [showForm, setShowForm] = useState(false)
 
   const form = useForm({
@@ -72,7 +74,7 @@ export default function Addresses({ addresses }: Props) {
   }
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this address?')) {
+    if (confirm(t('storefront.addressesPage.deleteConfirm'))) {
       router.delete(`/account/addresses/${id}`)
     }
   }
@@ -86,33 +88,33 @@ export default function Addresses({ addresses }: Props) {
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
             <Link href="/account">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Account
+              {t('storefront.addressesPage.backToAccount')}
             </Link>
           </Button>
         </div>
 
         <div className="animate-fade-up delay-100 flex items-start justify-between">
           <div>
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Address Book</span>
-            <h1 className="font-display text-3xl tracking-tight mt-2">Addresses</h1>
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.addressesPage.addressBook')}</span>
+            <h1 className="font-display text-3xl tracking-tight mt-2">{t('storefront.addressesPage.title')}</h1>
             <p className="text-muted-foreground mt-2">
-              Manage your shipping and billing addresses.
+              {t('storefront.addressesPage.description')}
             </p>
           </div>
           <Dialog open={showForm} onOpenChange={setShowForm}>
             <DialogTrigger asChild>
               <Button className="h-11 tracking-wide">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Address
+                {t('storefront.addressesPage.addAddress')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-display text-xl tracking-tight">Add New Address</DialogTitle>
+                <DialogTitle className="font-display text-xl tracking-tight">{t('storefront.addressesPage.addNewAddress')}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Address Type</Label>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.addressType')}</Label>
                   <Select
                     value={form.data.type}
                     onValueChange={(value) => form.setData('type', value)}
@@ -121,8 +123,8 @@ export default function Addresses({ addresses }: Props) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="shipping">Shipping</SelectItem>
-                      <SelectItem value="billing">Billing</SelectItem>
+                      <SelectItem value="shipping">{t('storefront.addressesPage.shipping')}</SelectItem>
+                      <SelectItem value="billing">{t('storefront.addressesPage.billing')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -130,7 +132,7 @@ export default function Addresses({ addresses }: Props) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground">
-                      First Name
+                      {t('storefront.addressesPage.firstName')}
                     </Label>
                     <Input
                       id="firstName"
@@ -142,7 +144,7 @@ export default function Addresses({ addresses }: Props) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground">
-                      Last Name
+                      {t('storefront.addressesPage.lastName')}
                     </Label>
                     <Input
                       id="lastName"
@@ -156,7 +158,7 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="space-y-2">
                   <Label htmlFor="company" className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Company (optional)
+                    {t('storefront.addressesPage.company')}
                   </Label>
                   <Input
                     id="company"
@@ -168,7 +170,7 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="space-y-2">
                   <Label htmlFor="address1" className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Address Line 1
+                    {t('storefront.addressesPage.addressLine1')}
                   </Label>
                   <Input
                     id="address1"
@@ -181,7 +183,7 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="space-y-2">
                   <Label htmlFor="address2" className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Address Line 2 (optional)
+                    {t('storefront.addressesPage.addressLine2')}
                   </Label>
                   <Input
                     id="address2"
@@ -193,7 +195,7 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="city" className="text-xs uppercase tracking-wider text-muted-foreground">City</Label>
+                    <Label htmlFor="city" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.city')}</Label>
                     <Input
                       id="city"
                       value={form.data.city}
@@ -203,7 +205,7 @@ export default function Addresses({ addresses }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state" className="text-xs uppercase tracking-wider text-muted-foreground">State</Label>
+                    <Label htmlFor="state" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.state')}</Label>
                     <Input
                       id="state"
                       value={form.data.state}
@@ -213,7 +215,7 @@ export default function Addresses({ addresses }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="postalCode" className="text-xs uppercase tracking-wider text-muted-foreground">Postal Code</Label>
+                    <Label htmlFor="postalCode" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.postalCode')}</Label>
                     <Input
                       id="postalCode"
                       value={form.data.postalCode}
@@ -226,7 +228,7 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="country" className="text-xs uppercase tracking-wider text-muted-foreground">Country</Label>
+                    <Label htmlFor="country" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.country')}</Label>
                     <Input
                       id="country"
                       value={form.data.country}
@@ -236,7 +238,7 @@ export default function Addresses({ addresses }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground">Phone (optional)</Label>
+                    <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.addressesPage.phone')}</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -249,10 +251,10 @@ export default function Addresses({ addresses }: Props) {
 
                 <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="border-border/60">
-                    Cancel
+                    {t('storefront.addressesPage.cancel')}
                   </Button>
                   <Button type="submit" className="h-11 tracking-wide" disabled={form.processing}>
-                    {form.processing ? 'Saving...' : 'Save Address'}
+                    {form.processing ? t('storefront.addressesPage.saving') : t('storefront.addressesPage.saveAddress')}
                   </Button>
                 </div>
               </form>
@@ -275,7 +277,7 @@ export default function Addresses({ addresses }: Props) {
                         {address.type}
                       </Badge>
                       {address.isDefault && (
-                        <Badge className="bg-accent text-accent-foreground text-xs">Default</Badge>
+                        <Badge className="bg-accent text-accent-foreground text-xs">{t('storefront.addressesPage.default')}</Badge>
                       )}
                     </div>
                     {address.company && (
@@ -306,9 +308,9 @@ export default function Addresses({ addresses }: Props) {
             <Card className="animate-fade-up delay-200 border-dashed border-border/60">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <MapPin className="text-muted-foreground/40 h-12 w-12" />
-                <h3 className="font-display mt-4 text-lg tracking-tight">No addresses yet</h3>
+                <h3 className="font-display mt-4 text-lg tracking-tight">{t('storefront.addressesPage.noAddresses')}</h3>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Add an address to speed up your checkout.
+                  {t('storefront.addressesPage.noAddressesDesc')}
                 </p>
               </CardContent>
             </Card>

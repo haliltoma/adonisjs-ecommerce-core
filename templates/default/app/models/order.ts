@@ -9,6 +9,12 @@ import OrderTransaction from './order_transaction.js'
 import OrderStatusHistory from './order_status_history.js'
 import Fulfillment from './fulfillment.js'
 import Refund from './refund.js'
+import Region from './region.js'
+import SalesChannel from './sales_channel.js'
+import Return from './return.js'
+import Exchange from './exchange.js'
+import Claim from './claim.js'
+import OrderEdit from './order_edit.js'
 
 export default class Order extends BaseModel {
   @column({ isPrimary: true })
@@ -93,6 +99,12 @@ export default class Order extends BaseModel {
   declare internalNotes: string | null
 
   @column()
+  declare regionId: string | null
+
+  @column()
+  declare salesChannelId: string | null
+
+  @column()
   declare metadata: Record<string, unknown>
 
   @column()
@@ -142,4 +154,22 @@ export default class Order extends BaseModel {
 
   @hasMany(() => Refund)
   declare refunds: HasMany<typeof Refund>
+
+  @belongsTo(() => Region)
+  declare region: BelongsTo<typeof Region>
+
+  @belongsTo(() => SalesChannel)
+  declare salesChannel: BelongsTo<typeof SalesChannel>
+
+  @hasMany(() => Return)
+  declare returns: HasMany<typeof Return>
+
+  @hasMany(() => Exchange)
+  declare exchanges: HasMany<typeof Exchange>
+
+  @hasMany(() => Claim)
+  declare claims: HasMany<typeof Claim>
+
+  @hasMany(() => OrderEdit)
+  declare edits: HasMany<typeof OrderEdit>
 }

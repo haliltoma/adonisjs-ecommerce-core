@@ -17,7 +17,7 @@ export default class Page extends BaseModel {
   declare slug: string
 
   @column()
-  declare content: { blocks: unknown[] } | null
+  declare content: Record<string, unknown> | null
 
   @column()
   declare template: string

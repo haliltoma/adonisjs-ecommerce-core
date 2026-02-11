@@ -3,6 +3,7 @@ import Customer from '#models/customer'
 import hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
 import string from '@adonisjs/core/helpers/string'
+import * as OTPAuth from 'otpauth'
 
 interface AdminLoginDTO {
   email: string
@@ -171,30 +172,44 @@ export default class AuthService {
   }
 
   // Two-Factor Authentication
+  private createTOTP(user: User, secret: OTPAuth.Secret): OTPAuth.TOTP {
+    return new OTPAuth.TOTP({
+      issuer: 'AdonisCommerce',
+      label: user.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret,
+    })
+  }
+
   async enableTwoFactor(userId: number): Promise<{ secret: string; qrCode: string }> {
     const user = await User.findOrFail(userId)
 
-    // Generate TOTP secret
-    const secret = string.random(32)
+    const secret = new OTPAuth.Secret({ size: 20 })
+    const totp = this.createTOTP(user, secret)
 
-    user.twoFactorSecret = secret
+    user.twoFactorSecret = secret.base32
     await user.save()
 
-    // Generate QR code URL (would use a TOTP library)
-    const qrCode = `otpauth://totp/AdonisCommerce:${user.email}?secret=${secret}&issuer=AdonisCommerce`
-
-    return { secret, qrCode }
+    return {
+      secret: secret.base32,
+      qrCode: totp.toString(),
+    }
   }
 
-  async confirmTwoFactor(userId: number, _code: string): Promise<boolean> {
+  async confirmTwoFactor(userId: number, code: string): Promise<boolean> {
     const user = await User.findOrFail(userId)
 
     if (!user.twoFactorSecret) {
       return false
     }
 
-    // Verify TOTP code (would use a TOTP library)
-    const isValid = true // Placeholder
+    const secret = OTPAuth.Secret.fromBase32(user.twoFactorSecret)
+    const totp = this.createTOTP(user, secret)
+
+    const delta = totp.validate({ token: code, window: 1 })
+    const isValid = delta !== null
 
     if (isValid) {
       user.twoFactorEnabled = true
@@ -211,15 +226,18 @@ export default class AuthService {
     await user.save()
   }
 
-  async verifyTwoFactor(userId: number, _code: string): Promise<boolean> {
+  async verifyTwoFactor(userId: number, code: string): Promise<boolean> {
     const user = await User.findOrFail(userId)
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
       return true // 2FA not enabled, skip verification
     }
 
-    // Verify TOTP code (would use a TOTP library)
-    return true // Placeholder
+    const secret = OTPAuth.Secret.fromBase32(user.twoFactorSecret)
+    const totp = this.createTOTP(user, secret)
+
+    const delta = totp.validate({ token: code, window: 1 })
+    return delta !== null
   }
 
   // Session Management

@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react'
 import { DollarSign, Heart, Home, LogOut, MapPin, Package, ShoppingBag, User } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -53,11 +54,13 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 }
 
 export default function AccountIndex({ customer, recentOrders, stats }: Props) {
+  const { t } = useTranslation()
+
   const getFullName = () => {
     if (customer.firstName || customer.lastName) {
       return `${customer.firstName || ''} ${customer.lastName || ''}`.trim()
     }
-    return 'Customer'
+    return t('storefront.accountPage.customer')
   }
 
   const getInitials = () => {
@@ -72,7 +75,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
 
   return (
     <StorefrontLayout>
-      <Head title="My Account" />
+      <Head title={t('storefront.accountPage.dashboard')} />
 
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-4 lg:gap-12">
@@ -96,31 +99,31 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                   <Button variant="secondary" asChild className="w-full justify-start">
                     <Link href="/account">
                       <Home className="mr-3 h-4 w-4" />
-                      Dashboard
+                      {t('storefront.accountPage.dashboard')}
                     </Link>
                   </Button>
                   <Button variant="ghost" asChild className="w-full justify-start text-muted-foreground hover:text-foreground">
                     <Link href="/account/orders">
                       <ShoppingBag className="mr-3 h-4 w-4" />
-                      Orders
+                      {t('storefront.accountPage.orders')}
                     </Link>
                   </Button>
                   <Button variant="ghost" asChild className="w-full justify-start text-muted-foreground hover:text-foreground">
                     <Link href="/account/addresses">
                       <MapPin className="mr-3 h-4 w-4" />
-                      Addresses
+                      {t('storefront.accountPage.addresses')}
                     </Link>
                   </Button>
                   <Button variant="ghost" asChild className="w-full justify-start text-muted-foreground hover:text-foreground">
-                    <Link href="/account/wishlist">
+                    <Link href="/wishlist">
                       <Heart className="mr-3 h-4 w-4" />
-                      Wishlist
+                      {t('storefront.accountPage.wishlist')}
                     </Link>
                   </Button>
                   <Button variant="ghost" asChild className="w-full justify-start text-muted-foreground hover:text-foreground">
                     <Link href="/account/profile">
                       <User className="mr-3 h-4 w-4" />
-                      Profile
+                      {t('storefront.accountPage.profile')}
                     </Link>
                   </Button>
                   <Button
@@ -130,7 +133,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                   >
                     <Link href="/account/logout" method="post" as="button">
                       <LogOut className="mr-3 h-4 w-4" />
-                      Logout
+                      {t('storefront.accountPage.logout')}
                     </Link>
                   </Button>
                 </nav>
@@ -141,12 +144,12 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
           {/* Main Content */}
           <main className="lg:col-span-3">
             <div className="animate-fade-up delay-100">
-              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Dashboard</span>
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.accountPage.dashboard')}</span>
               <h1 className="font-display text-3xl tracking-tight mt-2">
-                Welcome back, {customer.firstName || 'Customer'}!
+                {t('storefront.accountPage.welcomeBack', { name: customer.firstName || t('storefront.accountPage.customer') })}
               </h1>
               <p className="text-muted-foreground mt-2">
-                Here's what's happening with your account.
+                {t('storefront.accountPage.welcomeDesc')}
               </p>
             </div>
 
@@ -158,7 +161,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                     <Package className="text-accent h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Total Orders</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.totalOrders')}</p>
                     <p className="font-display text-2xl tracking-tight">{stats.totalOrders}</p>
                   </div>
                 </CardContent>
@@ -170,7 +173,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                     <DollarSign className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Total Spent</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.totalSpent')}</p>
                     <p className="font-display text-2xl tracking-tight">
                       {formatCurrency(stats.totalSpent)}
                     </p>
@@ -182,9 +185,9 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
             {/* Recent Orders */}
             <Card className="animate-fade-up delay-300 mt-12 border-border/60">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="font-display text-xl tracking-tight">Recent Orders</CardTitle>
+                <CardTitle className="font-display text-xl tracking-tight">{t('storefront.accountPage.recentOrders')}</CardTitle>
                 <Button variant="ghost" size="sm" asChild className="text-accent hover:text-accent/80">
-                  <Link href="/account/orders">View all</Link>
+                  <Link href="/account/orders">{t('storefront.accountPage.viewAll')}</Link>
                 </Button>
               </CardHeader>
               <CardContent>
@@ -192,11 +195,11 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/40">
-                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Order</TableHead>
-                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Date</TableHead>
-                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Total</TableHead>
-                        <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">Action</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.orderColumn')}</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.dateColumn')}</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.statusColumn')}</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.totalColumn')}</TableHead>
+                        <TableHead className="text-right text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.accountPage.actionColumn')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -206,7 +209,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                             <div>
                               <div className="font-medium text-sm">#{order.orderNumber}</div>
                               <div className="text-muted-foreground text-xs mt-0.5">
-                                {order.itemCount} items
+                                {t('storefront.accountPage.itemsCount', { count: order.itemCount })}
                               </div>
                             </div>
                           </TableCell>
@@ -223,7 +226,7 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                           </TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm" asChild className="text-accent hover:text-accent/80">
-                              <Link href={`/account/orders/${order.id}`}>View</Link>
+                              <Link href={`/account/orders/${order.id}`}>{t('storefront.accountPage.view')}</Link>
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -233,12 +236,12 @@ export default function AccountIndex({ customer, recentOrders, stats }: Props) {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <ShoppingBag className="text-muted-foreground/40 h-12 w-12" />
-                    <h3 className="font-display mt-4 tracking-tight">No orders yet</h3>
+                    <h3 className="font-display mt-4 tracking-tight">{t('storefront.accountPage.noOrdersYet')}</h3>
                     <p className="text-muted-foreground mt-2 text-sm">
-                      Start shopping to see your orders here.
+                      {t('storefront.accountPage.noOrdersDesc')}
                     </p>
                     <Button asChild className="mt-4 h-11 tracking-wide">
-                      <Link href="/products">Browse Products</Link>
+                      <Link href="/products">{t('storefront.accountPage.browseProducts')}</Link>
                     </Button>
                   </div>
                 )}

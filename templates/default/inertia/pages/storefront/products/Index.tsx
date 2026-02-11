@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react'
 import { useState } from 'react'
 import { Filter, Package, SlidersHorizontal, X } from 'lucide-react'
 
+import { useTranslation } from '@/hooks/use-translation'
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
@@ -75,6 +76,7 @@ export default function ProductsIndex({
   filters,
   priceRange,
 }: Props) {
+  const { t } = useTranslation()
   const [localFilters, setLocalFilters] = useState({
     minPrice: filters.minPrice?.toString() || '',
     maxPrice: filters.maxPrice?.toString() || '',
@@ -122,11 +124,18 @@ export default function ProductsIndex({
   return (
     <StorefrontLayout>
       <CollectionListSeo
-        title="All Products"
-        description={`Browse our collection of ${products.meta.total} premium products. Find the perfect item with free shipping on orders over $100.`}
+        title={t('storefront.productList.title')}
+        description={t('storefront.productList.subtitle', { total: products.meta.total })}
         storeName={storeName}
         baseUrl={baseUrl}
         image={products.data[0]?.thumbnail || undefined}
+        products={products.data.map((p, idx) => ({
+          name: p.title,
+          url: `${baseUrl}/products/${p.slug}`,
+          image: p.thumbnail || undefined,
+          price: p.price,
+          position: idx + 1,
+        }))}
       />
 
       {/* Page Header */}
@@ -135,13 +144,13 @@ export default function ProductsIndex({
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
             <div>
               <span className="animate-fade-up text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-                Our Collection
+                {t('storefront.productList.collectionLabel')}
               </span>
               <h1 className="animate-fade-up delay-100 font-display text-4xl tracking-tight sm:text-5xl mt-3">
-                Products
+                {t('storefront.productList.title')}
               </h1>
               <p className="animate-fade-up delay-200 text-muted-foreground mt-3 text-sm leading-relaxed">
-                Explore {products.meta.total} carefully curated pieces for modern living
+                {t('storefront.productList.subtitle', { total: products.meta.total })}
               </p>
             </div>
             <div className="animate-fade-up delay-300 flex items-center gap-3">
@@ -150,12 +159,12 @@ export default function ProductsIndex({
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="lg:hidden">
                     <SlidersHorizontal className="mr-2 h-4 w-4" />
-                    Filters
+                    {t('storefront.productList.filters')}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80">
                   <SheetHeader>
-                    <SheetTitle className="font-display text-xl">Filters</SheetTitle>
+                    <SheetTitle className="font-display text-xl">{t('storefront.productList.filters')}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 space-y-6">
                     <FilterContent
@@ -179,15 +188,15 @@ export default function ProductsIndex({
                 onValueChange={handleSortChange}
               >
                 <SelectTrigger className="w-48 rounded-lg border-border/60 bg-background text-sm">
-                  <SelectValue placeholder="Sort by" />
+                  <SelectValue placeholder={t('storefront.productList.sortBy')} />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg">
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                  <SelectItem value="name_asc">Name: A-Z</SelectItem>
-                  <SelectItem value="name_desc">Name: Z-A</SelectItem>
+                  <SelectItem value="featured">{t('storefront.productList.sortFeatured')}</SelectItem>
+                  <SelectItem value="newest">{t('storefront.productList.sortNewest')}</SelectItem>
+                  <SelectItem value="price_asc">{t('storefront.productList.sortPriceLowHigh')}</SelectItem>
+                  <SelectItem value="price_desc">{t('storefront.productList.sortPriceHighLow')}</SelectItem>
+                  <SelectItem value="name_asc">{t('storefront.productList.sortNameAZ')}</SelectItem>
+                  <SelectItem value="name_desc">{t('storefront.productList.sortNameZA')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -240,10 +249,10 @@ export default function ProductsIndex({
                         )
                       }
                     >
-                      Previous
+                      {t('storefront.productList.previous')}
                     </Button>
                     <span className="text-muted-foreground px-4 text-sm">
-                      Page {products.meta.currentPage} of {products.meta.lastPage}
+                      {t('storefront.productList.pageOf', { current: products.meta.currentPage, total: products.meta.lastPage })}
                     </span>
                     <Button
                       variant="outline"
@@ -260,7 +269,7 @@ export default function ProductsIndex({
                         )
                       }
                     >
-                      Next
+                      {t('storefront.productList.next')}
                     </Button>
                   </div>
                 )}
@@ -272,10 +281,10 @@ export default function ProductsIndex({
                     <Package className="text-muted-foreground h-8 w-8" />
                   </div>
                   <h3 className="mt-6 font-display text-xl">
-                    No products found
+                    {t('storefront.productList.noProductsFound')}
                   </h3>
                   <p className="text-muted-foreground mt-2 max-w-sm leading-relaxed">
-                    Try adjusting your filters or search terms to discover something new.
+                    {t('storefront.productList.noProductsDesc')}
                   </p>
                   {hasActiveFilters && (
                     <Button
@@ -284,7 +293,7 @@ export default function ProductsIndex({
                       className="mt-6 rounded-lg"
                       onClick={clearFilters}
                     >
-                      Clear all filters
+                      {t('storefront.productList.clearAllFilters')}
                     </Button>
                   )}
                 </CardContent>
@@ -370,15 +379,16 @@ function FilterContent({
   onClearFilters,
   hasActiveFilters,
 }: FilterContentProps) {
+  const { t } = useTranslation()
   return (
     <>
       {/* Categories */}
       {categories.length > 0 && (
         <div>
           <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-accent">
-            Browse
+            {t('storefront.productList.browseLabel')}
           </span>
-          <h3 className="font-display text-lg tracking-tight mt-1">Categories</h3>
+          <h3 className="font-display text-lg tracking-tight mt-1">{t('storefront.productList.categoriesTitle')}</h3>
           <div className="mt-4 space-y-0.5">
             <button
               type="button"
@@ -390,7 +400,7 @@ function FilterContent({
               }`}
             >
               <span className="relative">
-                All Products
+                {t('storefront.productList.allProducts')}
                 <span
                   className={`absolute -bottom-0.5 left-0 h-px bg-foreground transition-all duration-300 ${
                     !filters.categoryId ? 'w-full' : 'w-0 group-hover/cat:w-full'
@@ -431,9 +441,9 @@ function FilterContent({
       {/* Price Range */}
       <div>
         <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-accent">
-          Filter
+          {t('storefront.productList.filterLabel')}
         </span>
-        <h3 className="font-display text-lg tracking-tight mt-1">Price Range</h3>
+        <h3 className="font-display text-lg tracking-tight mt-1">{t('storefront.productList.priceRange')}</h3>
         <p className="text-muted-foreground mt-2 text-xs">
           {formatCurrency(priceRange.min)} - {formatCurrency(priceRange.max)}
         </p>
@@ -441,7 +451,7 @@ function FilterContent({
           <div className="flex gap-2">
             <Input
               type="number"
-              placeholder="Min"
+              placeholder={t('storefront.productList.min')}
               value={localFilters.minPrice}
               onChange={(e) =>
                 setLocalFilters({ ...localFilters, minPrice: e.target.value })
@@ -451,7 +461,7 @@ function FilterContent({
             <span className="text-muted-foreground flex items-center text-sm">-</span>
             <Input
               type="number"
-              placeholder="Max"
+              placeholder={t('storefront.productList.max')}
               value={localFilters.maxPrice}
               onChange={(e) =>
                 setLocalFilters({ ...localFilters, maxPrice: e.target.value })
@@ -460,7 +470,7 @@ function FilterContent({
             />
           </div>
           <Button size="sm" className="w-full rounded-lg" onClick={onApplyFilters}>
-            Apply Price Filter
+            {t('storefront.productList.applyPriceFilter')}
           </Button>
         </div>
       </div>
@@ -476,7 +486,7 @@ function FilterContent({
             onClick={onClearFilters}
           >
             <X className="mr-2 h-4 w-4" />
-            Clear all filters
+            {t('storefront.productList.clearAllFilters')}
           </Button>
         </>
       )}

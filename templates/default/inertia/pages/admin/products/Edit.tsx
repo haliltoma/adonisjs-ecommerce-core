@@ -123,8 +123,8 @@ export default function Edit({ product, categories, taxClasses, tags }: Props) {
     }
   }, [data.title])
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (e?: FormEvent) => {
+    e?.preventDefault()
     patch(`/admin/products/${product.id}`)
   }
 
@@ -172,7 +172,7 @@ export default function Edit({ product, categories, taxClasses, tags }: Props) {
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
-          <Button onClick={handleSubmit} disabled={processing} className="tracking-wide">
+          <Button onClick={() => handleSubmit()} disabled={processing} className="tracking-wide">
             <Save className="h-4 w-4 mr-2" />
             Save Changes
           </Button>

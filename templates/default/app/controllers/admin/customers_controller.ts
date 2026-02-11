@@ -74,7 +74,7 @@ export default class CustomersController {
 
   async store({ request, response, session, store }: HttpContext) {
     const storeId = store.id
-    const data = request.only([
+    const raw = request.only([
       'email',
       'password',
       'firstName',
@@ -85,6 +85,13 @@ export default class CustomersController {
       'notes',
       'groupId',
     ])
+
+    const data = {
+      ...raw,
+      phone: raw.phone || undefined,
+      notes: raw.notes || undefined,
+      groupId: raw.groupId || undefined,
+    }
 
     try {
       const customer = await this.customerService.create({
@@ -158,7 +165,7 @@ export default class CustomersController {
   }
 
   async update({ params, request, response, session }: HttpContext) {
-    const data = request.only([
+    const raw = request.only([
       'firstName',
       'lastName',
       'phone',
@@ -167,6 +174,13 @@ export default class CustomersController {
       'notes',
       'groupId',
     ])
+
+    const data = {
+      ...raw,
+      phone: raw.phone || undefined,
+      notes: raw.notes || undefined,
+      groupId: raw.groupId || undefined,
+    }
 
     try {
       await this.customerService.update(params.id, data)

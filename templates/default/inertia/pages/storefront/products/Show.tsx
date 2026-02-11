@@ -1,7 +1,8 @@
-import { Link, router } from '@inertiajs/react'
+import { Link, router, useForm } from '@inertiajs/react'
 import { useState } from 'react'
 import { Minus, Plus, Star } from 'lucide-react'
 
+import { useTranslation } from '@/hooks/use-translation'
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
@@ -137,6 +138,129 @@ function findVariantByOptions(
   })
 }
 
+function ReviewForm({ productSlug }: { productSlug: string }) {
+  const { t } = useTranslation()
+  const { data, setData, post, processing, errors, wasSuccessful, reset } = useForm({
+    rating: 0,
+    title: '',
+    content: '',
+  })
+  const [hoveredStar, setHoveredStar] = useState(0)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    post(`/products/${productSlug}/reviews`, {
+      preserveScroll: true,
+      onSuccess: () => reset(),
+    })
+  }
+
+  if (wasSuccessful) {
+    return (
+      <Card className="mt-10 border-border/50 animate-fade-up">
+        <CardContent className="pt-6">
+          <div className="rounded-2xl bg-secondary/50 border border-accent/20 p-8 text-center">
+            <h3 className="font-display text-xl mb-2">{t('storefront.productDetail.reviewThanks')}</h3>
+            <p className="text-muted-foreground text-[15px]">
+              {t('storefront.productDetail.reviewPending')}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="mt-10 border-border/50 animate-fade-up">
+      <CardContent className="pt-6">
+        <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+          {t('storefront.productDetail.reviewShareLabel')}
+        </span>
+        <h3 className="font-display text-2xl tracking-tight mt-2 mb-6">
+          {t('storefront.productDetail.writeReview')}
+        </h3>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Star Rating */}
+          <div>
+            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
+              {t('storefront.productDetail.rating')}
+            </label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  onClick={() => setData('rating', star)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`h-6 w-6 transition-colors ${
+                      star <= (hoveredStar || data.rating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'fill-muted text-muted-foreground/30'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            {errors.rating && (
+              <p className="mt-1 text-xs text-red-500">{errors.rating}</p>
+            )}
+          </div>
+
+          {/* Title */}
+          <div>
+            <label htmlFor="review-title" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
+              {t('storefront.productDetail.reviewTitleLabel')} <span className="normal-case tracking-normal font-normal">{t('storefront.productDetail.reviewTitleOptional')}</span>
+            </label>
+            <input
+              type="text"
+              id="review-title"
+              value={data.title}
+              onChange={(e) => setData('title', e.target.value)}
+              placeholder={t('storefront.productDetail.reviewTitlePlaceholder')}
+              className="w-full h-11 rounded-lg border border-border/60 bg-background px-4 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            />
+            {errors.title && (
+              <p className="mt-1 text-xs text-red-500">{errors.title}</p>
+            )}
+          </div>
+
+          {/* Content */}
+          <div>
+            <label htmlFor="review-content" className="block text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
+              {t('storefront.productDetail.reviewLabel')}
+            </label>
+            <textarea
+              id="review-content"
+              rows={4}
+              required
+              value={data.content}
+              onChange={(e) => setData('content', e.target.value)}
+              placeholder={t('storefront.productDetail.reviewPlaceholder')}
+              className="w-full rounded-lg border border-border/60 bg-background px-4 py-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors resize-none"
+            />
+            {errors.content && (
+              <p className="mt-1 text-xs text-red-500">{errors.content}</p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            disabled={processing || data.rating === 0}
+            className="rounded-full px-8 h-11 text-sm font-semibold tracking-wide"
+          >
+            {processing ? t('storefront.productDetail.submitting') : t('storefront.productDetail.submitReview')}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function ProductShow({
   product,
   relatedProducts,
@@ -144,6 +268,7 @@ export default function ProductShow({
   reviewStats,
   breadcrumb,
 }: Props) {
+  const { t } = useTranslation()
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
     () => {
       const defaultVariant =
@@ -216,6 +341,7 @@ export default function ProductShow({
                 }
               : undefined,
         }}
+        reviews={reviews}
         storeName={storeName}
         baseUrl={baseUrl}
         breadcrumbs={breadcrumb}
@@ -228,7 +354,7 @@ export default function ProductShow({
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link href="/" className="transition-colors hover:text-foreground">
-                  Home
+                  {t('storefront.productDetail.home')}
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -326,7 +452,7 @@ export default function ProductShow({
                   ))}
                 </div>
                 <span className="text-muted-foreground text-sm">
-                  {reviewStats.average.toFixed(1)} ({reviewStats.total} reviews)
+                  {reviewStats.average.toFixed(1)} ({reviewStats.total} {t('storefront.productDetail.reviews')})
                 </span>
               </div>
             )}
@@ -342,7 +468,7 @@ export default function ProductShow({
                     {formatCurrency(compareAtPrice)}
                   </span>
                   <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-white tracking-wide">
-                    Save {Math.round(((compareAtPrice - price) / compareAtPrice) * 100)}%
+                    {t('storefront.productDetail.save', { percent: Math.round(((compareAtPrice - price) / compareAtPrice) * 100) })}
                   </span>
                 </>
               )}
@@ -392,7 +518,7 @@ export default function ProductShow({
             <div className="animate-fade-up delay-500 mt-8 space-y-4">
               <div className="flex items-center gap-4">
                 <label className="text-xs font-semibold tracking-[0.1em] uppercase text-foreground/70">
-                  Quantity
+                  {t('storefront.productDetail.quantity')}
                 </label>
                 <div className="flex items-center rounded-full border">
                   <Button
@@ -423,10 +549,10 @@ export default function ProductShow({
                 disabled={!isAvailable || addingToCart}
               >
                 {addingToCart
-                  ? 'Adding...'
+                  ? t('storefront.productDetail.adding')
                   : isAvailable
-                    ? 'Add to Cart'
-                    : 'Out of Stock'}
+                    ? t('storefront.productDetail.addToCart')
+                    : t('storefront.productDetail.outOfStock')}
               </Button>
             </div>
 
@@ -442,7 +568,7 @@ export default function ProductShow({
               {product.categories.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-semibold tracking-[0.1em] uppercase text-muted-foreground">
-                    Categories:
+                    {t('storefront.productDetail.categories')}
                   </span>
                   {product.categories.map((cat) => (
                     <Link
@@ -458,7 +584,7 @@ export default function ProductShow({
               {product.tags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-semibold tracking-[0.1em] uppercase text-muted-foreground">
-                    Tags:
+                    {t('storefront.productDetail.tags')}
                   </span>
                   {product.tags.map((tag) => (
                     <Badge key={tag.id} variant="secondary" className="rounded-full font-normal">
@@ -476,10 +602,10 @@ export default function ProductShow({
           <section className="animate-fade-up mt-24">
             <div className="max-w-3xl">
               <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-                Details
+                {t('storefront.productDetail.detailsLabel')}
               </span>
               <h2 className="font-display text-3xl tracking-tight mt-2">
-                Description
+                {t('storefront.productDetail.description')}
               </h2>
               <div
                 className="prose prose-neutral mt-6 max-w-none text-[15px] leading-relaxed text-foreground/80"
@@ -490,14 +616,14 @@ export default function ProductShow({
         )}
 
         {/* Reviews */}
-        {reviews.length > 0 && (
-          <section className="mt-24">
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-              Feedback
-            </span>
-            <h2 className="font-display text-3xl tracking-tight mt-2">
-              Customer Reviews
-            </h2>
+        <section className="mt-24">
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+            {t('storefront.productDetail.feedbackLabel')}
+          </span>
+          <h2 className="font-display text-3xl tracking-tight mt-2">
+            {t('storefront.productDetail.customerReviews')}
+          </h2>
+          {reviews.length > 0 && (
             <div className="mt-10 space-y-6">
               {reviews.map((review, i) => (
                 <Card
@@ -520,7 +646,7 @@ export default function ProductShow({
                       </div>
                       {review.isVerifiedPurchase && (
                         <Badge variant="secondary" className="rounded-full text-[10px] tracking-wide">
-                          Verified Purchase
+                          {t('storefront.productDetail.verifiedPurchase')}
                         </Badge>
                       )}
                     </div>
@@ -540,8 +666,11 @@ export default function ProductShow({
                 </Card>
               ))}
             </div>
-          </section>
-        )}
+          )}
+
+          {/* Review Submission Form */}
+          <ReviewForm productSlug={product.slug} />
+        </section>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
@@ -549,10 +678,10 @@ export default function ProductShow({
             <div className="flex items-end justify-between mb-10">
               <div>
                 <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-                  Explore
+                  {t('storefront.productDetail.relatedLabel')}
                 </span>
                 <h2 className="font-display text-3xl tracking-tight mt-2">
-                  You May Also Like
+                  {t('storefront.productDetail.relatedTitle')}
                 </h2>
               </div>
             </div>

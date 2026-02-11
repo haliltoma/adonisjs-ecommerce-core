@@ -297,6 +297,222 @@ export class StoreNotFoundException extends CommerceException {
   }
 }
 
+// ── Inventory Exceptions ─────────────────────────────────
+
+/**
+ * Thrown when an inventory location is not found.
+ */
+export class InventoryLocationNotFoundException extends CommerceException {
+  static code = 'E_INVENTORY_LOCATION_NOT_FOUND'
+  static status = 404
+
+  constructor(identifier: string) {
+    super(`Inventory location not found: ${identifier}`, {
+      status: 404,
+      code: 'E_INVENTORY_LOCATION_NOT_FOUND',
+    })
+  }
+}
+
+// ── Fulfillment Exceptions ───────────────────────────────
+
+/**
+ * Thrown when a fulfillment is not found.
+ */
+export class FulfillmentNotFoundException extends CommerceException {
+  static code = 'E_FULFILLMENT_NOT_FOUND'
+  static status = 404
+
+  constructor(identifier: string) {
+    super(`Fulfillment not found: ${identifier}`, {
+      status: 404,
+      code: 'E_FULFILLMENT_NOT_FOUND',
+    })
+  }
+}
+
+/**
+ * Thrown when a fulfillment cannot be created (e.g. already fulfilled).
+ */
+export class FulfillmentNotAllowedException extends CommerceException {
+  static code = 'E_FULFILLMENT_NOT_ALLOWED'
+  static status = 400
+
+  constructor(message: string = 'Fulfillment not allowed for this order') {
+    super(message, {
+      status: 400,
+      code: 'E_FULFILLMENT_NOT_ALLOWED',
+    })
+  }
+}
+
+// ── Media Exceptions ─────────────────────────────────────
+
+/**
+ * Thrown when a media file upload fails.
+ */
+export class MediaUploadException extends CommerceException {
+  static code = 'E_MEDIA_UPLOAD_FAILED'
+  static status = 400
+
+  constructor(message: string = 'File upload failed') {
+    super(message, {
+      status: 400,
+      code: 'E_MEDIA_UPLOAD_FAILED',
+    })
+  }
+}
+
+/**
+ * Thrown when a media file type is not allowed.
+ */
+export class MediaTypeNotAllowedException extends CommerceException {
+  static code = 'E_MEDIA_TYPE_NOT_ALLOWED'
+  static status = 400
+
+  constructor(mimeType: string) {
+    super(`File type not allowed: ${mimeType}`, {
+      status: 400,
+      code: 'E_MEDIA_TYPE_NOT_ALLOWED',
+    })
+  }
+}
+
+/**
+ * Thrown when a file exceeds size limit.
+ */
+export class MediaSizeLimitException extends CommerceException {
+  static code = 'E_MEDIA_SIZE_LIMIT'
+  static status = 400
+
+  constructor(maxSize: string) {
+    super(`File exceeds maximum size limit of ${maxSize}`, {
+      status: 400,
+      code: 'E_MEDIA_SIZE_LIMIT',
+    })
+  }
+}
+
+// ── Search Exceptions ────────────────────────────────────
+
+/**
+ * Thrown when search service encounters an error.
+ */
+export class SearchException extends CommerceException {
+  static code = 'E_SEARCH_ERROR'
+  static status = 500
+
+  constructor(message: string = 'Search service error') {
+    super(message, {
+      status: 500,
+      code: 'E_SEARCH_ERROR',
+    })
+  }
+}
+
+// ── Webhook Exceptions ───────────────────────────────────
+
+/**
+ * Thrown when a webhook delivery fails.
+ */
+export class WebhookDeliveryException extends CommerceException {
+  static code = 'E_WEBHOOK_DELIVERY_FAILED'
+  static status = 500
+
+  constructor(webhookId: string, message: string) {
+    super(`Webhook delivery failed for ${webhookId}: ${message}`, {
+      status: 500,
+      code: 'E_WEBHOOK_DELIVERY_FAILED',
+    })
+  }
+}
+
+/**
+ * Thrown when webhook signature verification fails.
+ */
+export class WebhookSignatureException extends CommerceException {
+  static code = 'E_WEBHOOK_SIGNATURE_INVALID'
+  static status = 401
+
+  constructor() {
+    super('Invalid webhook signature', {
+      status: 401,
+      code: 'E_WEBHOOK_SIGNATURE_INVALID',
+    })
+  }
+}
+
+// ── Notification Exceptions ──────────────────────────────
+
+/**
+ * Thrown when notification sending fails.
+ */
+export class NotificationSendException extends CommerceException {
+  static code = 'E_NOTIFICATION_SEND_FAILED'
+  static status = 500
+
+  constructor(channel: string, message: string = 'Failed to send notification') {
+    super(`${message} via ${channel}`, {
+      status: 500,
+      code: 'E_NOTIFICATION_SEND_FAILED',
+    })
+  }
+}
+
+// ── Review Exceptions ────────────────────────────────────
+
+/**
+ * Thrown when a review is not found.
+ */
+export class ReviewNotFoundException extends CommerceException {
+  static code = 'E_REVIEW_NOT_FOUND'
+  static status = 404
+
+  constructor(identifier: string) {
+    super(`Review not found: ${identifier}`, {
+      status: 404,
+      code: 'E_REVIEW_NOT_FOUND',
+    })
+  }
+}
+
+/**
+ * Thrown when a duplicate review is attempted.
+ */
+export class DuplicateReviewException extends CommerceException {
+  static code = 'E_DUPLICATE_REVIEW'
+  static status = 400
+
+  constructor() {
+    super('You have already reviewed this product', {
+      status: 400,
+      code: 'E_DUPLICATE_REVIEW',
+    })
+  }
+}
+
+// ── Rate Limiting Exception ──────────────────────────────
+
+/**
+ * Thrown when rate limit is exceeded.
+ */
+export class RateLimitException extends CommerceException {
+  static code = 'E_RATE_LIMIT_EXCEEDED'
+  static status = 429
+
+  constructor(retryAfterSeconds?: number) {
+    const msg = retryAfterSeconds
+      ? `Rate limit exceeded. Try again in ${retryAfterSeconds} seconds.`
+      : 'Rate limit exceeded. Please try again later.'
+    super(msg, {
+      status: 429,
+      code: 'E_RATE_LIMIT_EXCEEDED',
+    })
+  }
+}
+
+// ── Validation Exception ─────────────────────────────────
+
 /**
  * Thrown when validation fails.
  */

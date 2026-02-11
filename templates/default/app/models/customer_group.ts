@@ -21,6 +21,12 @@ export default class CustomerGroup extends BaseModel {
   declare description: string | null
 
   @column()
+  declare conditions: Record<string, unknown>
+
+  @column()
+  declare isActive: boolean
+
+  @column()
   declare discountPercentage: number
 
   @column()

@@ -5,11 +5,15 @@ import {
   CreditCard,
   MapPin,
   Package,
+  RotateCcw,
+  ShieldAlert,
+  Repeat,
   Truck,
   User,
   XCircle,
   Clock,
   AlertCircle,
+  Pencil,
 } from 'lucide-react'
 import { FormEvent, useState } from 'react'
 
@@ -42,6 +46,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils'
 
 interface Props {
@@ -134,11 +148,68 @@ interface Props {
     fulfilledQuantity: number
     remainingQuantity: number
   }[]
+  returns: {
+    id: string
+    status: string
+    refundAmount: number | null
+    note: string | null
+    receivedAt: string | null
+    createdAt: string
+    items: {
+      id: string
+      quantity: number
+      receivedQuantity: number
+      orderItem: { id: string; title: string; variantTitle: string | null } | null
+      reason: { label: string } | null
+      note: string | null
+    }[]
+  }[]
+  claims: {
+    id: string
+    type: string
+    status: string
+    refundAmount: number | null
+    note: string | null
+    createdAt: string
+    items: {
+      id: string
+      quantity: number
+      reason: string
+      note: string | null
+      orderItem: { id: string; title: string } | null
+    }[]
+  }[]
+  exchanges: {
+    id: string
+    status: string
+    differenceAmount: number
+    paymentStatus: string
+    note: string | null
+    newItems: any[]
+    createdAt: string
+  }[]
+  edits: {
+    id: string
+    status: string
+    differenceAmount: number
+    internalNote: string | null
+    changes: any[]
+    creator: { name: string } | null
+    requestedAt: string | null
+    confirmedAt: string | null
+    createdAt: string
+  }[]
+  returnReasons: { id: string; label: string }[]
 }
 
-export default function OrderShow({ order, unfulfilledItems }: Props) {
+export default function OrderShow({ order, unfulfilledItems, returns = [], claims = [], exchanges = [], edits = [], returnReasons = [] }: Props) {
   const [selectedStatus, setSelectedStatus] = useState(order.status)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [isReturnOpen, setIsReturnOpen] = useState(false)
+  const [isClaimOpen, setIsClaimOpen] = useState(false)
+  const [returnItems, setReturnItems] = useState<{ orderItemId: string; quantity: number; returnReasonId?: string; note?: string }[]>([])
+  const [claimItems, setClaimItems] = useState<{ orderItemId: string; quantity: number; reason: string }[]>([])
+  const [claimType, setClaimType] = useState<'refund' | 'replace'>('refund')
 
   const noteForm = useForm({
     note: '',
@@ -171,7 +242,7 @@ export default function OrderShow({ order, unfulfilledItems }: Props) {
     if (selectedStatus === order.status) return
 
     setIsUpdatingStatus(true)
-    router.post(
+    router.patch(
       `/admin/orders/${order.id}/status`,
       { status: selectedStatus },
       {
@@ -182,7 +253,7 @@ export default function OrderShow({ order, unfulfilledItems }: Props) {
 
   const handleAddNote = (e: FormEvent) => {
     e.preventDefault()
-    noteForm.post(`/admin/orders/${order.id}/notes`, {
+    noteForm.post(`/admin/orders/${order.id}/note`, {
       onSuccess: () => noteForm.reset(),
     })
   }
@@ -197,6 +268,42 @@ export default function OrderShow({ order, unfulfilledItems }: Props) {
 
   const handleCreateFulfillment = () => {
     router.get(`/admin/orders/${order.id}/fulfillments/create`)
+  }
+
+  const handleToggleReturnItem = (itemId: string, quantity: number) => {
+    setReturnItems((prev) => {
+      const existing = prev.find((i) => i.orderItemId === itemId)
+      if (existing) return prev.filter((i) => i.orderItemId !== itemId)
+      return [...prev, { orderItemId: itemId, quantity }]
+    })
+  }
+
+  const handleSubmitReturn = () => {
+    if (returnItems.length === 0) return
+    router.post(`/admin/orders/${order.id}/returns`, { items: returnItems }, {
+      onSuccess: () => {
+        setIsReturnOpen(false)
+        setReturnItems([])
+      },
+    })
+  }
+
+  const handleToggleClaimItem = (itemId: string, quantity: number) => {
+    setClaimItems((prev) => {
+      const existing = prev.find((i) => i.orderItemId === itemId)
+      if (existing) return prev.filter((i) => i.orderItemId !== itemId)
+      return [...prev, { orderItemId: itemId, quantity, reason: 'other' }]
+    })
+  }
+
+  const handleSubmitClaim = () => {
+    if (claimItems.length === 0) return
+    router.post(`/admin/orders/${order.id}/claims`, { type: claimType, items: claimItems }, {
+      onSuccess: () => {
+        setIsClaimOpen(false)
+        setClaimItems([])
+      },
+    })
   }
 
   const formatAddress = (address: any) => {
@@ -532,6 +639,222 @@ export default function OrderShow({ order, unfulfilledItems }: Props) {
               </Card>
             )}
 
+            {/* Returns */}
+            {returns.length > 0 && (
+              <Card className="animate-fade-up delay-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <RotateCcw className="h-4 w-4" />
+                    Returns
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {returns.map((ret) => (
+                    <div key={ret.id} className="rounded-lg border border-border/60 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <Badge variant={getStatusVariant(ret.status)}>{ret.status}</Badge>
+                        {ret.refundAmount && (
+                          <span className="font-display">
+                            Refund: {formatCurrency(ret.refundAmount, order.currency)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {ret.items.map((ri) => (
+                          <div key={ri.id} className="flex items-center justify-between text-sm">
+                            <span>
+                              {ri.orderItem?.title}
+                              {ri.reason && <span className="text-muted-foreground ml-1">({ri.reason.label})</span>}
+                            </span>
+                            <span className="text-muted-foreground">
+                              Qty: {ri.quantity} {ri.receivedQuantity > 0 && `(received: ${ri.receivedQuantity})`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-muted-foreground mt-2 text-[11px] tracking-wide">
+                        {formatDateTime(ret.createdAt)}
+                      </div>
+                      {ret.status === 'requested' && (
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => router.post(`/admin/orders/${order.id}/returns/${ret.id}/receive`, {
+                              items: ret.items.map((ri) => ({ returnItemId: ri.id, receivedQuantity: ri.quantity })),
+                            })}
+                          >
+                            Mark Received
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => router.post(`/admin/orders/${order.id}/returns/${ret.id}/cancel`)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                      {ret.status === 'received' && (
+                        <Button
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            const amount = prompt('Enter refund amount:')
+                            if (amount) {
+                              router.post(`/admin/orders/${order.id}/returns/${ret.id}/complete`, {
+                                refundAmount: parseFloat(amount),
+                              })
+                            }
+                          }}
+                        >
+                          Complete & Refund
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Claims */}
+            {claims.length > 0 && (
+              <Card className="animate-fade-up delay-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <ShieldAlert className="h-4 w-4" />
+                    Claims
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {claims.map((claim) => (
+                    <div key={claim.id} className="rounded-lg border border-border/60 p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge variant={getStatusVariant(claim.status)}>{claim.status}</Badge>
+                        <Badge variant="outline">{claim.type}</Badge>
+                        {claim.refundAmount && (
+                          <span className="text-sm font-display ml-auto">
+                            {formatCurrency(claim.refundAmount, order.currency)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {claim.items.map((ci) => (
+                          <div key={ci.id} className="text-sm">
+                            {ci.orderItem?.title} × {ci.quantity}
+                            <span className="text-muted-foreground ml-1">({ci.reason})</span>
+                          </div>
+                        ))}
+                      </div>
+                      {claim.note && (
+                        <div className="text-muted-foreground text-sm mt-2">{claim.note}</div>
+                      )}
+                      <div className="text-muted-foreground mt-2 text-[11px] tracking-wide">
+                        {formatDateTime(claim.createdAt)}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Exchanges */}
+            {exchanges.length > 0 && (
+              <Card className="animate-fade-up delay-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <Repeat className="h-4 w-4" />
+                    Exchanges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {exchanges.map((ex) => (
+                    <div key={ex.id} className="rounded-lg border border-border/60 p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge variant={getStatusVariant(ex.status)}>{ex.status}</Badge>
+                        <Badge variant="outline">Payment: {ex.paymentStatus}</Badge>
+                        {ex.differenceAmount !== 0 && (
+                          <span className="text-sm font-display ml-auto">
+                            Difference: {formatCurrency(ex.differenceAmount, order.currency)}
+                          </span>
+                        )}
+                      </div>
+                      {ex.note && (
+                        <div className="text-muted-foreground text-sm">{ex.note}</div>
+                      )}
+                      <div className="text-muted-foreground mt-2 text-[11px] tracking-wide">
+                        {formatDateTime(ex.createdAt)}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Order Edits */}
+            {edits.length > 0 && (
+              <Card className="animate-fade-up delay-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <Pencil className="h-4 w-4" />
+                    Order Edits
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {edits.map((edit) => (
+                    <div key={edit.id} className="rounded-lg border border-border/60 p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge variant={getStatusVariant(edit.status)}>{edit.status}</Badge>
+                        {edit.differenceAmount !== 0 && (
+                          <span className="text-sm font-display ml-auto">
+                            {formatCurrency(edit.differenceAmount, order.currency)}
+                          </span>
+                        )}
+                      </div>
+                      {edit.internalNote && (
+                        <div className="text-muted-foreground text-sm">{edit.internalNote}</div>
+                      )}
+                      {edit.creator && (
+                        <div className="text-muted-foreground text-[11px] tracking-wide">
+                          By {edit.creator.name}
+                        </div>
+                      )}
+                      <div className="text-muted-foreground text-[11px] tracking-wide">
+                        {formatDateTime(edit.createdAt)}
+                      </div>
+                      {edit.status === 'created' && (
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => router.post(`/admin/orders/${order.id}/edits/${edit.id}/request`)}
+                          >
+                            Request Confirmation
+                          </Button>
+                        </div>
+                      )}
+                      {edit.status === 'requested' && (
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => router.post(`/admin/orders/${order.id}/edits/${edit.id}/confirm`)}
+                          >
+                            Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => router.post(`/admin/orders/${order.id}/edits/${edit.id}/decline`)}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Status History */}
             {order.statusHistory.length > 0 && (
               <Card className="animate-fade-up delay-500">
@@ -760,13 +1083,173 @@ export default function OrderShow({ order, unfulfilledItems }: Props) {
               </Card>
             )}
 
-            {/* Actions */}
+            {/* Order Lifecycle Actions */}
             {order.status !== 'cancelled' && !order.cancelledAt && (
               <Card className="animate-fade-up delay-700">
                 <CardHeader>
                   <CardTitle className="font-display text-lg">Actions</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-2">
+                  {/* Create Return */}
+                  <Dialog open={isReturnOpen} onOpenChange={setIsReturnOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full tracking-wide">
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Create Return
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="font-display">Create Return</DialogTitle>
+                        <DialogDescription>Select items to return from this order.</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-3 py-4 max-h-80 overflow-y-auto">
+                        {order.items.map((item) => {
+                          const isSelected = returnItems.some((ri) => ri.orderItemId === item.id)
+                          return (
+                            <div key={item.id} className="flex items-center gap-3 rounded-lg border p-3">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => handleToggleReturnItem(item.id, item.quantity - item.returnedQuantity)}
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{item.title}</div>
+                                {item.variantTitle && (
+                                  <div className="text-muted-foreground text-xs">{item.variantTitle}</div>
+                                )}
+                                <div className="text-muted-foreground text-xs">
+                                  Available: {item.quantity - item.returnedQuantity}
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max={item.quantity - item.returnedQuantity}
+                                  value={returnItems.find((ri) => ri.orderItemId === item.id)?.quantity || 1}
+                                  onChange={(e) => {
+                                    setReturnItems((prev) =>
+                                      prev.map((ri) =>
+                                        ri.orderItemId === item.id
+                                          ? { ...ri, quantity: parseInt(e.target.value) || 1 }
+                                          : ri
+                                      )
+                                    )
+                                  }}
+                                  className="w-20 h-8"
+                                />
+                              )}
+                              {isSelected && returnReasons.length > 0 && (
+                                <Select
+                                  value={returnItems.find((ri) => ri.orderItemId === item.id)?.returnReasonId || ''}
+                                  onValueChange={(val) => {
+                                    setReturnItems((prev) =>
+                                      prev.map((ri) =>
+                                        ri.orderItemId === item.id ? { ...ri, returnReasonId: val } : ri
+                                      )
+                                    )
+                                  }}
+                                >
+                                  <SelectTrigger className="w-32 h-8">
+                                    <SelectValue placeholder="Reason" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {returnReasons.map((r) => (
+                                      <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsReturnOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSubmitReturn} disabled={returnItems.length === 0}>
+                          Create Return
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Create Claim */}
+                  <Dialog open={isClaimOpen} onOpenChange={setIsClaimOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full tracking-wide">
+                        <ShieldAlert className="mr-2 h-4 w-4" />
+                        Create Claim
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="font-display">Create Claim</DialogTitle>
+                        <DialogDescription>File a claim for damaged or incorrect items.</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Claim Type</Label>
+                          <Select value={claimType} onValueChange={(val: 'refund' | 'replace') => setClaimType(val)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="refund">Refund</SelectItem>
+                              <SelectItem value="replace">Replace</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                          {order.items.map((item) => {
+                            const isSelected = claimItems.some((ci) => ci.orderItemId === item.id)
+                            return (
+                              <div key={item.id} className="flex items-center gap-3 rounded-lg border p-3">
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => handleToggleClaimItem(item.id, item.quantity)}
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{item.title}</div>
+                                </div>
+                                {isSelected && (
+                                  <Select
+                                    value={claimItems.find((ci) => ci.orderItemId === item.id)?.reason || 'other'}
+                                    onValueChange={(val) => {
+                                      setClaimItems((prev) =>
+                                        prev.map((ci) =>
+                                          ci.orderItemId === item.id ? { ...ci, reason: val } : ci
+                                        )
+                                      )
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-40 h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="missing_item">Missing Item</SelectItem>
+                                      <SelectItem value="wrong_item">Wrong Item</SelectItem>
+                                      <SelectItem value="production_failure">Production Failure</SelectItem>
+                                      <SelectItem value="damaged">Damaged</SelectItem>
+                                      <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsClaimOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSubmitClaim} disabled={claimItems.length === 0}>
+                          Create Claim
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Separator className="my-2" />
+
                   <Button
                     variant="destructive"
                     onClick={handleCancelOrder}

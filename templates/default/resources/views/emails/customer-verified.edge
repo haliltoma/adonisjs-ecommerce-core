@@ -1,0 +1,11 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Email Verified!</h1>
+  <p>Hi {{ customerName }},</p>
+  <p>Your email address has been successfully verified. You now have full access to all features of your account.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account" class="btn">Go to Account</a>
+  </p>
+@end

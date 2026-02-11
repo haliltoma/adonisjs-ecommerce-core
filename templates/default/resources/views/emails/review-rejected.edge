@@ -1,0 +1,17 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>About Your Recent Review</h1>
+  <p>Hi {{ customerName }},</p>
+  <p>Thank you for taking the time to write a review. Unfortunately, we were unable to publish it at this time.</p>
+
+  @if(reason)
+    <p><strong>Reason:</strong> {{ reason }}</p>
+  @end
+
+  <p>You're welcome to submit a new review that follows our community guidelines.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account" class="btn">My Account</a>
+  </p>
+@end

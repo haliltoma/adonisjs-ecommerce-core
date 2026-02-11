@@ -6,6 +6,7 @@ import Seo from '@/components/shared/Seo'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useTranslation } from '@/hooks/use-translation'
 
 interface Category {
   id: string
@@ -20,12 +21,13 @@ interface Props {
 }
 
 export default function Collections({ categories }: Props) {
+  const { t } = useTranslation()
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   return (
     <StorefrontLayout>
       <Seo
-        title="Collections"
+        title={t('storefront.collectionsPage.title')}
         description="Browse our collections and find the perfect products for you."
         storeName="AdonisCommerce"
         baseUrl={baseUrl}
@@ -37,13 +39,13 @@ export default function Collections({ categories }: Props) {
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-up">
             <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-              Curated For You
+              {t('storefront.collectionsPage.curatedForYou')}
             </span>
             <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">
-              Collections
+              {t('storefront.collectionsPage.title')}
             </h1>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Browse our curated collections to find exactly what you're looking for.
+              {t('storefront.collectionsPage.subtitle')}
             </p>
           </div>
         </div>
@@ -92,12 +94,12 @@ export default function Collections({ categories }: Props) {
           <Card className="border-dashed border-border/60 animate-fade-up delay-200">
             <CardContent className="flex flex-col items-center justify-center py-20 text-center">
               <Package className="text-muted-foreground h-12 w-12" />
-              <h3 className="font-display mt-4 text-lg">No collections yet</h3>
+              <h3 className="font-display mt-4 text-lg">{t('storefront.collectionsPage.noCollections')}</h3>
               <p className="text-muted-foreground mt-1 max-w-sm">
-                Collections will appear here once they are set up. In the meantime, browse all of our products.
+                {t('storefront.collectionsPage.noCollectionsDesc')}
               </p>
               <Button asChild className="mt-6">
-                <Link href="/products">Browse All Products</Link>
+                <Link href="/products">{t('storefront.collectionsPage.browseAllProducts')}</Link>
               </Button>
             </CardContent>
           </Card>

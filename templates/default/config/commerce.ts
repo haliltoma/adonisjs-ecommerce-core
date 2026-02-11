@@ -198,6 +198,19 @@ const commerceConfig = {
 
   /*
   |--------------------------------------------------------------------------
+  | Search Settings
+  |--------------------------------------------------------------------------
+  */
+  search: {
+    driver: (process.env.SEARCH_PROVIDER as 'database' | 'meilisearch') || 'database',
+    meilisearch: {
+      host: process.env.MEILISEARCH_HOST || 'http://127.0.0.1:7700',
+      apiKey: process.env.MEILISEARCH_API_KEY || '',
+    },
+  },
+
+  /*
+  |--------------------------------------------------------------------------
   | Admin Settings
   |--------------------------------------------------------------------------
   */
@@ -207,6 +220,72 @@ const commerceConfig = {
     twoFactorEnabled: process.env.ADMIN_2FA_ENABLED === 'true',
     sessionTimeout: Number(process.env.ADMIN_SESSION_TIMEOUT) || 120,
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Queue Settings
+  |--------------------------------------------------------------------------
+  */
+  queue: {
+    driver: (process.env.QUEUE_DRIVER as 'bullmq' | 'memory') || 'memory',
+    connection: {
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: Number(process.env.REDIS_QUEUE_DB) || 1,
+    },
+    concurrency: Number(process.env.QUEUE_CONCURRENCY) || 5,
+    queues: {
+      default: 'default',
+      emails: 'emails',
+      orders: 'orders',
+      inventory: 'inventory',
+      webhooks: 'webhooks',
+      imports: 'imports',
+      analytics: 'analytics',
+      scheduled: 'scheduled',
+    },
+  },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Plugin Settings
+  |--------------------------------------------------------------------------
+  | Register plugins by their package name or module path.
+  | Example: ['@adoniscommerce-plugin/blog', '@adoniscommerce-plugin/loyalty']
+  */
+  plugins: [] as string[],
+
+  /*
+  |--------------------------------------------------------------------------
+  | Model Overrides
+  |--------------------------------------------------------------------------
+  | Override default model classes with your own implementations.
+  | This allows extending core models without modifying the source.
+  | Provide the import path to your custom model class.
+  |
+  | Example:
+  |   modelOverrides: {
+  |     Product: () => import('#models/custom_product'),
+  |     Order: () => import('#models/custom_order'),
+  |   }
+  */
+  modelOverrides: {} as Record<string, () => Promise<{ default: unknown }>>,
+
+  /*
+  |--------------------------------------------------------------------------
+  | Service Overrides
+  |--------------------------------------------------------------------------
+  | Override default service classes with your own implementations.
+  | Provide the import path to your custom service class.
+  |
+  | Example:
+  |   serviceOverrides: {
+  |     PaymentService: () => import('#services/custom_payment_service'),
+  |   }
+  */
+  serviceOverrides: {} as Record<string, () => Promise<{ default: unknown }>>,
 }
 
 export default commerceConfig
+export type CommerceConfig = typeof commerceConfig

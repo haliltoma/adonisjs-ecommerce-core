@@ -1,0 +1,13 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>How Was Your Order?</h1>
+  <p>We hope you're enjoying your recent purchase from order <strong>#{{ orderNumber }}</strong>!</p>
+  <p>We'd love to hear your thoughts. Your feedback helps other customers and helps us improve.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ storeUrl }}/account/orders/{{ orderId }}" class="btn">Write a Review</a>
+  </p>
+
+  <p class="muted">Thank you for being a valued customer!</p>
+@end

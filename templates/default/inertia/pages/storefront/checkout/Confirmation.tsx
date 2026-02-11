@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react'
 import { CheckCircle2, Package } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -51,6 +52,8 @@ interface Props {
 }
 
 export default function Confirmation({ order }: Props) {
+  const { t } = useTranslation()
+
   const formatAddress = (address: Address) => {
     if (!address) return null
     return [
@@ -66,7 +69,7 @@ export default function Confirmation({ order }: Props) {
 
   return (
     <StorefrontLayout>
-      <Head title="Order Confirmed" />
+      <Head title={t('storefront.confirmationPage.orderConfirmed')} />
 
       <div className="mx-auto max-w-2xl px-4 py-20 sm:px-6">
         {/* Success Header */}
@@ -74,16 +77,15 @@ export default function Confirmation({ order }: Props) {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
             <CheckCircle2 className="h-10 w-10 text-accent" />
           </div>
-          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent mt-6 block">Order Confirmed</span>
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent mt-6 block">{t('storefront.confirmationPage.orderConfirmed')}</span>
           <h1 className="font-display text-3xl tracking-tight mt-2">
-            Thank you for your order!
+            {t('storefront.confirmationPage.thankYou')}
           </h1>
           <p className="text-muted-foreground mt-3">
-            Order <span className="font-semibold">#{order.orderNumber}</span> has been placed
-            successfully.
+            {t('storefront.confirmationPage.orderPlacedSuccess', { orderNumber: order.orderNumber })}
           </p>
           <p className="text-muted-foreground mt-1 text-sm">
-            A confirmation email has been sent to{' '}
+            {t('storefront.confirmationPage.confirmationEmail')}{' '}
             <span className="font-medium">{order.email}</span>
           </p>
         </div>
@@ -93,7 +95,7 @@ export default function Confirmation({ order }: Props) {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-display text-lg flex items-center gap-2">
               <Package className="h-5 w-5 text-accent" />
-              Order Summary
+              {t('storefront.confirmationPage.orderSummary')}
             </CardTitle>
             <div className="flex gap-2">
               <Badge className="bg-accent text-accent-foreground text-[10px] uppercase tracking-wider">{order.status}</Badge>
@@ -120,28 +122,28 @@ export default function Confirmation({ order }: Props) {
 
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t('storefront.confirmationPage.subtotal')}</span>
                 <span className="font-medium">{formatCurrency(order.subtotal)}</span>
               </div>
               {order.discountTotal > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-muted-foreground">{t('storefront.confirmationPage.discount')}</span>
                   <span className="text-emerald-700 font-medium">
                     -{formatCurrency(order.discountTotal)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
+                <span className="text-muted-foreground">{t('storefront.confirmationPage.shipping')}</span>
                 <span className="font-medium">{formatCurrency(order.shippingTotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax</span>
+                <span className="text-muted-foreground">{t('storefront.confirmationPage.tax')}</span>
                 <span className="font-medium">{formatCurrency(order.taxTotal)}</span>
               </div>
               <Separator />
               <div className="flex justify-between items-baseline pt-1">
-                <span className="font-display text-lg">Total</span>
+                <span className="font-display text-lg">{t('storefront.confirmationPage.total')}</span>
                 <span className="font-display text-xl">{formatCurrency(order.total)}</span>
               </div>
             </div>
@@ -153,8 +155,8 @@ export default function Confirmation({ order }: Props) {
           {order.shippingAddress && (
             <Card>
               <CardHeader>
-                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Delivery</span>
-                <CardTitle className="font-display text-base mt-1">Shipping Address</CardTitle>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.confirmationPage.delivery')}</span>
+                <CardTitle className="font-display text-base mt-1">{t('storefront.confirmationPage.shippingAddress')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm leading-relaxed text-muted-foreground">
@@ -169,8 +171,8 @@ export default function Confirmation({ order }: Props) {
           {order.billingAddress && (
             <Card>
               <CardHeader>
-                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">Billing</span>
-                <CardTitle className="font-display text-base mt-1">Billing Address</CardTitle>
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">{t('storefront.confirmationPage.billing')}</span>
+                <CardTitle className="font-display text-base mt-1">{t('storefront.confirmationPage.billingAddress')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm leading-relaxed text-muted-foreground">
@@ -186,15 +188,15 @@ export default function Confirmation({ order }: Props) {
         {/* Actions */}
         <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center animate-fade-up delay-500">
           <Button asChild className="h-12 px-8 tracking-wide" size="lg">
-            <Link href="/products">Continue Shopping</Link>
+            <Link href="/products">{t('storefront.confirmationPage.continueShopping')}</Link>
           </Button>
           <Button variant="outline" asChild className="h-12 px-8 tracking-wide" size="lg">
-            <Link href={`/account/orders/${order.id}`}>View Order Details</Link>
+            <Link href={`/account/orders/${order.id}`}>{t('storefront.confirmationPage.viewOrderDetails')}</Link>
           </Button>
         </div>
 
         <p className="text-muted-foreground mt-8 text-center text-xs tracking-wide animate-fade-in delay-600">
-          Placed on {formatDate(order.createdAt)}
+          {t('storefront.confirmationPage.placedOn')} {formatDate(order.createdAt)}
         </p>
       </div>
     </StorefrontLayout>

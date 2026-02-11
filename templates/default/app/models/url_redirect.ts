@@ -10,14 +10,14 @@ export default class UrlRedirect extends BaseModel {
   @column()
   declare storeId: string
 
-  @column()
+  @column({ columnName: 'source_path' })
   declare fromPath: string
 
-  @column()
+  @column({ columnName: 'target_path' })
   declare toPath: string
 
   @column()
-  declare statusCode: 301 | 302 | 307 | 308
+  declare type: 'permanent' | 'temporary'
 
   @column()
   declare isActive: boolean
@@ -36,4 +36,11 @@ export default class UrlRedirect extends BaseModel {
 
   @belongsTo(() => Store)
   declare store: BelongsTo<typeof Store>
+
+  /**
+   * Get the HTTP status code based on the redirect type.
+   */
+  get statusCode(): 301 | 302 {
+    return this.type === 'permanent' ? 301 : 302
+  }
 }

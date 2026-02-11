@@ -1,4 +1,5 @@
 import logger from '@adonisjs/core/services/logger'
+import app from '@adonisjs/core/services/app'
 import {
   OrderCreated,
   OrderPaid,
@@ -8,6 +9,7 @@ import {
   OrderRefunded,
   OrderStatusChanged,
 } from '#events/order_events'
+import { QueueProvider } from '#contracts/queue_provider'
 import InventoryItem from '#models/inventory_item'
 import OrderStatusHistory from '#models/order_status_history'
 import AnalyticsEvent from '#models/analytics_event'
@@ -50,7 +52,23 @@ export default class OrderListener {
       revenue: order.grandTotal,
     })
 
-    // Send confirmation email (would integrate with mail service)
+    // Queue order confirmation email
+    try {
+      const queue = await app.container.make(QueueProvider)
+      await queue.dispatch({
+        name: 'send-email',
+        queue: 'emails',
+        data: {
+          to: order.email,
+          subject: `Order Confirmed - #${order.orderNumber}`,
+          template: 'order-confirmation',
+          data: { orderId: order.id, orderNumber: order.orderNumber },
+        },
+      })
+    } catch (err) {
+      logger.error(`[OrderListener] Failed to queue confirmation email: ${(err as Error).message}`)
+    }
+
     logger.info(`[OrderListener] Order confirmation email queued for order ${order.orderNumber}`)
   }
 
@@ -99,7 +117,27 @@ export default class OrderListener {
 
     logger.info(`[OrderListener] Order ${order.orderNumber} shipped via ${carrier || 'unknown'} (${trackingNumber || 'no tracking'})`)
 
-    // Send shipping confirmation email (would integrate with mail service)
+    // Queue shipping confirmation email
+    try {
+      const queue = await app.container.make(QueueProvider)
+      await queue.dispatch({
+        name: 'send-email',
+        queue: 'emails',
+        data: {
+          to: order.email,
+          subject: `Your Order #${order.orderNumber} Has Been Shipped`,
+          template: 'order-shipped',
+          data: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            trackingNumber: trackingNumber || null,
+            carrier: carrier || null,
+          },
+        },
+      })
+    } catch (err) {
+      logger.error(`[OrderListener] Failed to queue shipping email: ${(err as Error).message}`)
+    }
   }
 
   /**
@@ -112,7 +150,25 @@ export default class OrderListener {
 
     logger.info(`[OrderListener] Order ${order.orderNumber} delivered`)
 
-    // Send review request email after a delay (would integrate with queue)
+    // Queue review request email with 3-day delay
+    try {
+      const queue = await app.container.make(QueueProvider)
+      await queue.dispatchLater(
+        {
+          name: 'send-email',
+          queue: 'emails',
+          data: {
+            to: order.email,
+            subject: `How was your order #${order.orderNumber}?`,
+            template: 'order-review-request',
+            data: { orderId: order.id, orderNumber: order.orderNumber },
+          },
+        },
+        3 * 24 * 60 * 60 * 1000 // 3 days delay
+      )
+    } catch (err) {
+      logger.error(`[OrderListener] Failed to queue review request: ${(err as Error).message}`)
+    }
   }
 
   /**

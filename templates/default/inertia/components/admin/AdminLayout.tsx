@@ -1,5 +1,6 @@
-import { ReactNode } from 'react'
-import { Bell, Search } from 'lucide-react'
+import { ReactNode, useEffect, useState, useCallback } from 'react'
+import { usePage } from '@inertiajs/react'
+import { Bell, Search, CheckCircle2, XCircle, X, Sun, Moon } from 'lucide-react'
 
 import { AppSidebar } from '@/components/admin/AppSidebar'
 import { Button } from '@/components/ui/button'
@@ -18,12 +19,93 @@ interface AdminLayoutProps {
   actions?: ReactNode
 }
 
+function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg animate-in slide-in-from-top-2 fade-in duration-300 ${
+        type === 'success'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+          : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'
+      }`}
+    >
+      {type === 'success' ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+      ) : (
+        <XCircle className="h-4 w-4 shrink-0" />
+      )}
+      <span className="text-sm font-medium">{message}</span>
+      <button onClick={onClose} className="ml-auto shrink-0 opacity-60 hover:opacity-100">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+function useTheme() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark')
+    setTheme(isDark ? 'dark' : 'light')
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const root = document.documentElement
+    root.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('admin-theme', theme)
+  }, [theme, mounted])
+
+  const toggle = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }, [])
+
+  return { theme, toggle }
+}
+
 export default function AdminLayout({
   children,
   title,
   description,
   actions,
 }: AdminLayoutProps) {
+  const { props } = usePage<{ flash?: { success?: string; error?: string; errors?: Record<string, string> } }>()
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'error' }[]>([])
+  const { theme, toggle: toggleTheme } = useTheme()
+
+  useEffect(() => {
+    const flash = props.flash
+    if (!flash) return
+
+    const newToasts: typeof toasts = []
+    if (flash.success) {
+      newToasts.push({ id: Date.now(), message: flash.success, type: 'success' })
+    }
+    if (flash.error) {
+      newToasts.push({ id: Date.now() + 1, message: flash.error, type: 'error' })
+    }
+    if (flash.errors) {
+      Object.values(flash.errors).forEach((msg, i) => {
+        newToasts.push({ id: Date.now() + 2 + i, message: msg, type: 'error' })
+      })
+    }
+
+    if (newToasts.length) {
+      setToasts((prev) => [...prev, ...newToasts])
+    }
+  }, [props.flash])
+
+  const removeToast = (id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -48,6 +130,9 @@ export default function AdminLayout({
 
           {/* Right side */}
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme}>
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button variant="ghost" size="icon" className="relative h-8 w-8">
               <Bell className="h-4 w-4" />
               <span className="bg-accent absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-semibold text-white">
@@ -71,6 +156,20 @@ export default function AdminLayout({
           )}
           <div className="p-6">{children}</div>
         </main>
+
+        {/* Toast notifications */}
+        {toasts.length > 0 && (
+          <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+            {toasts.map((toast) => (
+              <Toast
+                key={toast.id}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => removeToast(toast.id)}
+              />
+            ))}
+          </div>
+        )}
       </SidebarInset>
     </SidebarProvider>
   )

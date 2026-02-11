@@ -1,6 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Product from '#models/product'
 import Category from '#models/category'
+import Collection from '#models/collection'
+import Page from '#models/page'
 import env from '#start/env'
 
 export default class SeoController {
@@ -70,18 +72,20 @@ Disallow: /
 
   /**
    * Generate XML Sitemap
-   * Lists all indexable pages for search engines
+   * Lists all indexable pages for search engines.
+   * Includes product images, CMS pages, and collections.
    */
   async sitemap({ response, store }: HttpContext) {
     const baseUrl = env.get('APP_URL', 'http://localhost:3333')
     const storeId = store.id
 
-    // Fetch active products
+    // Fetch active products with images
     const products = await Product.query()
       .where('storeId', storeId)
       .where('status', 'active')
+      .preload('images')
       .orderBy('updatedAt', 'desc')
-      .select(['slug', 'updatedAt'])
+      .select(['id', 'title', 'slug', 'updatedAt'])
 
     // Fetch active categories
     const categories = await Category.query()
@@ -89,14 +93,31 @@ Disallow: /
       .where('isActive', true)
       .select(['slug', 'updatedAt'])
 
+    // Fetch published CMS pages
+    const pages = await Page.query()
+      .where('storeId', storeId)
+      .where('status', 'published')
+      .select(['slug', 'updatedAt'])
+
+    // Fetch active collections
+    let collections: Array<{ slug: string; updatedAt: any }> = []
+    try {
+      collections = await Collection.query()
+        .where('storeId', storeId)
+        .where('isActive', true)
+        .select(['slug', 'updatedAt'])
+    } catch {
+      // Collection model may not exist
+    }
+
     const now = new Date().toISOString()
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
-  <!-- Static Pages -->
+  <!-- Homepage -->
   <url>
     <loc>${baseUrl}</loc>
     <lastmod>${now}</lastmod>
@@ -104,6 +125,7 @@ Disallow: /
     <priority>1.0</priority>
   </url>
 
+  <!-- Product Listing -->
   <url>
     <loc>${baseUrl}/products</loc>
     <lastmod>${now}</lastmod>
@@ -111,35 +133,82 @@ Disallow: /
     <priority>0.9</priority>
   </url>
 
+  <!-- Search -->
   <url>
     <loc>${baseUrl}/search</loc>
     <lastmod>${now}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
   </url>
+
+  <!-- Static Store Pages -->
+  <url><loc>${baseUrl}/about</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>${baseUrl}/contact</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>${baseUrl}/shipping</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>${baseUrl}/returns</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>${baseUrl}/faq</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 `
 
-    // Add categories
+    // Categories
     for (const category of categories) {
       const lastMod = category.updatedAt?.toISO() || now
       xml += `
   <url>
-    <loc>${baseUrl}/category/${category.slug}</loc>
+    <loc>${baseUrl}/category/${esc(category.slug)}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`
     }
 
-    // Add products
+    // Collections
+    for (const collection of collections) {
+      const lastMod = collection.updatedAt?.toISO?.() || now
+      xml += `
+  <url>
+    <loc>${baseUrl}/collections/${esc(collection.slug)}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+    }
+
+    // Products with images
     for (const product of products) {
       const lastMod = product.updatedAt?.toISO() || now
       xml += `
   <url>
-    <loc>${baseUrl}/products/${product.slug}</loc>
+    <loc>${baseUrl}/products/${esc(product.slug)}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.7</priority>`
+
+      // Add product images (Google Image sitemap extension)
+      const images = product.images || []
+      for (const img of images.slice(0, 10)) {
+        if (img.url) {
+          const imgUrl = img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
+          xml += `
+    <image:image>
+      <image:loc>${esc(imgUrl)}</image:loc>
+      <image:title>${esc(product.title)}</image:title>
+    </image:image>`
+        }
+      }
+
+      xml += `
+  </url>`
+    }
+
+    // CMS Pages
+    for (const page of pages) {
+      const lastMod = page.updatedAt?.toISO() || now
+      xml += `
+  <url>
+    <loc>${baseUrl}/pages/${esc(page.slug)}</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>`
     }
 
@@ -147,24 +216,61 @@ Disallow: /
 </urlset>`
 
     response.header('Content-Type', 'application/xml; charset=utf-8')
-    response.header('Cache-Control', 'public, max-age=3600') // Cache for 1 hour
+    response.header('Cache-Control', 'public, max-age=3600')
     return response.send(xml)
   }
 
   /**
-   * Generate sitemap index for large sites
-   * Splits sitemap into multiple files if needed
+   * Generate sitemap index for large sites.
+   * Points to /sitemap-products.xml, /sitemap-categories.xml, /sitemap-pages.xml
    */
-  async sitemapIndex({ response }: HttpContext) {
+  async sitemapIndex({ response, store }: HttpContext) {
     const baseUrl = env.get('APP_URL', 'http://localhost:3333')
+    const storeId = store.id
+
+    // Count products to decide if we need split sitemaps
+    const productCount = await Product.query()
+      .where('storeId', storeId)
+      .where('status', 'active')
+      .count('* as total')
+      .first()
+    const total = Number(productCount?.$extras.total || 0)
+
     const now = new Date().toISOString()
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    // For stores with < 5000 URLs, single sitemap is fine
+    if (total < 4000) {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>${baseUrl}/sitemap.xml</loc>
     <lastmod>${now}</lastmod>
   </sitemap>
+</sitemapindex>`
+
+      response.header('Content-Type', 'application/xml; charset=utf-8')
+      response.header('Cache-Control', 'public, max-age=3600')
+      return response.send(xml)
+    }
+
+    // For large stores, split into separate sitemaps
+    const pageCount = Math.ceil(total / 5000)
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${baseUrl}/sitemap.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>`
+
+    for (let i = 1; i <= pageCount; i++) {
+      xml += `
+  <sitemap>
+    <loc>${baseUrl}/sitemap-products-${i}.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>`
+    }
+
+    xml += `
 </sitemapindex>`
 
     response.header('Content-Type', 'application/xml; charset=utf-8')

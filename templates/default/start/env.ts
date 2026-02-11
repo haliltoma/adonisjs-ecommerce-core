@@ -34,5 +34,18 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PORT: Env.schema.number(),
   DB_USER: Env.schema.string(),
   DB_PASSWORD: Env.schema.string.optional(),
-  DB_DATABASE: Env.schema.string()
+  DB_DATABASE: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring payment providers
+  |----------------------------------------------------------
+  */
+  PAYMENT_PROVIDER: Env.schema.enum.optional(['manual', 'stripe', 'iyzico'] as const),
+  STRIPE_SECRET_KEY: Env.schema.string.optional(),
+  STRIPE_PUBLIC_KEY: Env.schema.string.optional(),
+  STRIPE_WEBHOOK_SECRET: Env.schema.string.optional(),
+  IYZICO_API_KEY: Env.schema.string.optional(),
+  IYZICO_SECRET_KEY: Env.schema.string.optional(),
+  IYZICO_BASE_URL: Env.schema.string.optional(),
 })

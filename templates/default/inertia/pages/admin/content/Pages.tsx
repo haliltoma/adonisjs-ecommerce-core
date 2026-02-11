@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react'
-import { FileText, Plus, Search } from 'lucide-react'
+import { Head, Link, router } from '@inertiajs/react'
+import { FileText, Plus, Search, Pencil, Trash, ExternalLink, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -7,6 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -22,6 +29,8 @@ interface PageItem {
   title: string
   slug: string
   status: 'draft' | 'published'
+  template: string
+  isSystem: boolean
   updatedAt: string | null
 }
 
@@ -37,6 +46,13 @@ export default function ContentPages({ pages }: Props) {
       page.title.toLowerCase().includes(search.toLowerCase()) ||
       page.slug.toLowerCase().includes(search.toLowerCase())
   )
+
+  const handleDelete = (page: PageItem) => {
+    if (page.isSystem) return
+    if (confirm(`Are you sure you want to delete "${page.title}"? This action cannot be undone.`)) {
+      router.delete(`/admin/content/pages/${page.id}`)
+    }
+  }
 
   return (
     <AdminLayout
@@ -74,12 +90,13 @@ export default function ContentPages({ pages }: Props) {
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Slug</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Status</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Last Updated</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPages.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-32 text-center">
+                    <TableCell colSpan={5} className="h-32 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <FileText className="h-8 w-8" style={{ color: '#e9b96e' }} />
                         <p className="text-muted-foreground text-sm">
@@ -103,15 +120,25 @@ export default function ContentPages({ pages }: Props) {
                   </TableRow>
                 ) : (
                   filteredPages.map((page) => (
-                    <TableRow key={page.id}>
+                    <TableRow key={page.id} className="group">
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <Link
+                          href={`/admin/content/pages/${page.id}/edit`}
+                          className="flex items-center gap-3 hover:underline underline-offset-4"
+                        >
                           <FileText className="h-4 w-4 flex-shrink-0" style={{ color: '#d4872e' }} />
-                          <span className="text-sm font-medium">{page.title}</span>
-                        </div>
+                          <div>
+                            <span className="text-sm font-medium">{page.title}</span>
+                            {page.isSystem && (
+                              <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                                System
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
-                        <code className="text-muted-foreground text-sm">/{page.slug}</code>
+                        <code className="text-muted-foreground text-sm">/pages/{page.slug}</code>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -123,6 +150,43 @@ export default function ContentPages({ pages }: Props) {
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {page.updatedAt ? formatDate(page.updatedAt) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/content/pages/${page.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            {page.status === 'published' && (
+                              <DropdownMenuItem asChild>
+                                <a href={`/pages/${page.slug}`} target="_blank" rel="noopener">
+                                  <ExternalLink className="mr-2 h-4 w-4" />
+                                  View Page
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            {!page.isSystem && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleDelete(page)}
+                                >
+                                  <Trash className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))

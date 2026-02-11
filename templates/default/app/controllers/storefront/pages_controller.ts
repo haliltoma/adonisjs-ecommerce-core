@@ -1,13 +1,24 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import vine from '@vinejs/vine'
 import Page from '#models/page'
+
+const contactValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(1).maxLength(200),
+    email: vine.string().email().normalizeEmail(),
+    subject: vine.string().trim().minLength(1).maxLength(300),
+    message: vine.string().trim().minLength(1).maxLength(5000),
+  })
+)
 
 export default class PagesController {
   /**
    * Convert page content blocks to HTML string
    */
-  private contentToHtml(content: { blocks: unknown[] } | null): string {
-    if (!content?.blocks?.length) return ''
-    return content.blocks
+  private contentToHtml(content: Record<string, unknown> | null): string {
+    const blocks = (content as any)?.blocks
+    if (!blocks?.length) return ''
+    return blocks
       .map((block: unknown) => {
         const b = block as { type?: string; data?: { text?: string; level?: number } }
         if (b.type === 'paragraph') return `<p>${b.data?.text || ''}</p>`
@@ -65,6 +76,18 @@ export default class PagesController {
           }
         : null,
     })
+  }
+
+  /**
+   * Handle contact form submission
+   */
+  async submitContact({ request, response, session, logger }: HttpContext) {
+    const data = await request.validateUsing(contactValidator)
+
+    logger.info({ contactMessage: data }, 'Contact form submission received')
+
+    session.flash('success', 'Thank you for your message!')
+    return response.redirect().back()
   }
 
   /**
@@ -211,6 +234,9 @@ export default class PagesController {
       return response.notFound({ error: 'Page not found' })
     }
 
+    // Check if content is Puck format (has root + content keys)
+    const isPuckContent = page.content && 'root' in page.content && 'content' in page.content
+
     return inertia.render('storefront/Page', {
       store: {
         name: store.name,
@@ -218,7 +244,10 @@ export default class PagesController {
       },
       page: {
         title: page.title,
-        content: this.contentToHtml(page.content),
+        slug: page.slug,
+        content: isPuckContent ? null : this.contentToHtml(page.content),
+        puckContent: isPuckContent ? page.content : null,
+        template: page.template,
         metaTitle: page.metaTitle,
         metaDescription: page.metaDescription,
       },

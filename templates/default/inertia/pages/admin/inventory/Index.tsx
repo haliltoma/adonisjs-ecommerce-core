@@ -1,10 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   AlertTriangle,
   Check,
   Download,
-  MapPin,
   Minus,
   Package,
   Plus,
@@ -39,19 +38,14 @@ import { debounce } from '@/lib/utils'
 interface InventoryItem {
   id: string
   productId: string
-  variantId: string | null
+  variantId: string
   productTitle: string
   variantTitle: string | null
   sku: string | null
   thumbnail: string | null
   quantity: number
-  reservedQuantity: number
-  availableQuantity: number
-  lowStockThreshold: number
   trackInventory: boolean
   allowBackorder: boolean
-  locationId: string
-  locationName: string
 }
 
 interface Location {
@@ -78,11 +72,158 @@ interface Props {
   }
 }
 
+function StockAdjuster({
+  item,
+  onClose,
+}: {
+  item: InventoryItem
+  onClose: () => void
+}) {
+  const [mode, setMode] = useState<'add' | 'remove' | 'set'>('add')
+  const [value, setValue] = useState('1')
+  const [reason, setReason] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [mode])
+
+  const numValue = parseInt(value) || 0
+
+  const canSubmit =
+    numValue > 0 &&
+    !submitting &&
+    (mode !== 'remove' || numValue <= item.quantity) &&
+    (mode !== 'set' || numValue !== item.quantity)
+
+  const handleSubmit = () => {
+    if (!canSubmit) return
+    setSubmitting(true)
+
+    if (mode === 'set') {
+      router.post(
+        `/admin/inventory/variants/${item.id}/set`,
+        { quantity: numValue },
+        { preserveScroll: true, onFinish: () => { setSubmitting(false); onClose() } }
+      )
+    } else {
+      router.post(
+        `/admin/inventory/variants/${item.id}/adjust`,
+        {
+          quantity: numValue,
+          type: mode === 'add' ? 'addition' : 'subtraction',
+          reason: reason || undefined,
+        },
+        { preserveScroll: true, onFinish: () => { setSubmitting(false); onClose() } }
+      )
+    }
+  }
+
+  const preview =
+    mode === 'set'
+      ? numValue
+      : mode === 'add'
+        ? item.quantity + numValue
+        : item.quantity - numValue
+
+  return (
+    <div className="absolute right-0 top-full z-30 mt-1 w-72 rounded-lg border bg-popover p-3 shadow-lg">
+      {/* Mode tabs */}
+      <div className="mb-3 flex rounded-md border bg-muted/50 p-0.5">
+        {(['add', 'remove', 'set'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => { setMode(m); setValue(m === 'set' ? String(item.quantity) : '1') }}
+            className={`flex-1 rounded-sm px-2 py-1 text-xs font-medium transition-colors ${
+              mode === m
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            disabled={m === 'remove' && item.quantity <= 0}
+          >
+            {m === 'add' ? 'Add' : m === 'remove' ? 'Remove' : 'Set'}
+          </button>
+        ))}
+      </div>
+
+      {/* Quantity input */}
+      <div className="mb-2 flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-1">
+          <span className="text-xs text-muted-foreground w-10">
+            {mode === 'set' ? 'To:' : 'Qty:'}
+          </span>
+          <Input
+            ref={inputRef}
+            type="number"
+            min={mode === 'set' ? 0 : 1}
+            max={mode === 'remove' ? item.quantity : undefined}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') onClose() }}
+            className="h-8 text-sm text-center"
+          />
+        </div>
+      </div>
+
+      {/* Preview */}
+      <div className="mb-2 flex items-center justify-between rounded-md bg-muted/50 px-2.5 py-1.5">
+        <span className="text-xs text-muted-foreground">Result</span>
+        <span className="text-sm font-medium">
+          {item.quantity}
+          {mode !== 'set' && (
+            <>
+              <span className={mode === 'add' ? 'text-emerald-600' : 'text-red-500'}>
+                {' '}{mode === 'add' ? '+' : '-'}{numValue || 0}
+              </span>
+              {' = '}
+            </>
+          )}
+          {mode === 'set' && <>{' → '}</>}
+          <span className={preview < 0 ? 'text-red-500' : ''}>{preview}</span>
+        </span>
+      </div>
+
+      {/* Validation error */}
+      {mode === 'remove' && numValue > item.quantity && (
+        <p className="mb-2 text-xs text-red-500">
+          Cannot remove more than current stock ({item.quantity})
+        </p>
+      )}
+
+      {/* Reason (optional) */}
+      {mode !== 'set' && (
+        <Input
+          placeholder="Reason (optional)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
+          className="mb-2 h-7 text-xs"
+        />
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-1.5">
+        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          className="h-7 text-xs"
+          disabled={!canSubmit}
+          onClick={handleSubmit}
+        >
+          {submitting ? 'Saving...' : 'Confirm'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export default function InventoryIndex({ inventory, locations, filters = {} }: Props) {
   const [search, setSearch] = useState(filters.search || '')
   const [adjustingId, setAdjustingId] = useState<string | null>(null)
-  const [adjustmentValue, setAdjustmentValue] = useState('')
-  const [adjustmentReason, setAdjustmentReason] = useState('')
 
   const debouncedSearch = debounce((value: string) => {
     router.get(
@@ -105,24 +246,11 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
     )
   }
 
-  const handleAdjustment = (itemId: string) => {
-    const value = parseInt(adjustmentValue)
-    if (isNaN(value) || value === 0) return
-
+  const handleQuickAdjust = (itemId: string, type: 'addition' | 'subtraction') => {
     router.post(
-      `/admin/inventory/${itemId}/adjust`,
-      {
-        adjustment: value,
-        reason: adjustmentReason,
-      },
-      {
-        preserveScroll: true,
-        onSuccess: () => {
-          setAdjustingId(null)
-          setAdjustmentValue('')
-          setAdjustmentReason('')
-        },
-      }
+      `/admin/inventory/variants/${itemId}/adjust`,
+      { quantity: 1, type, reason: type === 'addition' ? 'Quick add' : 'Quick remove' },
+      { preserveScroll: true }
     )
   }
 
@@ -132,18 +260,18 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
     if (!item.trackInventory) {
       return { label: 'Not tracked', variant: 'outline' }
     }
-    if (item.availableQuantity <= 0) {
+    if (item.quantity <= 0) {
       return { label: 'Out of stock', variant: 'destructive' }
     }
-    if (item.availableQuantity <= item.lowStockThreshold) {
+    if (item.quantity <= 10) {
       return { label: 'Low stock', variant: 'secondary' }
     }
     return { label: 'In stock', variant: 'default' }
   }
 
   const getQuantityColor = (item: InventoryItem) => {
-    if (item.availableQuantity <= 0) return 'text-red-600'
-    if (item.availableQuantity <= item.lowStockThreshold) return 'text-yellow-600'
+    if (item.quantity <= 0) return 'text-red-600 dark:text-red-400'
+    if (item.quantity <= 10) return 'text-yellow-600 dark:text-yellow-400'
     return ''
   }
 
@@ -185,25 +313,26 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Select
-                  value={filters.locationId || 'all'}
-                  onValueChange={(value) =>
-                    handleFilterChange('locationId', value === 'all' ? '' : value)
-                  }
-                >
-                  <SelectTrigger className="w-[180px] h-9 text-sm">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All locations</SelectItem>
-                    {locations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {locations.length > 0 && (
+                  <Select
+                    value={filters.locationId || 'all'}
+                    onValueChange={(value) =>
+                      handleFilterChange('locationId', value === 'all' ? '' : value)
+                    }
+                  >
+                    <SelectTrigger className="w-[180px] h-9 text-sm">
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All locations</SelectItem>
+                      {locations.map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
 
                 <label className="flex items-center gap-2">
                   <Checkbox
@@ -223,18 +352,15 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
                 <TableRow>
                   <TableHead className="text-xs">Product</TableHead>
                   <TableHead className="text-xs">SKU</TableHead>
-                  <TableHead className="text-xs">Location</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-center text-xs">Available</TableHead>
-                  <TableHead className="text-center text-xs">Reserved</TableHead>
-                  <TableHead className="text-center text-xs">Total</TableHead>
-                  <TableHead className="w-32"></TableHead>
+                  <TableHead className="text-center text-xs">Stock</TableHead>
+                  <TableHead className="w-40"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {inventory.data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center">
+                    <TableCell colSpan={5} className="h-32 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="text-muted-foreground h-8 w-8" />
                         <p className="text-muted-foreground text-sm">
@@ -285,14 +411,8 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="font-mono text-xs">
+                        <TableCell className="font-mono text-xs text-muted-foreground">
                           {item.sku || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="text-muted-foreground h-3 w-3" />
-                            <span className="text-sm">{item.locationName}</span>
-                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="text-[11px]">
@@ -303,72 +423,53 @@ export default function InventoryIndex({ inventory, locations, filters = {} }: P
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={`text-sm font-medium ${getQuantityColor(item)}`}>
-                            {item.availableQuantity}
+                          <span className={`text-sm font-semibold tabular-nums ${getQuantityColor(item)}`}>
+                            {item.quantity}
                           </span>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-center text-sm">
-                          {item.reservedQuantity}
-                        </TableCell>
-                        <TableCell className="text-center text-sm font-medium">
-                          {item.quantity}
-                        </TableCell>
                         <TableCell>
-                          {adjustingId === item.id ? (
-                            <div className="flex items-center gap-1">
-                              <Input
-                                type="number"
-                                value={adjustmentValue}
-                                onChange={(e) => setAdjustmentValue(e.target.value)}
-                                placeholder="+/-"
-                                className="h-8 w-16 text-center text-sm"
+                          <div className="relative flex items-center justify-end gap-1">
+                            {/* Quick -1 */}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              disabled={item.quantity <= 0}
+                              onClick={() => handleQuickAdjust(item.id, 'subtraction')}
+                              title={item.quantity <= 0 ? 'No stock to remove' : 'Remove 1'}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+
+                            {/* Quick +1 */}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => handleQuickAdjust(item.id, 'addition')}
+                              title="Add 1"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+
+                            {/* Custom adjust toggle */}
+                            <Button
+                              variant={adjustingId === item.id ? 'secondary' : 'ghost'}
+                              size="sm"
+                              className="h-7 px-2 text-[11px]"
+                              onClick={() => setAdjustingId(adjustingId === item.id ? null : item.id)}
+                            >
+                              {adjustingId === item.id ? <X className="h-3 w-3" /> : 'Adjust'}
+                            </Button>
+
+                            {/* Popover for custom adjustment */}
+                            {adjustingId === item.id && (
+                              <StockAdjuster
+                                item={item}
+                                onClose={() => setAdjustingId(null)}
                               />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-green-600 hover:text-green-700"
-                                onClick={() => handleAdjustment(item.id)}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => {
-                                  setAdjustingId(null)
-                                  setAdjustmentValue('')
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => {
-                                  setAdjustingId(item.id)
-                                  setAdjustmentValue('-1')
-                                }}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => {
-                                  setAdjustingId(item.id)
-                                  setAdjustmentValue('1')
-                                }}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     )

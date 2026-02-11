@@ -1,0 +1,11 @@
+@layout('emails/layout')
+
+@slot('main')
+  <h1>Welcome, {{ customerName }}!</h1>
+  <p>Thanks for creating an account with us. We're excited to have you on board.</p>
+  <p>You can now track your orders, save your favorite products, and enjoy a faster checkout experience.</p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{{ loginUrl }}" class="btn">Start Shopping</a>
+  </p>
+@end

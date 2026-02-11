@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Package, X } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { useTranslation } from '@/hooks/use-translation'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -85,6 +86,7 @@ export default function CategoryPage({
   breadcrumb,
   subcategories,
 }: Props) {
+  const { t } = useTranslation()
   const [localFilters, setLocalFilters] = useState({
     minPrice: filters.minPrice?.toString() || '',
     maxPrice: filters.maxPrice?.toString() || '',
@@ -120,7 +122,7 @@ export default function CategoryPage({
         title={category.name}
         description={
           category.description ||
-          `Shop ${category.name} at ${storeName}. Browse ${products.meta.total} products.`
+          t('storefront.categoryPage.productsCount', { count: products.meta.total })
         }
         storeName={storeName}
         baseUrl={baseUrl}
@@ -133,13 +135,13 @@ export default function CategoryPage({
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/">Home</Link>
+                <Link href="/">{t('storefront.categoryPage.home')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/products">Products</Link>
+                <Link href="/products">{t('storefront.categoryPage.products')}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             {breadcrumb.map((item) => (
@@ -173,7 +175,7 @@ export default function CategoryPage({
             </div>
           )}
           <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-            Collection
+            {t('storefront.categoryPage.collection')}
           </span>
           <h1 className="font-display text-3xl tracking-tight mt-2">{category.name}</h1>
           {category.description && (
@@ -184,7 +186,7 @@ export default function CategoryPage({
         {/* Subcategories */}
         {subcategories.length > 0 && (
           <div className="mb-12 animate-fade-up delay-100">
-            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground">Subcategories</span>
+            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground">{t('storefront.categoryPage.subcategories')}</span>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {subcategories.map((sub) => (
                 <Link
@@ -215,7 +217,7 @@ export default function CategoryPage({
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between pb-4 animate-fade-up delay-200">
           <p className="text-muted-foreground text-sm">
-            {products.meta.total} products
+            {t('storefront.categoryPage.productsCount', { count: products.meta.total })}
           </p>
           <Select
             value={filters.sortBy || 'newest'}
@@ -228,12 +230,12 @@ export default function CategoryPage({
             }
           >
             <SelectTrigger className="w-44 border-border/60">
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder={t('storefront.categoryPage.sortBy')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="price-asc">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc">Price: High to Low</SelectItem>
+              <SelectItem value="newest">{t('storefront.categoryPage.newest')}</SelectItem>
+              <SelectItem value="price-asc">{t('storefront.categoryPage.priceLowHigh')}</SelectItem>
+              <SelectItem value="price-desc">{t('storefront.categoryPage.priceHighLow')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -246,12 +248,12 @@ export default function CategoryPage({
             <div className="sticky top-24 space-y-6">
               {/* Price Range */}
               <div>
-                <h3 className="text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground">Price Range</h3>
+                <h3 className="text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground">{t('storefront.categoryPage.priceRange')}</h3>
                 <div className="mt-4 space-y-3">
                   <div className="flex gap-2">
                     <Input
                       type="number"
-                      placeholder="Min"
+                      placeholder={t('storefront.categoryPage.min')}
                       value={localFilters.minPrice}
                       onChange={(e) =>
                         setLocalFilters({ ...localFilters, minPrice: e.target.value })
@@ -261,7 +263,7 @@ export default function CategoryPage({
                     <span className="text-muted-foreground flex items-center">-</span>
                     <Input
                       type="number"
-                      placeholder="Max"
+                      placeholder={t('storefront.categoryPage.max')}
                       value={localFilters.maxPrice}
                       onChange={(e) =>
                         setLocalFilters({ ...localFilters, maxPrice: e.target.value })
@@ -270,7 +272,7 @@ export default function CategoryPage({
                     />
                   </div>
                   <Button size="sm" className="w-full" onClick={applyFilters}>
-                    Apply
+                    {t('storefront.categoryPage.apply')}
                   </Button>
                 </div>
               </div>
@@ -286,7 +288,7 @@ export default function CategoryPage({
                     onClick={clearFilters}
                   >
                     <X className="mr-2 h-4 w-4" />
-                    Clear filters
+                    {t('storefront.categoryPage.clearFilters')}
                   </Button>
                 </>
               )}
@@ -362,10 +364,10 @@ export default function CategoryPage({
                         )
                       }
                     >
-                      Previous
+                      {t('storefront.categoryPage.previous')}
                     </Button>
                     <span className="text-muted-foreground px-4 text-sm">
-                      Page {products.meta.currentPage} of {products.meta.lastPage}
+                      {t('storefront.categoryPage.pageOf', { current: products.meta.currentPage, total: products.meta.lastPage })}
                     </span>
                     <Button
                       variant="outline"
@@ -380,7 +382,7 @@ export default function CategoryPage({
                         )
                       }
                     >
-                      Next
+                      {t('storefront.categoryPage.next')}
                     </Button>
                   </div>
                 )}
@@ -389,12 +391,12 @@ export default function CategoryPage({
               <Card className="border-dashed border-border/60 animate-fade-up delay-300">
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                   <Package className="text-muted-foreground h-12 w-12" />
-                  <h3 className="font-display mt-4 text-lg">No products found</h3>
+                  <h3 className="font-display mt-4 text-lg">{t('storefront.categoryPage.noProducts')}</h3>
                   <p className="text-muted-foreground mt-1">
-                    This category doesn't have any products yet.
+                    {t('storefront.categoryPage.noProductsDesc')}
                   </p>
                   <Button asChild className="mt-4">
-                    <Link href="/products">Browse all products</Link>
+                    <Link href="/products">{t('storefront.categoryPage.browseAll')}</Link>
                   </Button>
                 </CardContent>
               </Card>

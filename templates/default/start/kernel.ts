@@ -39,6 +39,7 @@ router.use([
   () => import('@adonisjs/shield/shield_middleware'),
   () => import('@adonisjs/auth/initialize_auth_middleware'),
   () => import('#middleware/store_resolver_middleware'),
+  () => import('#middleware/url_redirect_middleware'),
   () => import('#middleware/locale_detector_middleware'),
   () => import('#middleware/currency_resolver_middleware')
 ])
@@ -50,5 +51,8 @@ router.use([
 export const middleware = router.named({
   guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
-  adminAuth: () => import('#middleware/admin_auth_middleware')
+  adminAuth: () => import('#middleware/admin_auth_middleware'),
+  adminRole: () => import('#middleware/admin_role_middleware'),
+  adminPermission: () => import('#middleware/admin_permission_middleware'),
+  rateLimit: () => import('#middleware/rate_limit_middleware'),
 })

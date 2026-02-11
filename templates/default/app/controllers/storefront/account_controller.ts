@@ -3,6 +3,9 @@ import AuthService from '#services/auth_service'
 import CustomerService from '#services/customer_service'
 import OrderService from '#services/order_service'
 import CartService from '#services/cart_service'
+import Review from '#models/review'
+import Wishlist from '#models/wishlist'
+import WishlistItem from '#models/wishlist_item'
 
 export default class AccountController {
   private authService: AuthService
@@ -17,9 +20,184 @@ export default class AccountController {
     this.cartService = new CartService()
   }
 
-  async wishlist({ inertia }: HttpContext) {
-    return inertia.render('storefront/Wishlist', {
-      items: [],
+  async wishlist({ inertia, session }: HttpContext) {
+    const customerId = session.get('customer_id')
+    let items: Array<Record<string, unknown>> = []
+
+    if (customerId) {
+      const wishlist = await Wishlist.query()
+        .where('customerId', customerId)
+        .preload('items', (q) => {
+          q.preload('product', (pq) => {
+            pq.preload('images', (iq) => iq.orderBy('sortOrder', 'asc').limit(1))
+          })
+        })
+        .first()
+
+      if (wishlist) {
+        items = wishlist.items.map((item) => ({
+          id: item.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          note: item.note,
+          createdAt: item.createdAt.toISO(),
+          product: item.product ? {
+            id: item.product.id,
+            title: item.product.title,
+            slug: item.product.slug,
+            price: item.product.price,
+            compareAtPrice: item.product.compareAtPrice,
+            status: item.product.status,
+            imageUrl: item.product.images?.[0]?.url || null,
+          } : null,
+        }))
+      }
+    }
+
+    return inertia.render('storefront/Wishlist', { items })
+  }
+
+  async addToWishlist({ request, response, session }: HttpContext) {
+    const customerId = session.get('customer_id')
+
+    if (!customerId) {
+      session.flash('error', 'Please login to use wishlist')
+      return response.redirect().toRoute('storefront.account.login')
+    }
+
+    const { productId, variantId } = request.only(['productId', 'variantId'])
+
+    try {
+      let wishlist = await Wishlist.query()
+        .where('customerId', customerId)
+        .first()
+
+      if (!wishlist) {
+        wishlist = await Wishlist.create({
+          customerId,
+          name: 'My Wishlist',
+          isPublic: false,
+        })
+      }
+
+      const existing = await WishlistItem.query()
+        .where('wishlistId', wishlist.id)
+        .where('productId', productId)
+        .first()
+
+      if (!existing) {
+        await WishlistItem.create({
+          wishlistId: wishlist.id,
+          productId,
+          variantId: variantId || null,
+        })
+      }
+
+      session.flash('success', 'Added to wishlist')
+      return response.redirect().back()
+    } catch (error) {
+      session.flash('error', (error as Error).message)
+      return response.redirect().back()
+    }
+  }
+
+  async removeFromWishlist({ params, response, session }: HttpContext) {
+    const customerId = session.get('customer_id')
+
+    if (!customerId) {
+      return response.redirect().toRoute('storefront.account.login')
+    }
+
+    try {
+      const wishlist = await Wishlist.query()
+        .where('customerId', customerId)
+        .firstOrFail()
+
+      await WishlistItem.query()
+        .where('wishlistId', wishlist.id)
+        .where('id', params.id)
+        .delete()
+
+      session.flash('success', 'Removed from wishlist')
+      return response.redirect().back()
+    } catch (error) {
+      session.flash('error', (error as Error).message)
+      return response.redirect().back()
+    }
+  }
+
+  async orderTracking({ inertia, request, store }: HttpContext) {
+    const { orderNumber, email } = request.qs()
+
+    if (!orderNumber || !email) {
+      return inertia.render('storefront/account/OrderTracking')
+    }
+
+    const order = await this.orderService.findByOrderNumber(store.id, orderNumber)
+
+    if (!order || order.email !== email) {
+      return inertia.render('storefront/account/OrderTracking')
+    }
+
+    const events: Array<Record<string, unknown>> = []
+
+    // Add order placed event
+    events.push({
+      id: 'placed',
+      status: 'order_placed',
+      description: 'Order placed',
+      timestamp: order.createdAt.toISO(),
+    })
+
+    // Add fulfillment events
+    if (order.fulfillments) {
+      for (const f of order.fulfillments) {
+        if (f.createdAt) {
+          events.push({
+            id: `ful-${f.id}`,
+            status: 'processing',
+            description: 'Order is being prepared',
+            timestamp: f.createdAt.toISO(),
+          })
+        }
+        if (f.shippedAt) {
+          events.push({
+            id: `ship-${f.id}`,
+            status: 'shipped',
+            description: `Shipped via ${f.carrier || 'carrier'}`,
+            location: f.trackingNumber || undefined,
+            timestamp: f.shippedAt.toISO(),
+          })
+        }
+        if (f.deliveredAt) {
+          events.push({
+            id: `del-${f.id}`,
+            status: 'delivered',
+            description: 'Package delivered',
+            timestamp: f.deliveredAt.toISO(),
+          })
+        }
+      }
+    }
+
+    // Sort events newest first
+    events.sort((a, b) => {
+      const ta = a.timestamp as string
+      const tb = b.timestamp as string
+      return tb.localeCompare(ta)
+    })
+
+    const latestFulfillment = order.fulfillments?.[0]
+
+    return inertia.render('storefront/account/OrderTracking', {
+      tracking: {
+        orderNumber: order.orderNumber,
+        status: latestFulfillment?.status || order.status,
+        carrier: latestFulfillment?.carrier || '',
+        trackingNumber: latestFulfillment?.trackingNumber || '',
+        estimatedDelivery: null,
+        events,
+      },
     })
   }
 
@@ -220,6 +398,53 @@ export default class AccountController {
           deliveredAt: f.deliveredAt?.toISO(),
         })),
         createdAt: order.createdAt.toISO(),
+      },
+    })
+  }
+
+  async reviews({ inertia, session, response, request }: HttpContext) {
+    const customerId = session.get('customer_id')
+
+    if (!customerId) {
+      return response.redirect().toRoute('storefront.account.login')
+    }
+
+    const page = request.input('page', 1)
+
+    const reviews = await Review.query()
+      .where('customerId', customerId)
+      .preload('product', (pq) => {
+        pq.preload('images', (iq) => iq.orderBy('sortOrder', 'asc').limit(1))
+      })
+      .orderBy('createdAt', 'desc')
+      .paginate(page, 10)
+
+    return inertia.render('storefront/account/Reviews', {
+      reviews: {
+        data: reviews.all().map((r) => ({
+          id: r.id,
+          rating: r.rating,
+          title: r.title,
+          content: r.content,
+          status: r.status,
+          isVerifiedPurchase: r.isVerifiedPurchase,
+          helpfulCount: r.helpfulCount,
+          product: r.product
+            ? {
+                id: r.product.id,
+                title: r.product.title,
+                slug: r.product.slug,
+                thumbnail: r.product.images?.[0]?.url || null,
+              }
+            : null,
+          createdAt: r.createdAt.toISO(),
+        })),
+        meta: {
+          total: reviews.total,
+          perPage: reviews.perPage,
+          currentPage: reviews.currentPage,
+          lastPage: reviews.lastPage,
+        },
       },
     })
   }
