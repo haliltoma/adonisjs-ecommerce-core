@@ -255,6 +255,7 @@ export default class OrderService {
   async list(filters: OrderFilters): Promise<ModelPaginatorContract<Order>> {
     const query = Order.query()
       .where('storeId', filters.storeId)
+      .whereNull('deletedAt')
       .preload('items')
       .preload('customer')
 
@@ -300,6 +301,7 @@ export default class OrderService {
   async getCustomerOrders(customerId: string, page: number = 1, limit: number = 10) {
     return await Order.query()
       .where('customerId', customerId)
+      .whereNull('deletedAt')
       .preload('items')
       .orderBy('createdAt', 'desc')
       .paginate(page, limit)
@@ -310,7 +312,7 @@ export default class OrderService {
   }
 
   async getOrderStats(storeId: string, dateFrom?: DateTime, dateTo?: DateTime) {
-    const query = Order.query().where('storeId', storeId)
+    const query = Order.query().where('storeId', storeId).whereNull('deletedAt')
 
     if (dateFrom) {
       query.where('createdAt', '>=', dateFrom.toISO()!)

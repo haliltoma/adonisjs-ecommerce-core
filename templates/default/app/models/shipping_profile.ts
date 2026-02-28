@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Product from './product.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class ShippingProfile extends BaseModel {
   @column({ isPrimary: true })
@@ -17,7 +18,7 @@ export default class ShippingProfile extends BaseModel {
   @column()
   declare type: 'default' | 'gift_card' | 'custom'
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

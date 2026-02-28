@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import Return from '#models/return'
 import ReturnItem from '#models/return_item'
 import ReturnReason from '#models/return_reason'
@@ -74,7 +75,7 @@ export default class ReturnService {
 
       returnRecord.status = 'received'
       returnRecord.receivedBy = data.receivedBy ?? null
-      returnRecord.receivedAt = new Date() as any
+      returnRecord.receivedAt = DateTime.now()
       returnRecord.useTransaction(trx)
       await returnRecord.save()
 

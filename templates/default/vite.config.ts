@@ -14,7 +14,7 @@ export default defineConfig({
       entrypoints: ['inertia/app/app.tsx', 'inertia/css/app.css'],
       reload: ['resources/views/**/*.edge'],
     }),
-    inertia({ ssr: { enabled: true, entrypoint: 'inertia/app/ssr.tsx' } }),
+    inertia({ ssr: { enabled: false } }),
     react(),
     tailwindcss(),
   ],

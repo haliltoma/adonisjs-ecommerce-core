@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import ApiKey from '#models/api_key'
 import { createHash, randomBytes } from 'node:crypto'
 
@@ -59,7 +60,7 @@ export default class ApiKeyService {
       .whereNull('revokedAt')
       .firstOrFail()
 
-    apiKey.revokedAt = new Date() as any
+    apiKey.revokedAt = DateTime.now()
     await apiKey.save()
     return apiKey
   }
@@ -95,7 +96,7 @@ export default class ApiKeyService {
       .first()
 
     if (apiKey) {
-      apiKey.lastUsedAt = new Date() as any
+      apiKey.lastUsedAt = DateTime.now()
       await apiKey.save()
     }
 

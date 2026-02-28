@@ -138,8 +138,8 @@ export default class DiscountsController {
 
       session.flash('success', 'Discount created successfully')
       return response.redirect().toRoute('admin.discounts.edit', { id: discount.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -268,8 +268,8 @@ export default class DiscountsController {
 
       session.flash('success', 'Discount updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -279,8 +279,8 @@ export default class DiscountsController {
       await this.discountService.delete(params.id)
       session.flash('success', 'Discount deleted')
       return response.redirect().toRoute('admin.discounts.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -296,8 +296,8 @@ export default class DiscountsController {
       await this.discountService.update(params.id, { isActive: !discount.isActive })
       session.flash('success', `Discount ${discount.isActive ? 'deactivated' : 'activated'}`)
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

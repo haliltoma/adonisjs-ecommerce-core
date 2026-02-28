@@ -39,7 +39,7 @@ export default class CacheInvalidationListener {
       if (event.product.isFeatured) {
         await cache.deletePattern(`store:${storeId}:products:featured`)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: ProductCreated')
     }
   }
@@ -67,7 +67,7 @@ export default class CacheInvalidationListener {
       if ('isFeatured' in event.changes) {
         await cache.deletePattern(`store:${storeId}:products:featured`)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: ProductUpdated')
     }
   }
@@ -83,7 +83,7 @@ export default class CacheInvalidationListener {
         cache.deletePattern(`store:${storeId}:products:*`),
         cache.deletePattern(`store:${storeId}:categories:*`),
       ])
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: ProductDeleted')
     }
   }
@@ -100,7 +100,7 @@ export default class CacheInvalidationListener {
       if (event.customer) {
         await cache.deletePattern(`store:${storeId}:orders:customer:${event.customer.id}:*`)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: OrderCreated')
     }
   }
@@ -115,7 +115,7 @@ export default class CacheInvalidationListener {
         cache.deletePattern(`store:${storeId}:analytics:*`),
         cache.deletePattern(`store:${storeId}:orders:customer:${event.order.customerId}:*`),
       ])
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: OrderStatusChanged')
     }
   }
@@ -129,7 +129,7 @@ export default class CacheInvalidationListener {
       // Invalidate product cache since stock affects availability display
       await cache.deletePattern(`store:*:product:*`)
       await cache.deletePattern(`store:*:products:*`)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Cache invalidation failed: InventoryAdjusted')
     }
   }

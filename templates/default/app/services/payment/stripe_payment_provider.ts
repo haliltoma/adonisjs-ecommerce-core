@@ -76,7 +76,7 @@ export class StripePaymentProvider extends PaymentProvider {
           url: session.url,
         },
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const stripeError = error as Stripe.errors.StripeError
       return {
         success: false,
@@ -128,7 +128,7 @@ export class StripePaymentProvider extends PaymentProvider {
           paymentMethod: paymentIntent.payment_method,
         },
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const stripeError = error as Stripe.errors.StripeError
       return {
         success: false,
@@ -184,7 +184,7 @@ export class StripePaymentProvider extends PaymentProvider {
           paymentIntent: refund.payment_intent,
         },
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const stripeError = error as Stripe.errors.StripeError
       return {
         success: false,
@@ -219,7 +219,7 @@ export class StripePaymentProvider extends PaymentProvider {
           status: paymentIntent.status,
         },
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const stripeError = error as Stripe.errors.StripeError
       return {
         success: false,

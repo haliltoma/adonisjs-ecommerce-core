@@ -40,8 +40,8 @@ export default class PaymentWebhookController {
 
     try {
       webhookEvent = await paymentProvider.verifyWebhook(rawBody, signature)
-    } catch (error) {
-      logger.warn({ error: error.message }, 'Stripe webhook signature verification failed')
+    } catch (error: unknown) {
+      logger.warn({ error: (error as Error).message }, 'Stripe webhook signature verification failed')
       return response.status(400).json({ error: 'Invalid webhook signature' })
     }
 
@@ -56,8 +56,8 @@ export default class PaymentWebhookController {
 
     try {
       await this.handleStripeEvent(webhookEvent.type, webhookEvent.transactionId, webhookEvent.data)
-    } catch (error) {
-      logger.error({ error: error.message, type: webhookEvent.type }, 'Error processing Stripe webhook')
+    } catch (error: unknown) {
+      logger.error({ error: (error as Error).message, type: webhookEvent.type }, 'Error processing Stripe webhook')
       // Still return 200 so Stripe doesn't retry
     }
 
@@ -78,8 +78,8 @@ export default class PaymentWebhookController {
 
     try {
       webhookEvent = await paymentProvider.verifyWebhook(rawBody, '')
-    } catch (error) {
-      logger.warn({ error: error.message }, 'Iyzico webhook verification failed')
+    } catch (error: unknown) {
+      logger.warn({ error: (error as Error).message }, 'Iyzico webhook verification failed')
       return response.status(400).json({ error: 'Invalid Iyzico callback' })
     }
 
@@ -157,8 +157,8 @@ export default class PaymentWebhookController {
           ))
         }
       }
-    } catch (error) {
-      logger.error({ error: error.message }, 'Error processing Iyzico webhook')
+    } catch (error: unknown) {
+      logger.error({ error: (error as Error).message }, 'Error processing Iyzico webhook')
     }
 
     // Iyzico expects a redirect to the confirmation page
@@ -206,7 +206,8 @@ export default class PaymentWebhookController {
    * Checkout session completed — payment successful.
    */
   private async handleCheckoutComplete(sessionId: string, data: Record<string, unknown>) {
-    const orderId = (data.client_reference_id || (data.metadata as any)?.orderId) as string
+    const metadata = data.metadata as Record<string, unknown> | undefined
+    const orderId = (data.client_reference_id || metadata?.orderId) as string
     if (!orderId) {
       logger.warn({ sessionId }, 'Checkout complete webhook missing orderId')
       return
@@ -259,7 +260,8 @@ export default class PaymentWebhookController {
    * Checkout session expired — customer didn't complete payment.
    */
   private async handleCheckoutExpired(sessionId: string, data: Record<string, unknown>) {
-    const orderId = (data.client_reference_id || (data.metadata as any)?.orderId) as string
+    const metadata = data.metadata as Record<string, unknown> | undefined
+    const orderId = (data.client_reference_id || metadata?.orderId) as string
     if (!orderId) return
 
     const order = await this.orderService.findById(orderId)
@@ -283,7 +285,8 @@ export default class PaymentWebhookController {
    * PaymentIntent succeeded (direct PI flow, not Checkout Session).
    */
   private async handlePaymentSucceeded(paymentIntentId: string, data: Record<string, unknown>) {
-    const orderId = ((data.metadata as any)?.orderId) as string
+    const metadata = data.metadata as Record<string, unknown> | undefined
+    const orderId = metadata?.orderId as string
     if (!orderId) return
 
     const order = await this.orderService.findById(orderId)
@@ -319,7 +322,8 @@ export default class PaymentWebhookController {
    * PaymentIntent failed.
    */
   private async handlePaymentFailed(paymentIntentId: string, data: Record<string, unknown>) {
-    const orderId = ((data.metadata as any)?.orderId) as string
+    const metadata = data.metadata as Record<string, unknown> | undefined
+    const orderId = metadata?.orderId as string
     if (!orderId) return
 
     const order = await this.orderService.findById(orderId)
@@ -339,11 +343,11 @@ export default class PaymentWebhookController {
 
     const updatedOrder = await this.orderService.findById(order.id)
     if (updatedOrder) {
-      const lastError = (data.last_payment_error as any)
+      const lastError = data.last_payment_error as Record<string, unknown> | undefined
       await emitter.emit(PaymentFailed, new PaymentFailed(
         updatedOrder,
-        lastError?.message || 'Payment failed',
-        lastError?.code || 'payment_failed'
+        (lastError?.message as string) || 'Payment failed',
+        (lastError?.code as string) || 'payment_failed'
       ))
     }
   }

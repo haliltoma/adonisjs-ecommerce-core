@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class AnalyticsEvent extends BaseModel {
   @column({ isPrimary: true })
@@ -19,7 +20,7 @@ export default class AnalyticsEvent extends BaseModel {
   @column()
   declare eventType: string
 
-  @column()
+  @column(jsonColumn({ columnName: 'event_data' }))
   declare eventData: Record<string, unknown> | null
 
   @column()

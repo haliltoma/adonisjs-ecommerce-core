@@ -95,7 +95,7 @@ export default class AccountController {
 
       session.flash('success', 'Added to wishlist')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -120,7 +120,7 @@ export default class AccountController {
 
       session.flash('success', 'Removed from wishlist')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -236,7 +236,7 @@ export default class AccountController {
 
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('storefront.account.dashboard')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred during login')
       return response.redirect().back()
     }
@@ -248,19 +248,37 @@ export default class AccountController {
 
   async register({ request, response, session, store }: HttpContext) {
     const storeId = store.id
-    const data = request.only([
-      'email',
-      'password',
-      'firstName',
-      'lastName',
-      'phone',
-      'acceptsMarketing',
-    ])
+    const { email, password, passwordConfirmation, firstName, lastName, phone, acceptTerms } =
+      request.only([
+        'email',
+        'password',
+        'passwordConfirmation',
+        'firstName',
+        'lastName',
+        'phone',
+        'acceptTerms',
+      ])
+
+    // Validate password confirmation
+    if (password !== passwordConfirmation) {
+      session.flash('error', 'Passwords do not match')
+      return response.redirect().back()
+    }
+
+    // Validate terms acceptance
+    if (!acceptTerms) {
+      session.flash('error', 'You must accept the terms and conditions')
+      return response.redirect().back()
+    }
 
     try {
       const customer = await this.authService.registerCustomer({
         storeId,
-        ...data,
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
       })
 
       session.put('customer_id', customer.id)
@@ -273,8 +291,8 @@ export default class AccountController {
 
       session.flash('success', 'Account created successfully!')
       return response.redirect().toRoute('storefront.account.dashboard')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -488,8 +506,8 @@ export default class AccountController {
       await this.customerService.update(customerId, data)
       session.flash('success', 'Profile updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -526,8 +544,8 @@ export default class AccountController {
       await this.customerService.updatePassword(customerId, newPassword)
       session.flash('success', 'Password updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -586,8 +604,8 @@ export default class AccountController {
       await this.customerService.addAddress(customerId, data)
       session.flash('success', 'Address added')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -618,8 +636,8 @@ export default class AccountController {
       await this.customerService.updateAddress(params.id, data)
       session.flash('success', 'Address updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -635,8 +653,8 @@ export default class AccountController {
       await this.customerService.deleteAddress(params.id)
       session.flash('success', 'Address deleted')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -652,7 +670,7 @@ export default class AccountController {
       await this.authService.generatePasswordResetToken(email, false)
       session.flash('success', 'If an account exists with this email, you will receive a password reset link.')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred')
       return response.redirect().back()
     }
@@ -677,7 +695,7 @@ export default class AccountController {
 
       session.flash('success', 'Password has been reset. Please login with your new password.')
       return response.redirect().toRoute('storefront.account.login')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred')
       return response.redirect().back()
     }

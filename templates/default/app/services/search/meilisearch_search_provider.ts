@@ -344,7 +344,7 @@ export class MeilisearchSearchProvider extends SearchProvider {
         healthy: health.status === 'available',
         message: health.status === 'available' ? undefined : `Status: ${health.status}`,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return { healthy: false, message: String(error) }
     }
   }

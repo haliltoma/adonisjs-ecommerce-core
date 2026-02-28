@@ -80,7 +80,7 @@ export default class PluginManager {
       }
 
       logger.info(`Plugin "${plugin.meta.name}" v${plugin.meta.version} loaded`)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(`Failed to load plugin "${pluginPath}": ${(error as Error).message}`)
     }
   }
@@ -94,7 +94,7 @@ export default class PluginManager {
         try {
           await plugin.routes(router)
           logger.info(`Plugin "${name}" routes registered`)
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error(`Failed to register routes for plugin "${name}": ${(error as Error).message}`)
         }
       }
@@ -111,7 +111,7 @@ export default class PluginManager {
         try {
           await plugin.events(emitter)
           logger.info(`Plugin "${name}" events registered`)
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error(`Failed to register events for plugin "${name}": ${(error as Error).message}`)
         }
       }
@@ -128,7 +128,7 @@ export default class PluginManager {
       if (plugin.ready) {
         try {
           await plugin.ready(this.app)
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error(`Plugin "${name}" ready hook failed: ${(error as Error).message}`)
         }
       }
@@ -149,7 +149,7 @@ export default class PluginManager {
     for (const handler of handlers) {
       try {
         await handler(...args)
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error(`Hook "${hookName}" handler failed: ${(error as Error).message}`)
       }
     }
@@ -191,7 +191,7 @@ export default class PluginManager {
       if (plugin.shutdown) {
         try {
           await plugin.shutdown()
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error(`Plugin "${name}" shutdown failed: ${(error as Error).message}`)
         }
       }

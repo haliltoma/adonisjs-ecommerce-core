@@ -5,6 +5,7 @@ import Store from './store.js'
 import Region from './region.js'
 import Order from './order.js'
 import GiftCardTransaction from './gift_card_transaction.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class GiftCard extends BaseModel {
   @column({ isPrimary: true })
@@ -37,7 +38,7 @@ export default class GiftCard extends BaseModel {
   @column.dateTime()
   declare endsAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

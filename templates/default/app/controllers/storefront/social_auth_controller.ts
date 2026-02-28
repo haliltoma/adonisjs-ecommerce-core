@@ -2,8 +2,14 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Customer from '#models/customer'
 import CartService from '#services/cart_service'
+import type Store from '#models/store'
 
 type SocialProvider = 'google' | 'facebook'
+
+interface StorefrontContext extends HttpContext {
+  ally: { use(provider: string): any }
+  store: Store
+}
 
 export default class SocialAuthController {
   private cartService: CartService
@@ -13,15 +19,16 @@ export default class SocialAuthController {
   }
 
   async redirect(ctx: HttpContext) {
+    const { ally } = ctx as unknown as StorefrontContext
     const provider = ctx.params.provider as SocialProvider
-    return (ctx as any).ally.use(provider).redirect()
+    return ally.use(provider).redirect()
   }
 
   async callback(ctx: HttpContext) {
     const { params, session, response } = ctx
-    const store = (ctx as any).store
+    const { store, ally } = ctx as unknown as StorefrontContext
     const provider = params.provider as SocialProvider
-    const social = (ctx as any).ally.use(provider)
+    const social = ally.use(provider)
 
     if (social.accessDenied()) {
       session.flash('error', 'Access denied. You cancelled the login.')
@@ -119,7 +126,7 @@ export default class SocialAuthController {
 
       session.flash('success', 'Welcome!')
       return response.redirect().toRoute('storefront.account.dashboard')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred during social login.')
       return response.redirect().toRoute('storefront.account.login')
     }

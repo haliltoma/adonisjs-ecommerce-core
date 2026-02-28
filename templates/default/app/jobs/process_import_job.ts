@@ -41,10 +41,10 @@ export async function handleProcessImport(job: JobContext): Promise<void> {
 
     switch (payload.type) {
       case 'products':
-        await service.importProducts(payload.storeId, rows as any)
+        await service.importProducts(payload.storeId, rows)
         break
       case 'customers':
-        await service.importCustomers(payload.storeId, rows as any)
+        await service.importCustomers(payload.storeId, rows)
         break
       default:
         throw new Error(`Unsupported import type: ${payload.type}`)
@@ -52,7 +52,7 @@ export async function handleProcessImport(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[ImportJob] Import ${payload.importId} completed`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[ImportJob] Import ${payload.importId} failed: ${(error as Error).message}`)
     throw error
   }

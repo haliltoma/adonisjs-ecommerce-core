@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import GiftCard from '#models/gift_card'
 import GiftCardTransaction from '#models/gift_card_transaction'
 import db from '@adonisjs/lucid/services/db'
@@ -78,7 +79,7 @@ export default class GiftCardService {
       currencyCode: data.currencyCode || 'USD',
       isDisabled: false,
       regionId: data.regionId || null,
-      endsAt: data.endsAt ? new Date(data.endsAt) as any : null,
+      endsAt: data.endsAt ? DateTime.fromISO(data.endsAt) : null,
       metadata: data.metadata || {},
     })
   }
@@ -172,7 +173,7 @@ export default class GiftCardService {
       .firstOrFail()
 
     if (data.regionId !== undefined) giftCard.regionId = data.regionId
-    if (data.endsAt !== undefined) giftCard.endsAt = data.endsAt ? new Date(data.endsAt) as any : null
+    if (data.endsAt !== undefined) giftCard.endsAt = data.endsAt ? DateTime.fromISO(data.endsAt) : null
     if (data.metadata) giftCard.metadata = { ...giftCard.metadata, ...data.metadata }
     await giftCard.save()
     return giftCard

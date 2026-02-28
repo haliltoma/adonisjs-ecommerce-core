@@ -154,7 +154,7 @@ export default class ProductsController {
 
       session.flash('success', 'Your review has been submitted and is pending approval.')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'There was a problem submitting your review. Please try again.')
       return response.redirect().back()
     }

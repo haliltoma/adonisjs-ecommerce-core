@@ -34,7 +34,7 @@ export default class AuthController {
       await auth.use('web').login(user, true)
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred during login')
       return response.redirect().back()
     }
@@ -72,7 +72,7 @@ export default class AuthController {
 
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'Verification failed')
       return response.redirect().back()
     }
@@ -103,7 +103,7 @@ export default class AuthController {
       // Always show success message to prevent email enumeration
       session.flash('success', 'If an account exists with this email, you will receive a password reset link.')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred')
       return response.redirect().back()
     }
@@ -128,7 +128,7 @@ export default class AuthController {
 
       session.flash('success', 'Password has been reset. Please login with your new password.')
       return response.redirect().toRoute('admin.auth.login')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'An error occurred')
       return response.redirect().back()
     }
@@ -174,8 +174,8 @@ export default class AuthController {
       await user.save()
       session.flash('success', 'Profile updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -199,8 +199,8 @@ export default class AuthController {
       await this.authService.updateAdminPassword(user.id, newPassword)
       session.flash('success', 'Password updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -213,8 +213,8 @@ export default class AuthController {
       session.put('2fa_setup_secret', secret)
 
       return response.json({ qrCode, secret })
-    } catch (error) {
-      return response.status(500).json({ error: error.message })
+    } catch (error: unknown) {
+      return response.status(500).json({ error: (error as Error).message })
     }
   }
 
@@ -231,8 +231,8 @@ export default class AuthController {
 
       session.forget('2fa_setup_secret')
       return response.json({ success: true })
-    } catch (error) {
-      return response.status(500).json({ error: error.message })
+    } catch (error: unknown) {
+      return response.status(500).json({ error: (error as Error).message })
     }
   }
 
@@ -251,8 +251,8 @@ export default class AuthController {
       await this.authService.disableTwoFactor(user.id)
       session.flash('success', 'Two-factor authentication disabled')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

@@ -2,12 +2,13 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class DailyAnalytics extends BaseModel {
   static table = 'daily_analytics'
 
   @column({ isPrimary: true })
-  declare id: string
+  declare id: number
 
   @column()
   declare storeId: string
@@ -42,13 +43,13 @@ export default class DailyAnalytics extends BaseModel {
   @column()
   declare returningCustomers: number
 
-  @column()
+  @column(jsonColumn())
   declare topProducts: Record<string, unknown>[] | null
 
-  @column()
+  @column(jsonColumn())
   declare topCategories: Record<string, unknown>[] | null
 
-  @column()
+  @column(jsonColumn())
   declare trafficSources: Record<string, number> | null
 
   @column.dateTime({ autoCreate: true })

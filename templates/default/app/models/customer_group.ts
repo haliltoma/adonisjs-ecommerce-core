@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Customer from './customer.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class CustomerGroup extends BaseModel {
   @column({ isPrimary: true })
@@ -20,7 +21,7 @@ export default class CustomerGroup extends BaseModel {
   @column()
   declare description: string | null
 
-  @column()
+  @column(jsonColumn())
   declare conditions: Record<string, unknown>
 
   @column()

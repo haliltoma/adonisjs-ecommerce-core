@@ -60,7 +60,7 @@ export default class ReviewListener {
             },
           })
         }
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error(`[ReviewListener] Failed to queue approval email: ${(err as Error).message}`)
       }
     }
@@ -93,7 +93,7 @@ export default class ReviewListener {
             },
           })
         }
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error(`[ReviewListener] Failed to queue rejection email: ${(err as Error).message}`)
       }
     }
@@ -122,7 +122,7 @@ export default class ReviewListener {
         }
         await product.save()
       }
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[ReviewListener] Failed to update product rating: ${(err as Error).message}`)
     }
   }

@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import { ArrowLeft, Save } from 'lucide-react'
-import { FormEvent, useEffect } from 'react'
+import { FormEvent, useEffect, useRef } from 'react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -21,8 +21,9 @@ export default function CreateCollection() {
     sortOrder: 0,
   })
 
+  const slugManuallyEdited = useRef(false)
   useEffect(() => {
-    if (data.name && !data.slug) {
+    if (data.name && !slugManuallyEdited.current) {
       setData('slug', slugify(data.name))
     }
   }, [data.name])
@@ -81,7 +82,7 @@ export default function CreateCollection() {
                 <Input
                   id="slug"
                   value={data.slug}
-                  onChange={(e) => setData('slug', e.target.value)}
+                  onChange={(e) => { slugManuallyEdited.current = true; setData('slug', e.target.value) }}
                   placeholder="summer-collection"
                   required
                   className="h-11 border-border/60 focus-visible:border-accent"

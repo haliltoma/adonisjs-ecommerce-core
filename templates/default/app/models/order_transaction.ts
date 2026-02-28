@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Order from './order.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class OrderTransaction extends BaseModel {
   @column({ isPrimary: true })
@@ -28,7 +29,7 @@ export default class OrderTransaction extends BaseModel {
   @column()
   declare gatewayTransactionId: string | null
 
-  @column()
+  @column(jsonColumn())
   declare gatewayResponse: Record<string, unknown>
 
   @column()

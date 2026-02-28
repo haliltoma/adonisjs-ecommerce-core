@@ -74,8 +74,8 @@ export default function CustomerAnalytics({ period, customers, summary }: Props)
     }
   }
 
-  const formatCurrency = (value: number) =>
-    `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const formatCurrency = (value: number | null | undefined) =>
+    `$${(Number(value) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
@@ -119,7 +119,7 @@ export default function CustomerAnalytics({ period, customers, summary }: Props)
               <Users className="h-4 w-4" style={{ color: '#d4872e' }} />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl">{summary.totalCustomers.toLocaleString()}</div>
+              <div className="font-display text-2xl">{(Number(summary.totalCustomers) || 0).toLocaleString()}</div>
               <p className="text-muted-foreground text-xs">All registered customers</p>
             </CardContent>
           </Card>
@@ -130,7 +130,7 @@ export default function CustomerAnalytics({ period, customers, summary }: Props)
               <UserPlus className="h-4 w-4" style={{ color: '#d4872e' }} />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl">{summary.newCustomersCount.toLocaleString()}</div>
+              <div className="font-display text-2xl">{(Number(summary.newCustomersCount) || 0).toLocaleString()}</div>
               <p className="text-muted-foreground text-xs">Joined in period</p>
             </CardContent>
           </Card>
@@ -141,7 +141,7 @@ export default function CustomerAnalytics({ period, customers, summary }: Props)
               <UserCheck className="h-4 w-4" style={{ color: '#d4872e' }} />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl">{summary.returningCustomersCount.toLocaleString()}</div>
+              <div className="font-display text-2xl">{(Number(summary.returningCustomersCount) || 0).toLocaleString()}</div>
               <p className="text-muted-foreground text-xs">Repeat purchasers</p>
             </CardContent>
           </Card>

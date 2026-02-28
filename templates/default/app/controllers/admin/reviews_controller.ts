@@ -33,15 +33,18 @@ export default class ReviewsController {
           id: r.id,
           rating: r.rating,
           title: r.title,
-          content: r.content,
+          comment: r.content,
           status: r.status,
           isVerifiedPurchase: r.isVerifiedPurchase,
           helpfulCount: r.helpfulCount,
           reportCount: r.reportCount,
-          product: r.product ? { id: r.product.id, title: r.product.title } : null,
-          customer: r.customer
-            ? { id: r.customer.id, name: `${r.customer.firstName} ${r.customer.lastName}` }
-            : null,
+          productId: r.product?.id || '',
+          productTitle: r.product?.title || 'Unknown Product',
+          customerName: r.customer
+            ? `${r.customer.firstName} ${r.customer.lastName}`.trim()
+            : 'Anonymous',
+          customerEmail: r.customer?.email || '',
+          reply: r.$extras?.adminResponse || null,
           createdAt: r.createdAt.toISO(),
         })),
         meta: {
@@ -65,7 +68,7 @@ export default class ReviewsController {
 
       session.flash('success', `Review ${status}`)
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -78,7 +81,7 @@ export default class ReviewsController {
 
       session.flash('success', 'Review deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }

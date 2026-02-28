@@ -98,7 +98,7 @@ export class EmailNotificationProvider extends NotificationProvider {
         provider: this.name,
         channel: this.channel,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(`[EmailProvider] Failed to send email: ${(error as Error).message}`)
       return {
         success: false,
@@ -135,7 +135,7 @@ export class EmailNotificationProvider extends NotificationProvider {
         return { healthy: false, message: '@adonisjs/mail is not installed' }
       }
       return { healthy: true, message: 'Email provider is configured' }
-    } catch (error) {
+    } catch (error: unknown) {
       return { healthy: false, message: (error as Error).message }
     }
   }

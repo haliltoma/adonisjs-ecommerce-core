@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Order from './order.js'
 import FulfillmentItem from './fulfillment_item.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Fulfillment extends BaseModel {
   @column({ isPrimary: true })
@@ -35,7 +36,7 @@ export default class Fulfillment extends BaseModel {
   @column()
   declare notes: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

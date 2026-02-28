@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react'
-import { useState, useCallback, useEffect, type ComponentType } from 'react'
+import { useState, useCallback, useEffect, useRef, type ComponentType } from 'react'
 import {
   ArrowLeft,
   Save,
@@ -81,12 +81,13 @@ export default function PageEditor({ page }: Props) {
 
   const initialData = (page?.content as any) || emptyPuckData
 
+  const slugManuallyEdited = useRef(isEditing)
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
-    if (!isEditing && !slug) {
+    if (!slugManuallyEdited.current) {
       setSlug(slugify(newTitle))
     }
-  }, [isEditing, slug])
+  }, [])
 
   const handleSave = useCallback((puckData: any) => {
     if (!title.trim()) {
@@ -249,7 +250,7 @@ export default function PageEditor({ page }: Props) {
                     <Input
                       id="slug"
                       value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
+                      onChange={(e) => { slugManuallyEdited.current = true; setSlug(e.target.value) }}
                       placeholder="page-url"
                       className="flex-1"
                     />

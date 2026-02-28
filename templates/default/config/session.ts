@@ -34,7 +34,7 @@ const sessionConfig = defineConfig({
    * variable in order to infer the store name without any
    * errors.
    */
-  store: env.get('SESSION_DRIVER'),
+  store: env.get('SESSION_DRIVER') as 'cookie' | 'redis',
 
   /**
    * List of configured stores. Refer documentation to see
@@ -42,6 +42,9 @@ const sessionConfig = defineConfig({
    */
   stores: {
     cookie: stores.cookie(),
+    redis: stores.redis({
+      connection: 'session',
+    }),
   },
 })
 

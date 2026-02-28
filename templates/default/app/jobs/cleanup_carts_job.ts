@@ -50,7 +50,7 @@ export async function handleCleanupCarts(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[CleanupCartsJob] Cleaned ${cleaned} carts, ${abandoned} abandoned notifications sent`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[CleanupCartsJob] Failed: ${(error as Error).message}`)
     throw error
   }

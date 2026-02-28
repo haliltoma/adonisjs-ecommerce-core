@@ -115,7 +115,7 @@ export default class CartListener {
           },
           30 * 60 * 1000 // 30 minutes delay
         )
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error(`[CartListener] Failed to queue abandoned email: ${(err as Error).message}`)
       }
     }

@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import BlogCategory from './blog_category.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class BlogPost extends BaseModel {
   @column({ isPrimary: true })
@@ -15,7 +16,7 @@ export default class BlogPost extends BaseModel {
   declare blogCategoryId: string | null
 
   @column()
-  declare authorId: string | null
+  declare authorId: number | null
 
   @column()
   declare title: string
@@ -35,7 +36,7 @@ export default class BlogPost extends BaseModel {
   @column()
   declare status: 'draft' | 'published' | 'archived'
 
-  @column()
+  @column(jsonColumn())
   declare tags: string[]
 
   @column()

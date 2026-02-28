@@ -5,7 +5,7 @@ import Store from './store.js'
 
 export default class Setting extends BaseModel {
   @column({ isPrimary: true })
-  declare id: string
+  declare id: number
 
   @column()
   declare storeId: string | null

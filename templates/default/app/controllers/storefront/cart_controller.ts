@@ -50,11 +50,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -84,11 +84,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -116,11 +116,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -141,11 +141,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -176,11 +176,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -207,11 +207,11 @@ export default class CartController {
       }
 
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       if (this.isApiRequest(request)) {
-        return response.status(400).json({ error: error.message })
+        return response.status(400).json({ error: (error as Error).message })
       }
-      session.flash('error', error.message)
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

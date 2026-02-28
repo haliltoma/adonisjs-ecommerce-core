@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Order from './order.js'
 import Product from './product.js'
 import ProductVariant from './product_variant.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class OrderItem extends BaseModel {
   @column({ isPrimary: true })
@@ -57,7 +58,7 @@ export default class OrderItem extends BaseModel {
   @column()
   declare thumbnailUrl: string | null
 
-  @column()
+  @column(jsonColumn())
   declare properties: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

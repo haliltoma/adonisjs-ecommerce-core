@@ -35,7 +35,25 @@ export default class BlogController {
       .orderBy('sortOrder', 'asc')
 
     return inertia.render('admin/blog/Index', {
-      posts: posts.serialize(),
+      posts: {
+        data: posts.all().map((p) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          status: p.status,
+          isFeatured: p.isFeatured,
+          viewCount: p.viewCount || 0,
+          category: p.category ? { name: p.category.name, slug: p.category.slug } : null,
+          publishedAt: p.publishedAt?.toISO() || null,
+          createdAt: p.createdAt.toISO(),
+        })),
+        meta: {
+          total: posts.total,
+          perPage: posts.perPage,
+          currentPage: posts.currentPage,
+          lastPage: posts.lastPage,
+        },
+      },
       categories: categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
       filters: { status, search, category: categoryId },
     })
@@ -65,7 +83,7 @@ export default class BlogController {
       await BlogPost.create({
         id: randomUUID(),
         storeId: store.id,
-        authorId: admin?.id ? String(admin.id) : null,
+        authorId: admin?.id || null,
         title: data.title,
         slug,
         excerpt: data.excerpt || null,
@@ -83,7 +101,7 @@ export default class BlogController {
 
       session.flash('success', 'Blog post created')
       return response.redirect('/admin/blog')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -158,7 +176,7 @@ export default class BlogController {
 
       session.flash('success', 'Blog post updated')
       return response.redirect('/admin/blog')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -211,7 +229,7 @@ export default class BlogController {
 
       session.flash('success', 'Category created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }

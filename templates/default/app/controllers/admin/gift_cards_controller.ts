@@ -64,8 +64,8 @@ export default class GiftCardsController {
       })
       session.flash('success', `Gift card ${giftCard.code} created`)
       return response.redirect().toRoute('admin.giftCards.show', { id: giftCard.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -111,8 +111,8 @@ export default class GiftCardsController {
       await this.giftCardService.update(storeId, params.id, data)
       session.flash('success', 'Gift card updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -125,8 +125,26 @@ export default class GiftCardsController {
       await this.giftCardService.adjustBalance(storeId, params.id, amount, note)
       session.flash('success', 'Gift card balance adjusted')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
+      return response.redirect().back()
+    }
+  }
+
+  async destroy({ params, response, session, store }: HttpContext) {
+    const storeId = store.id
+
+    try {
+      const giftCard = await this.giftCardService.findById(storeId, params.id)
+      if (giftCard.balance > 0 && !giftCard.isDisabled) {
+        session.flash('error', 'Cannot delete an active gift card with remaining balance. Disable it first.')
+        return response.redirect().back()
+      }
+      await giftCard.delete()
+      session.flash('success', 'Gift card deleted')
+      return response.redirect().toRoute('admin.giftCards.index')
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -144,8 +162,8 @@ export default class GiftCardsController {
         session.flash('success', 'Gift card disabled')
       }
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

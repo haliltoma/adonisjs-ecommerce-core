@@ -6,6 +6,7 @@ import Customer from './customer.js'
 import Region from './region.js'
 import Order from './order.js'
 import User from './user.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class DraftOrder extends BaseModel {
   @column({ isPrimary: true })
@@ -32,13 +33,13 @@ export default class DraftOrder extends BaseModel {
   @column()
   declare currencyCode: string
 
-  @column()
+  @column(jsonColumn())
   declare items: Record<string, unknown>[]
 
-  @column()
+  @column(jsonColumn())
   declare shippingAddress: Record<string, unknown> | null
 
-  @column()
+  @column(jsonColumn())
   declare billingAddress: Record<string, unknown> | null
 
   @column()
@@ -68,7 +69,7 @@ export default class DraftOrder extends BaseModel {
   @column()
   declare createdBy: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime()

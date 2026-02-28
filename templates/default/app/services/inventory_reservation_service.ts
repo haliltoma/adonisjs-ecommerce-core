@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import InventoryReservation from '#models/inventory_reservation'
 
 interface CreateReservationDTO {
@@ -23,7 +24,7 @@ export default class InventoryReservationService {
       quantity: data.quantity,
       description: data.description || null,
       createdBy: data.createdBy || null,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) as any : null,
+      expiresAt: data.expiresAt ? DateTime.fromISO(data.expiresAt) : null,
       metadata: {},
     })
   }
@@ -57,7 +58,7 @@ export default class InventoryReservationService {
     })
 
     const result = await query.sum('quantity as total')
-    return Number((result[0] as any).$extras.total || 0)
+    return Number((result[0] as InventoryReservation)?.$extras?.total || 0)
   }
 
   async release(reservationId: string) {

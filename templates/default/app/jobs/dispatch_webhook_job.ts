@@ -67,7 +67,7 @@ export async function handleDispatchWebhook(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[WebhookJob] Webhook "${payload.event}" delivered to ${payload.url} (${response.status})`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[WebhookJob] Failed to deliver webhook to ${payload.url}: ${(error as Error).message}`)
     throw error
   }

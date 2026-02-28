@@ -1,7 +1,16 @@
+import { DateTime } from 'luxon'
 import DraftOrder from '#models/draft_order'
 import Order from '#models/order'
 import OrderItem from '#models/order_item'
 import db from '@adonisjs/lucid/services/db'
+
+interface DraftOrderItem {
+  productId: string
+  variantId?: string | null
+  title: string
+  quantity: number
+  unitPrice: number
+}
 
 interface CreateDraftOrderDTO {
   storeId: string
@@ -172,22 +181,22 @@ export default class DraftOrderService {
           regionId: draftOrder.regionId,
           notes: draftOrder.note,
           metadata: { draftOrderId: draftOrder.id },
-          placedAt: new Date() as any,
+          placedAt: DateTime.now(),
         },
         { client: trx }
       )
 
       // Create order items
-      for (const item of draftOrder.items) {
+      for (const item of draftOrder.items as unknown as DraftOrderItem[]) {
         await OrderItem.create(
           {
             orderId: order.id,
-            productId: (item as any).productId,
-            variantId: (item as any).variantId || null,
-            title: (item as any).title,
-            quantity: (item as any).quantity,
-            unitPrice: (item as any).unitPrice,
-            totalPrice: (item as any).unitPrice * (item as any).quantity,
+            productId: item.productId,
+            variantId: item.variantId || null,
+            title: item.title,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.unitPrice * item.quantity,
           },
           { client: trx }
         )
@@ -196,7 +205,7 @@ export default class DraftOrderService {
       // Update draft order
       draftOrder.status = 'completed'
       draftOrder.orderId = order.id
-      draftOrder.completedAt = new Date() as any
+      draftOrder.completedAt = DateTime.now()
       draftOrder.useTransaction(trx)
       await draftOrder.save()
 

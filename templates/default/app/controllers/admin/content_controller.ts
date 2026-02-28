@@ -81,8 +81,8 @@ export default class ContentController {
 
       session.flash('success', 'Page created successfully')
       return response.redirect().toRoute('admin.content.pages.edit', { id: page.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -121,8 +121,8 @@ export default class ContentController {
 
       session.flash('success', 'Page updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -143,8 +143,8 @@ export default class ContentController {
 
       session.flash('success', 'Page deleted')
       return response.redirect().toRoute('admin.content.pages')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -193,7 +193,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -213,7 +213,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -231,7 +231,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -256,7 +256,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu item added')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -272,7 +272,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu item updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -286,7 +286,7 @@ export default class ContentController {
 
       session.flash('success', 'Menu item removed')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -341,7 +341,7 @@ export default class ContentController {
 
       session.flash('success', 'Banner created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -369,7 +369,7 @@ export default class ContentController {
 
       session.flash('success', 'Banner updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -386,7 +386,7 @@ export default class ContentController {
 
       session.flash('success', 'Banner deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }

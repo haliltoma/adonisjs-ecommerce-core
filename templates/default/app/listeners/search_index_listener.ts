@@ -64,7 +64,7 @@ export default class SearchIndexListener {
       const search = await this.getSearchProvider()
       const doc = await this.productToIndexable(event.product)
       await search.indexProduct(doc)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Failed to index product in search')
     }
   }
@@ -80,7 +80,7 @@ export default class SearchIndexListener {
         // Product is no longer active, remove from index
         await search.removeProduct(event.product.id)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Failed to update product in search index')
     }
   }
@@ -89,7 +89,7 @@ export default class SearchIndexListener {
     try {
       const search = await this.getSearchProvider()
       await search.removeProduct(event.product.id)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, 'Failed to remove product from search index')
     }
   }

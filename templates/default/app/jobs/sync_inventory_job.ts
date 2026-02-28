@@ -104,7 +104,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
     }
 
     await job.updateProgress(100)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[SyncInventoryJob] Failed: ${(error as Error).message}`)
     throw error
   }

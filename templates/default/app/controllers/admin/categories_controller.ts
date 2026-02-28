@@ -22,7 +22,7 @@ export default class CategoriesController {
         name: c.name,
         description: c.description,
         productCount: Number(c.$extras.products_count || 0),
-        type: (c.metadata as any)?.type === 'automated' ? 'automated' : 'manual',
+        type: c.metadata?.type === 'automated' ? 'automated' : 'manual',
         isActive: c.isActive,
       })),
     })
@@ -55,8 +55,8 @@ export default class CategoriesController {
 
       session.flash('success', 'Collection created successfully')
       return response.redirect().toRoute('admin.collections.edit', { id: collection.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -111,8 +111,8 @@ export default class CategoriesController {
 
       session.flash('success', 'Collection updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -128,38 +128,64 @@ export default class CategoriesController {
 
       session.flash('success', 'Collection deleted')
       return response.redirect().toRoute('admin.collections')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
 
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id
-    const tree = await this.categoryService.getTree(storeId, true)
 
-    // Also get flat list for table view
-    const categories = await Category.query()
+    const allCategories = await Category.query()
       .where('storeId', storeId)
-      .preload('parent')
       .withCount('products')
-      .orderBy('depth', 'asc')
       .orderBy('position', 'asc')
+      .orderBy('name', 'asc')
 
-    return inertia.render('admin/categories/Index', {
-      tree,
-      categories: categories.map((c) => ({
+    // Build tree structure matching frontend Category interface
+    type CategoryNode = {
+      id: string
+      name: string
+      slug: string
+      description: string | null
+      imageUrl: string | null
+      isActive: boolean
+      position: number
+      parentId: string | null
+      productCount: number
+      children: CategoryNode[]
+    }
+
+    const map = new Map<string, CategoryNode>()
+    const roots: CategoryNode[] = []
+
+    for (const c of allCategories) {
+      map.set(c.id, {
         id: c.id,
         name: c.name,
         slug: c.slug,
-        depth: c.depth,
-        parentId: c.parentId,
-        parentName: c.parent?.name,
+        description: c.description,
+        imageUrl: c.imageUrl,
         isActive: c.isActive,
         position: c.position,
+        parentId: c.parentId,
         productCount: Number(c.$extras.products_count || 0),
-        createdAt: c.createdAt.toISO(),
-      })),
+        children: [],
+      })
+    }
+
+    for (const c of allCategories) {
+      const node = map.get(c.id)!
+      if (c.parentId && map.has(c.parentId)) {
+        map.get(c.parentId)!.children.push(node)
+      } else {
+        roots.push(node)
+      }
+    }
+
+    return inertia.render('admin/categories/Index', {
+      categories: roots,
     })
   }
 
@@ -204,8 +230,8 @@ export default class CategoriesController {
 
       session.flash('success', 'Category created successfully')
       return response.redirect().toRoute('admin.categories.edit', { id: category.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -270,8 +296,8 @@ export default class CategoriesController {
       await this.categoryService.update(params.id, data)
       session.flash('success', 'Category updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -281,8 +307,8 @@ export default class CategoriesController {
       await this.categoryService.delete(params.id)
       session.flash('success', 'Category deleted')
       return response.redirect().toRoute('admin.categories.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -294,8 +320,8 @@ export default class CategoriesController {
       await this.categoryService.updateSortOrder(categoryIds)
       session.flash('success', 'Categories reordered')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

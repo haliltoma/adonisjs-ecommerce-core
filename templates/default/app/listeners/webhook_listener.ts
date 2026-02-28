@@ -38,7 +38,7 @@ export default class WebhookListener {
     try {
       const dispatcher = await app.container.make(WebhookDispatcher)
       await dispatcher.dispatch({ storeId, event, payload })
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error({ err: error }, `[WebhookListener] Failed to dispatch ${event}`)
     }
   }

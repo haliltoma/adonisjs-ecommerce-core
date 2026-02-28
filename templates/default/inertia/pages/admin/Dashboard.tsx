@@ -2,10 +2,12 @@ import { Head, Link } from '@inertiajs/react'
 import {
   ArrowDown,
   ArrowUp,
+  Clock,
   DollarSign,
   Package,
   ShoppingCart,
   TrendingUp,
+  Users,
   AlertTriangle,
 } from 'lucide-react'
 import {
@@ -73,6 +75,13 @@ interface ChartDataPoint {
   orders: number
 }
 
+interface Counts {
+  totalCustomers: number
+  totalProducts: number
+  pendingOrders: number
+  newCustomersThisMonth: number
+}
+
 interface Props {
   user: { displayName: string; email: string }
   stats: {
@@ -90,6 +99,7 @@ interface Props {
     total_revenue: number
   }>
   revenueChart: ChartDataPoint[]
+  counts: Counts
 }
 
 const CHART_COLOR = '#d4872e'
@@ -101,6 +111,7 @@ export default function Dashboard({
   lowStockProducts,
   topProducts,
   revenueChart,
+  counts,
 }: Props) {
   const chartData = (revenueChart || []).map((d) => ({
     date: d.date,
@@ -166,6 +177,37 @@ export default function Dashboard({
     },
   ]
 
+  const secondaryCards = [
+    {
+      title: 'Total Customers',
+      icon: Users,
+      value: counts.totalCustomers.toLocaleString(),
+      sub: `${counts.newCustomersThisMonth} new this month`,
+      href: '/admin/customers',
+    },
+    {
+      title: 'Active Products',
+      icon: Package,
+      value: counts.totalProducts.toLocaleString(),
+      sub: `${lowStockProducts.length} low stock`,
+      href: '/admin/products',
+    },
+    {
+      title: 'Pending Orders',
+      icon: Clock,
+      value: counts.pendingOrders.toLocaleString(),
+      sub: 'Awaiting processing',
+      href: '/admin/orders?status=pending',
+    },
+    {
+      title: 'Weekly Revenue',
+      icon: TrendingUp,
+      value: formatCurrency(stats.weekly.revenue),
+      sub: `${stats.weekly.orderCount} orders this week`,
+      href: '/admin/analytics/sales?period=7d',
+    },
+  ]
+
   return (
     <AdminLayout>
       <Head title="Dashboard - Admin" />
@@ -212,6 +254,30 @@ export default function Dashboard({
                 </p>
               </CardContent>
             </Card>
+          ))}
+        </div>
+
+        {/* Secondary Stats */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {secondaryCards.map((stat, i) => (
+            <Link key={stat.title} href={stat.href} className="block">
+              <Card className={`animate-fade-up delay-${(i + 5) * 100} transition-colors hover:border-accent/40`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <stat.icon className="text-muted-foreground/50 h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="font-display text-2xl tracking-tight">
+                    {stat.value}
+                  </div>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    {stat.sub}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
 

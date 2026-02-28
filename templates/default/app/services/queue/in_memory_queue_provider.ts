@@ -57,7 +57,7 @@ export class InMemoryQueueProvider extends QueueProvider {
     // Process immediately if handler exists and queue is not paused
     if (!this.paused.has(queueName)) {
       this.processJob(id).catch((err) => {
-        logger.error(`[Queue] Job ${id} failed: ${err.message}`)
+        logger.error(`[Queue] Job ${id} failed: ${(err as Error).message}`)
       })
     }
 
@@ -86,7 +86,7 @@ export class InMemoryQueueProvider extends QueueProvider {
       inMemoryJob.status = 'waiting'
       if (!this.paused.has(queueName)) {
         this.processJob(id).catch((err) => {
-          logger.error(`[Queue] Delayed job ${id} failed: ${err.message}`)
+          logger.error(`[Queue] Delayed job ${id} failed: ${(err as Error).message}`)
         })
       }
     }, delayMs)
@@ -217,8 +217,8 @@ export class InMemoryQueueProvider extends QueueProvider {
       job.status = 'completed'
       job.completedAt = new Date()
       job.progress = 100
-    } catch (error) {
-      job.failedReason = error instanceof Error ? error.message : 'Unknown error'
+    } catch (error: unknown) {
+      job.failedReason = error instanceof Error ? (error as Error).message : 'Unknown error'
       if (job.attemptsMade < job.maxAttempts) {
         job.status = 'waiting'
         // Retry with backoff

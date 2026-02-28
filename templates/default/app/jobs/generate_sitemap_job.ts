@@ -101,7 +101,7 @@ export async function handleGenerateSitemap(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[SitemapJob] Sitemap generated with ${urls.length} URLs`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[SitemapJob] Failed: ${(error as Error).message}`)
     throw error
   }

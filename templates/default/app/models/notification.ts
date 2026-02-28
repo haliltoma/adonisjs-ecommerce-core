@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Notification extends BaseModel {
   @column({ isPrimary: true })
@@ -19,7 +20,7 @@ export default class Notification extends BaseModel {
   @column()
   declare message: string
 
-  @column()
+  @column(jsonColumn())
   declare data: Record<string, unknown> | null
 
   @column()

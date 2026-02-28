@@ -184,7 +184,7 @@ export default class HomeController {
 
       session.flash('success', 'Thank you for subscribing!')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', 'Failed to subscribe. Please try again.')
       return response.redirect().back()
     }

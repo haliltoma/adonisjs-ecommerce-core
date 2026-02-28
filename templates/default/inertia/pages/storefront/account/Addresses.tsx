@@ -1,6 +1,6 @@
 import { Head, Link, useForm, router } from '@inertiajs/react'
 import { useState } from 'react'
-import { ArrowLeft, MapPin, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit2, MapPin, Plus, Trash2 } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
 import { useTranslation } from '@/hooks/use-translation'
@@ -47,8 +47,9 @@ interface Props {
 export default function Addresses({ addresses }: Props) {
   const { t } = useTranslation()
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
-  const form = useForm({
+  const emptyAddress = {
     type: 'shipping',
     isDefault: false,
     firstName: '',
@@ -61,21 +62,60 @@ export default function Addresses({ addresses }: Props) {
     postalCode: '',
     country: '',
     phone: '',
-  })
+  }
+
+  const form = useForm(emptyAddress)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    form.post('/account/addresses', {
-      onSuccess: () => {
-        setShowForm(false)
-        form.reset()
-      },
+    if (editingId) {
+      form.patch(`/account/addresses/${editingId}`, {
+        onSuccess: () => {
+          setShowForm(false)
+          setEditingId(null)
+          form.reset()
+        },
+      })
+    } else {
+      form.post('/account/addresses', {
+        onSuccess: () => {
+          setShowForm(false)
+          form.reset()
+        },
+      })
+    }
+  }
+
+  const handleEdit = (address: Address) => {
+    setEditingId(address.id)
+    form.setData({
+      type: address.type,
+      isDefault: address.isDefault,
+      firstName: address.firstName,
+      lastName: address.lastName,
+      company: address.company || '',
+      address1: address.address1,
+      address2: address.address2 || '',
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country,
+      phone: address.phone || '',
     })
+    setShowForm(true)
   }
 
   const handleDelete = (id: string) => {
     if (confirm(t('storefront.addressesPage.deleteConfirm'))) {
       router.delete(`/account/addresses/${id}`)
+    }
+  }
+
+  const handleDialogChange = (open: boolean) => {
+    setShowForm(open)
+    if (!open) {
+      setEditingId(null)
+      form.setData(emptyAddress)
     }
   }
 
@@ -101,7 +141,7 @@ export default function Addresses({ addresses }: Props) {
               {t('storefront.addressesPage.description')}
             </p>
           </div>
-          <Dialog open={showForm} onOpenChange={setShowForm}>
+          <Dialog open={showForm} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button className="h-11 tracking-wide">
                 <Plus className="mr-2 h-4 w-4" />
@@ -110,7 +150,7 @@ export default function Addresses({ addresses }: Props) {
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-display text-xl tracking-tight">{t('storefront.addressesPage.addNewAddress')}</DialogTitle>
+                <DialogTitle className="font-display text-xl tracking-tight">{editingId ? t('storefront.addressesPage.editAddress') : t('storefront.addressesPage.addNewAddress')}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -293,14 +333,24 @@ export default function Addresses({ addresses }: Props) {
                       <p className="text-muted-foreground mt-1 text-sm">{address.phone}</p>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(address.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => handleEdit(address)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(address.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))

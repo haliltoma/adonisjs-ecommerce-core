@@ -243,8 +243,8 @@ export default class CheckoutController {
 
       // Redirect to payment page
       return response.redirect().toRoute('storefront.checkout.payment', { orderId: order.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -385,8 +385,8 @@ export default class CheckoutController {
 
       session.flash('info', 'Payment is being processed. You will receive a confirmation email.')
       return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
-    } catch (error) {
-      session.flash('error', `Payment failed: ${error.message}`)
+    } catch (error: unknown) {
+      session.flash('error', `Payment failed: ${(error as Error).message}`)
       return response.redirect().back()
     }
   }

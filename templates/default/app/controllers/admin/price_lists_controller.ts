@@ -100,7 +100,7 @@ export default class PriceListsController {
 
       session.flash('success', 'Price list created')
       return response.redirect().toRoute('admin.priceLists.index')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -181,7 +181,7 @@ export default class PriceListsController {
       await this.priceListService.update(store.id, params.id, data)
       session.flash('success', 'Price list updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -192,7 +192,7 @@ export default class PriceListsController {
       await this.priceListService.delete(store.id, params.id)
       session.flash('success', 'Price list deleted')
       return response.redirect().toRoute('admin.priceLists.index')
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -205,7 +205,7 @@ export default class PriceListsController {
       await this.priceListService.updateRules(store.id, params.id, rules)
       session.flash('success', 'Rules updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -218,7 +218,7 @@ export default class PriceListsController {
       await this.priceListService.addPrices(store.id, params.id, prices)
       session.flash('success', 'Prices added')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -231,7 +231,7 @@ export default class PriceListsController {
       await this.priceListService.removePrices(store.id, params.id, priceIds)
       session.flash('success', 'Prices removed')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }

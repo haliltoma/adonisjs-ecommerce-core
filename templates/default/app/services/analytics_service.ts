@@ -252,7 +252,7 @@ export default class AnalyticsService {
       existing.merge(data)
       await existing.save()
     } else {
-      await DailyAnalytics.create({ id: randomUUID(), ...data })
+      await DailyAnalytics.create(data)
     }
   }
 

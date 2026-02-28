@@ -30,33 +30,6 @@ interface ExportOptions {
   format?: 'csv'
 }
 
-interface InventoryImportRow {
-  sku: string
-  quantity: string | number
-  location?: string
-}
-
-interface ProductImportRow {
-  title: string
-  sku?: string
-  price?: string | number
-  compareAtPrice?: string | number
-  description?: string
-  status?: string
-  type?: string
-  vendor?: string
-  weight?: string | number
-  barcode?: string
-}
-
-interface CustomerImportRow {
-  email: string
-  firstName?: string
-  lastName?: string
-  phone?: string
-  status?: string
-}
-
 export default class ImportExportService {
   /**
    * Parse CSV content into rows
@@ -130,7 +103,7 @@ export default class ImportExportService {
 
   async importInventory(
     storeId: string,
-    rows: InventoryImportRow[]
+    rows: Record<string, string>[]
   ): Promise<ImportResult> {
     const result: ImportResult = { total: rows.length, created: 0, updated: 0, skipped: 0, errors: [] }
 
@@ -167,7 +140,7 @@ export default class ImportExportService {
         variant.stockQuantity = quantity
         await variant.save()
         result.updated++
-      } catch (error) {
+      } catch (error: unknown) {
         result.errors.push({ row: rowNum, message: (error as Error).message })
         result.skipped++
       }
@@ -232,7 +205,7 @@ export default class ImportExportService {
 
   async importProducts(
     storeId: string,
-    rows: ProductImportRow[]
+    rows: Record<string, string>[]
   ): Promise<ImportResult> {
     const result: ImportResult = { total: rows.length, created: 0, updated: 0, skipped: 0, errors: [] }
     const { randomUUID } = await import('node:crypto')
@@ -294,7 +267,7 @@ export default class ImportExportService {
           })
           result.created++
         }
-      } catch (error) {
+      } catch (error: unknown) {
         result.errors.push({ row: rowNum, message: (error as Error).message })
         result.skipped++
       }
@@ -352,7 +325,7 @@ export default class ImportExportService {
 
   async importCustomers(
     storeId: string,
-    rows: CustomerImportRow[]
+    rows: Record<string, string>[]
   ): Promise<ImportResult> {
     const result: ImportResult = { total: rows.length, created: 0, updated: 0, skipped: 0, errors: [] }
     const { randomUUID } = await import('node:crypto')
@@ -392,7 +365,7 @@ export default class ImportExportService {
           })
           result.created++
         }
-      } catch (error) {
+      } catch (error: unknown) {
         result.errors.push({ row: rowNum, message: (error as Error).message })
         result.skipped++
       }

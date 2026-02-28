@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, manyToMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Product from './product.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class SalesChannel extends BaseModel {
   @column({ isPrimary: true })
@@ -20,7 +21,7 @@ export default class SalesChannel extends BaseModel {
   @column()
   declare isActive: boolean
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

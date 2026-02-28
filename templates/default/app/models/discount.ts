@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Discount extends BaseModel {
   @column({ isPrimary: true })
@@ -25,13 +26,13 @@ export default class Discount extends BaseModel {
   @column()
   declare appliesTo: 'all' | 'specific_products' | 'specific_categories'
 
-  @column()
+  @column(jsonColumn())
   declare productIds: string[] | null
 
-  @column()
+  @column(jsonColumn())
   declare categoryIds: string[] | null
 
-  @column()
+  @column(jsonColumn())
   declare customerIds: string[] | null
 
   @column()
@@ -103,10 +104,10 @@ export default class Discount extends BaseModel {
   declare budgetUsed: number
 
   // Additional targeting
-  @column()
+  @column(jsonColumn())
   declare customerGroupIds: string[] | null
 
-  @column()
+  @column(jsonColumn())
   declare regionIds: string[] | null
 
   @column.dateTime({ autoCreate: true })

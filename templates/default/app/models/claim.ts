@@ -4,6 +4,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Order from './order.js'
 import ClaimItem from './claim_item.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Claim extends BaseModel {
   @column({ isPrimary: true })
@@ -30,7 +31,7 @@ export default class Claim extends BaseModel {
   @column()
   declare internalNote: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

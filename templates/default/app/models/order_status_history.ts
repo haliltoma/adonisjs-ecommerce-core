@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Order from './order.js'
 import User from './user.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class OrderStatusHistory extends BaseModel {
   @column({ isPrimary: true })
@@ -32,7 +33,7 @@ export default class OrderStatusHistory extends BaseModel {
   @column()
   declare isCustomerNotified: boolean
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

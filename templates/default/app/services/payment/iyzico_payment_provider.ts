@@ -115,7 +115,7 @@ export class IyzicoPaymentProvider extends PaymentProvider {
         errorCode: result.errorCode,
         gatewayResponse: result,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         transactionId: null,
@@ -153,7 +153,7 @@ export class IyzicoPaymentProvider extends PaymentProvider {
         errorMessage: result.errorMessage || 'Payment not captured',
         gatewayResponse: result,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         transactionId,
@@ -209,7 +209,7 @@ export class IyzicoPaymentProvider extends PaymentProvider {
         errorMessage: result.errorMessage || 'Refund failed',
         gatewayResponse: result,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         refundId: null,
@@ -253,7 +253,7 @@ export class IyzicoPaymentProvider extends PaymentProvider {
         errorMessage: result.errorMessage || 'Void failed',
         gatewayResponse: result,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         transactionId,

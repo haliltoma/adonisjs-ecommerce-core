@@ -4,6 +4,7 @@ import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import User from './user.js'
 import SalesChannel from './sales_channel.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class ApiKey extends BaseModel {
   @column({ isPrimary: true })
@@ -36,7 +37,7 @@ export default class ApiKey extends BaseModel {
   @column.dateTime()
   declare lastUsedAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

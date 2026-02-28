@@ -105,8 +105,8 @@ export default class DraftOrdersController {
       })
       session.flash('success', 'Draft order created')
       return response.redirect().toRoute('admin.draftOrders.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -168,8 +168,8 @@ export default class DraftOrdersController {
       await this.draftOrderService.update(storeId, params.id, data)
       session.flash('success', 'Draft order updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -181,8 +181,8 @@ export default class DraftOrdersController {
       const { order } = await this.draftOrderService.registerPayment(storeId, params.id)
       session.flash('success', `Payment registered. Order ${order.orderNumber} created.`)
       return response.redirect().toRoute('admin.orders.show', { id: order.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -194,8 +194,8 @@ export default class DraftOrdersController {
       await this.draftOrderService.delete(storeId, params.id)
       session.flash('success', 'Draft order deleted')
       return response.redirect().toRoute('admin.draftOrders.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

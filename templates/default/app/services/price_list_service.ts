@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import PriceList from '#models/price_list'
 import PriceListPrice from '#models/price_list_price'
 import PriceListRule from '#models/price_list_rule'
@@ -11,7 +12,7 @@ interface CreatePriceListDTO {
   status?: 'active' | 'draft'
   startsAt?: string | null
   endsAt?: string | null
-  rules?: { attribute: string; operator: string; value: unknown }[]
+  rules?: { attribute: string; operator: 'eq' | 'ne' | 'in' | 'gt' | 'gte' | 'lt' | 'lte'; value: unknown }[]
   prices?: { variantId: string; amount: number; currencyCode: string; minQuantity?: number; maxQuantity?: number }[]
 }
 
@@ -80,8 +81,8 @@ export default class PriceListService {
           description: data.description ?? null,
           type: data.type,
           status: data.status ?? 'draft',
-          startsAt: data.startsAt ? new Date(data.startsAt) as any : null,
-          endsAt: data.endsAt ? new Date(data.endsAt) as any : null,
+          startsAt: data.startsAt ? DateTime.fromISO(data.startsAt) : null,
+          endsAt: data.endsAt ? DateTime.fromISO(data.endsAt) : null,
           metadata: {},
         },
         { client: trx }
@@ -92,7 +93,7 @@ export default class PriceListService {
           data.rules.map((r) => ({
             priceListId: priceList.id,
             attribute: r.attribute,
-            operator: r.operator as any,
+            operator: r.operator,
             value: r.value,
           })),
           { client: trx }
@@ -125,8 +126,8 @@ export default class PriceListService {
 
     priceList.merge({
       ...data,
-      startsAt: data.startsAt !== undefined ? (data.startsAt ? new Date(data.startsAt) as any : null) : priceList.startsAt,
-      endsAt: data.endsAt !== undefined ? (data.endsAt ? new Date(data.endsAt) as any : null) : priceList.endsAt,
+      startsAt: data.startsAt !== undefined ? (data.startsAt ? DateTime.fromISO(data.startsAt) : null) : priceList.startsAt,
+      endsAt: data.endsAt !== undefined ? (data.endsAt ? DateTime.fromISO(data.endsAt) : null) : priceList.endsAt,
     })
     await priceList.save()
     return priceList
@@ -144,7 +145,7 @@ export default class PriceListService {
   async updateRules(
     storeId: string,
     priceListId: string,
-    rules: { attribute: string; operator: string; value: unknown }[]
+    rules: { attribute: string; operator: 'eq' | 'ne' | 'in' | 'gt' | 'gte' | 'lt' | 'lte'; value: unknown }[]
   ) {
     await PriceList.query()
       .where('storeId', storeId)
@@ -158,7 +159,7 @@ export default class PriceListService {
         rules.map((r) => ({
           priceListId,
           attribute: r.attribute,
-          operator: r.operator as any,
+          operator: r.operator,
           value: r.value,
         }))
       )

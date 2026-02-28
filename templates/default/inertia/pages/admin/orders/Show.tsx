@@ -267,7 +267,16 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
   }
 
   const handleCreateFulfillment = () => {
-    router.get(`/admin/orders/${order.id}/fulfillments/create`)
+    const unfulfilledItems = order.items
+      .filter((item: any) => (item.fulfilledQuantity || 0) < item.quantity)
+      .map((item: any) => ({
+        orderItemId: item.id,
+        quantity: item.quantity - (item.fulfilledQuantity || 0),
+      }))
+
+    if (unfulfilledItems.length === 0) return
+
+    router.post(`/admin/orders/${order.id}/fulfillments`, { items: unfulfilledItems })
   }
 
   const handleToggleReturnItem = (itemId: string, quantity: number) => {

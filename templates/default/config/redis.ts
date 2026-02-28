@@ -1,4 +1,5 @@
 import { defineConfig } from '@adonisjs/redis'
+import type { InferConnections } from '@adonisjs/redis/types'
 
 const redisConfig = defineConfig({
   connection: 'main',
@@ -34,3 +35,7 @@ const redisConfig = defineConfig({
 })
 
 export default redisConfig
+
+declare module '@adonisjs/redis/types' {
+  export interface RedisConnections extends InferConnections<typeof redisConfig> {}
+}

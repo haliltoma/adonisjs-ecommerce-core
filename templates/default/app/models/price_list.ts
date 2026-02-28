@@ -4,6 +4,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import PriceListRule from './price_list_rule.js'
 import PriceListPrice from './price_list_price.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class PriceList extends BaseModel {
   @column({ isPrimary: true })
@@ -30,7 +31,7 @@ export default class PriceList extends BaseModel {
   @column.dateTime()
   declare endsAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

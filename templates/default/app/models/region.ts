@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import RegionCountry from './region_country.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Region extends BaseModel {
   @column({ isPrimary: true })
@@ -26,16 +27,16 @@ export default class Region extends BaseModel {
   @column()
   declare includesTax: boolean
 
-  @column()
+  @column(jsonColumn())
   declare paymentProviders: string[]
 
-  @column()
+  @column(jsonColumn())
   declare fulfillmentProviders: string[]
 
   @column()
   declare isActive: boolean
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

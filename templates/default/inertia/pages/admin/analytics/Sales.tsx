@@ -57,8 +57,8 @@ export default function SalesAnalytics({ period, data, summary, paymentMethods }
     }
   }
 
-  const formatCurrency = (value: number) =>
-    `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const formatCurrency = (value: number | null | undefined) =>
+    `$${(Number(value) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   return (
     <AdminLayout
@@ -112,7 +112,7 @@ export default function SalesAnalytics({ period, data, summary, paymentMethods }
               <ShoppingCart className="h-4 w-4" style={{ color: '#d4872e' }} />
             </CardHeader>
             <CardContent>
-              <div className="font-display text-2xl">{summary.totalOrders.toLocaleString()}</div>
+              <div className="font-display text-2xl">{(Number(summary.totalOrders) || 0).toLocaleString()}</div>
               <p className="text-muted-foreground text-xs">Paid orders in period</p>
             </CardContent>
           </Card>

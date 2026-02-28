@@ -23,7 +23,7 @@ export default class Review extends BaseModel {
   @column()
   declare title: string | null
 
-  @column()
+  @column({ columnName: 'body' })
   declare content: string | null
 
   @column()

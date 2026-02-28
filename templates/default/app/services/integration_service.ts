@@ -11,7 +11,6 @@ import {
   type IntegrationCategory,
   type IntegrationStatus,
 } from '#contracts/integration_provider'
-import { randomUUID } from 'node:crypto'
 
 interface IntegrationInfo {
   name: string
@@ -90,7 +89,6 @@ export default class IntegrationService {
       await existing.save()
     } else {
       await Setting.create({
-        id: randomUUID(),
         storeId,
         group: 'integration',
         key: `${providerName}.config`,
@@ -117,7 +115,6 @@ export default class IntegrationService {
       await existing.save()
     } else {
       await Setting.create({
-        id: randomUUID(),
         storeId,
         group: 'integration',
         key,

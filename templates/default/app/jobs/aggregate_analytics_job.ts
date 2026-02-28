@@ -76,7 +76,7 @@ export async function handleAggregateAnalytics(job: JobContext): Promise<void> {
     logger.info(
       `[AnalyticsJob] Daily summary: ${todayCount} orders, $${todayRevenue.toFixed(2)} revenue`
     )
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[AnalyticsJob] Failed: ${(error as Error).message}`)
     throw error
   }

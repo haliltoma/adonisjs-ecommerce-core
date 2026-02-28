@@ -48,6 +48,7 @@ interface CreateProductDTO {
     isActive?: boolean
     trackInventory?: boolean
     allowBackorder?: boolean
+    inventoryQuantity?: number
   }[]
   images?: { url: string; alt?: string; position?: number }[]
 }
@@ -71,7 +72,8 @@ interface ProductFilters {
 export default class ProductService {
   async create(data: CreateProductDTO): Promise<Product> {
     return await db.transaction(async (trx) => {
-      const slug = data.slug || this.generateSlug(data.title)
+      const baseSlug = data.slug || this.generateSlug(data.title)
+      const slug = await this.ensureUniqueSlug(data.storeId, baseSlug)
 
       const product = await Product.create(
         {
@@ -144,6 +146,7 @@ export default class ProductService {
               isActive: variantData.isActive ?? true,
               trackInventory: variantData.trackInventory ?? false,
               allowBackorder: variantData.allowBackorder ?? false,
+              inventoryQuantity: variantData.inventoryQuantity ?? 0,
             },
             { client: trx }
           )
@@ -205,6 +208,73 @@ export default class ProductService {
 
       if (data.tagIds !== undefined) {
         await product.related('tags').sync(data.tagIds, true, trx)
+      }
+
+      if (data.options !== undefined) {
+        await ProductOption.query({ client: trx })
+          .where('productId', product.id)
+          .delete()
+
+        for (let i = 0; i < data.options.length; i++) {
+          await ProductOption.create(
+            {
+              productId: product.id,
+              name: data.options[i].name,
+              values: data.options[i].values,
+              position: i,
+            },
+            { client: trx }
+          )
+        }
+      }
+
+      if (data.variants !== undefined) {
+        await ProductVariant.query({ client: trx })
+          .where('productId', product.id)
+          .delete()
+
+        for (let i = 0; i < data.variants.length; i++) {
+          const variantData = data.variants[i]
+          await ProductVariant.create(
+            {
+              productId: product.id,
+              title: variantData.title,
+              sku: variantData.sku,
+              barcode: variantData.barcode,
+              price: variantData.price,
+              compareAtPrice: variantData.compareAtPrice,
+              costPrice: variantData.costPrice,
+              option1: variantData.option1,
+              option2: variantData.option2,
+              option3: variantData.option3,
+              weight: variantData.weight,
+              position: variantData.position ?? i,
+              isActive: variantData.isActive ?? true,
+              trackInventory: variantData.trackInventory ?? false,
+              allowBackorder: variantData.allowBackorder ?? false,
+              inventoryQuantity: variantData.inventoryQuantity ?? 0,
+            },
+            { client: trx }
+          )
+        }
+      }
+
+      if (data.images !== undefined) {
+        await ProductImage.query({ client: trx })
+          .where('productId', product.id)
+          .delete()
+
+        for (let i = 0; i < data.images.length; i++) {
+          await ProductImage.create(
+            {
+              productId: product.id,
+              url: data.images[i].url,
+              altText: data.images[i].alt,
+              position: data.images[i].position ?? i,
+            },
+            { client: trx }
+          )
+        }
       }
 
       return product
@@ -355,9 +425,44 @@ export default class ProductService {
   }
 
   private generateSlug(title: string): string {
+    const charMap: Record<string, string> = {
+      'ş': 's', 'ç': 'c', 'ğ': 'g', 'ü': 'u', 'ö': 'o', 'ı': 'i',
+      'Ş': 's', 'Ç': 'c', 'Ğ': 'g', 'Ü': 'u', 'Ö': 'o', 'İ': 'i',
+      'ä': 'ae', 'ß': 'ss', 'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+      'à': 'a', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u',
+      'ñ': 'n', 'ý': 'y', 'ž': 'z', 'ð': 'd', 'þ': 'th',
+    }
+
     return title
+      .split('')
+      .map((char) => charMap[char] || char)
+      .join('')
       .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
+      .replace(/^-+|-+$/g, '')
+  }
+
+  async ensureUniqueSlug(storeId: string, slug: string, excludeProductId?: string): Promise<string> {
+    let candidate = slug
+    let counter = 1
+
+    while (true) {
+      const query = Product.query()
+        .where('storeId', storeId)
+        .where('slug', candidate)
+        .whereNull('deletedAt')
+
+      if (excludeProductId) {
+        query.whereNot('id', excludeProductId)
+      }
+
+      const existing = await query.first()
+      if (!existing) return candidate
+
+      candidate = `${slug}-${counter}`
+      counter++
+    }
   }
 }

@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class SearchLog extends BaseModel {
   @column({ isPrimary: true })
@@ -22,7 +23,7 @@ export default class SearchLog extends BaseModel {
   @column()
   declare sessionId: string | null
 
-  @column()
+  @column(jsonColumn())
   declare filters: Record<string, unknown> | null
 
   @column()

@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Webhook from './webhook.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class WebhookLog extends BaseModel {
   @column({ isPrimary: true })
@@ -13,7 +14,7 @@ export default class WebhookLog extends BaseModel {
   @column()
   declare event: string
 
-  @column()
+  @column(jsonColumn())
   declare payload: Record<string, unknown>
 
   @column()

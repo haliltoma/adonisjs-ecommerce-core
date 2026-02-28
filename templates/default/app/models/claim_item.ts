@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Claim from './claim.js'
 import OrderItem from './order_item.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class ClaimItem extends BaseModel {
   @column({ isPrimary: true })
@@ -23,13 +24,13 @@ export default class ClaimItem extends BaseModel {
   @column()
   declare note: string | null
 
-  @column()
+  @column(jsonColumn())
   declare images: string[]
 
-  @column()
+  @column(jsonColumn())
   declare tags: string[]
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

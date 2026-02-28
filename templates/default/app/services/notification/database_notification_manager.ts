@@ -88,13 +88,13 @@ export class DatabaseNotificationManager extends NotificationManager {
         provider: 'database',
         channel: 'database',
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         messageId: null,
         provider: 'database',
         channel: 'database',
-        errorMessage: error instanceof Error ? error.message : 'Failed to store notification',
+        errorMessage: error instanceof Error ? (error as Error).message : 'Failed to store notification',
       }
     }
   }

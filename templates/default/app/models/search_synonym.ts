@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class SearchSynonym extends BaseModel {
   @column({ isPrimary: true })
@@ -13,7 +14,7 @@ export default class SearchSynonym extends BaseModel {
   @column()
   declare term: string
 
-  @column()
+  @column(jsonColumn())
   declare synonyms: string[]
 
   @column()

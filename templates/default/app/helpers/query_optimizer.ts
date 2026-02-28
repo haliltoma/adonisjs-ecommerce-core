@@ -84,7 +84,7 @@ export async function cursorPaginate<T extends typeof BaseModel>(
   }
 
   const lastItem = data[data.length - 1]
-  const nextCursor = hasMore && lastItem ? String((lastItem as any)[orderColumn]) : null
+  const nextCursor = hasMore && lastItem ? String((lastItem as Record<string, unknown>)[orderColumn]) : null
 
   return { data: data as InstanceType<T>[], nextCursor }
 }

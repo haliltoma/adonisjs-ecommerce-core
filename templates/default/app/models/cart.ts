@@ -6,6 +6,7 @@ import Customer from './customer.js'
 import Discount from './discount.js'
 import CustomerAddress from './customer_address.js'
 import CartItem from './cart_item.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Cart extends BaseModel {
   @column({ isPrimary: true })
@@ -68,7 +69,7 @@ export default class Cart extends BaseModel {
   @column()
   declare notes: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime()

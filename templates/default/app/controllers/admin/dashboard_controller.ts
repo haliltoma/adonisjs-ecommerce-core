@@ -30,6 +30,7 @@ export default class DashboardController {
     // Recent orders
     const recentOrders = await Order.query()
       .where('storeId', storeId)
+      .whereNull('deletedAt')
       .preload('customer')
       .orderBy('createdAt', 'desc')
       .limit(10)
@@ -42,6 +43,30 @@ export default class DashboardController {
       })
       .preload('variants')
       .limit(10)
+
+    // Total counts
+    const totalCustomers = await Customer.query()
+      .where('storeId', storeId)
+      .whereNull('deletedAt')
+      .count('* as total')
+
+    const totalProducts = await Product.query()
+      .where('storeId', storeId)
+      .where('status', 'active')
+      .whereNull('deletedAt')
+      .count('* as total')
+
+    const pendingOrders = await Order.query()
+      .where('storeId', storeId)
+      .where('status', 'pending')
+      .whereNull('deletedAt')
+      .count('* as total')
+
+    const newCustomersThisMonth = await Customer.query()
+      .where('storeId', storeId)
+      .where('createdAt', '>=', thisMonth.toSQL()!)
+      .whereNull('deletedAt')
+      .count('* as total')
 
     // Top selling products (this month)
     const topProducts = await db
@@ -105,12 +130,19 @@ export default class DashboardController {
       })),
       topProducts,
       revenueChart,
+      counts: {
+        totalCustomers: Number(totalCustomers[0]?.$extras.total || 0),
+        totalProducts: Number(totalProducts[0]?.$extras.total || 0),
+        pendingOrders: Number(pendingOrders[0]?.$extras.total || 0),
+        newCustomersThisMonth: Number(newCustomersThisMonth[0]?.$extras.total || 0),
+      },
     })
   }
 
   private async getDateRangeStats(storeId: string, from: DateTime, to: DateTime) {
     const orders = await Order.query()
       .where('storeId', storeId)
+      .whereNull('deletedAt')
       .where('createdAt', '>=', from.toSQL()!)
       .where('createdAt', '<', to.toSQL()!)
 
@@ -358,15 +390,31 @@ export default class DashboardController {
       .where('createdAt', '>=', dateFrom.toSQL()!)
       .count('* as total')
 
-    const returningCustomers = await db
+    const returningCustomersRaw = await db
       .from('orders')
-      .where('store_id', storeId)
-      .where('created_at', '>=', dateFrom.toSQL()!)
-      .whereNotNull('customer_id')
-      .select('customer_id')
-      .count('* as order_count')
-      .groupBy('customer_id')
-      .havingRaw('COUNT(*) > 1')
+      .join('customers', 'orders.customer_id', 'customers.id')
+      .where('orders.store_id', storeId)
+      .where('orders.created_at', '>=', dateFrom.toSQL()!)
+      .whereNotNull('orders.customer_id')
+      .select(
+        'customers.id',
+        db.raw("CONCAT(customers.first_name, ' ', customers.last_name) as name"),
+        'customers.email'
+      )
+      .count('orders.id as order_count')
+      .sum('orders.grand_total as total_spent')
+      .groupBy('customers.id', 'customers.first_name', 'customers.last_name', 'customers.email')
+      .havingRaw('COUNT(orders.id) > 1')
+      .orderBy('total_spent', 'desc')
+      .limit(10)
+
+    const returningCustomers = returningCustomersRaw.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      orderCount: Number(row.order_count || 0),
+      totalSpent: Number(row.total_spent || 0),
+    }))
 
     // Product analytics
     const topCategories = await db

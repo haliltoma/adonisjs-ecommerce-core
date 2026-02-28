@@ -65,7 +65,7 @@ export default class OrderListener {
           data: { orderId: order.id, orderNumber: order.orderNumber },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[OrderListener] Failed to queue confirmation email: ${(err as Error).message}`)
     }
 
@@ -135,7 +135,7 @@ export default class OrderListener {
           },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[OrderListener] Failed to queue shipping email: ${(err as Error).message}`)
     }
   }
@@ -166,7 +166,7 @@ export default class OrderListener {
         },
         3 * 24 * 60 * 60 * 1000 // 3 days delay
       )
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[OrderListener] Failed to queue review request: ${(err as Error).message}`)
     }
   }
@@ -261,7 +261,6 @@ export default class OrderListener {
 
     if (!dailyAnalytics) {
       dailyAnalytics = await DailyAnalytics.create({
-        id: randomUUID(),
         storeId,
         date: DateTime.fromFormat(today, 'yyyy-MM-dd'),
         pageViews: 0,

@@ -101,8 +101,8 @@ export default class CustomersController {
 
       session.flash('success', 'Customer created successfully')
       return response.redirect().toRoute('admin.customers.show', { id: customer.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -186,8 +186,8 @@ export default class CustomersController {
       await this.customerService.update(params.id, data)
       session.flash('success', 'Customer updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -199,8 +199,8 @@ export default class CustomersController {
       await this.customerService.updateStatus(params.id, status)
       session.flash('success', 'Customer status updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -212,8 +212,8 @@ export default class CustomersController {
       await this.customerService.updatePassword(params.id, password)
       session.flash('success', 'Password updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -223,8 +223,8 @@ export default class CustomersController {
       await this.customerService.delete(params.id)
       session.flash('success', 'Customer deleted')
       return response.redirect().toRoute('admin.customers.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -249,8 +249,8 @@ export default class CustomersController {
       await this.customerService.addAddress(params.id, data)
       session.flash('success', 'Address added')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -275,8 +275,8 @@ export default class CustomersController {
       await this.customerService.updateAddress(params.addressId, data)
       session.flash('success', 'Address updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -286,8 +286,8 @@ export default class CustomersController {
       await this.customerService.deleteAddress(params.addressId)
       session.flash('success', 'Address deleted')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

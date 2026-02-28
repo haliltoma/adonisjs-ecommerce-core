@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Cart from './cart.js'
 import Product from './product.js'
 import ProductVariant from './product_variant.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class CartItem extends BaseModel {
   @column({ isPrimary: true })
@@ -42,7 +43,7 @@ export default class CartItem extends BaseModel {
   @column()
   declare weight: number | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

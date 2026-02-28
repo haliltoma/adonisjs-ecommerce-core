@@ -49,8 +49,9 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     const { response } = ctx
 
     if (error instanceof Error) {
-      const status = (error as any).status || 500
-      const code = (error as any).code || 'E_INTERNAL_ERROR'
+      const httpError = error as Error & { status?: number; code?: string }
+      const status = httpError.status || 500
+      const code = httpError.code || 'E_INTERNAL_ERROR'
 
       // Don't expose internal errors in production
       const message =
@@ -85,12 +86,13 @@ export default class HttpExceptionHandler extends ExceptionHandler {
   async report(error: unknown, ctx: HttpContext) {
     // Log server errors
     if (error instanceof Error) {
-      const status = (error as any).status || 500
+      const httpError = error as Error & { status?: number; code?: string }
+      const status = httpError.status || 500
 
       if (status >= 500) {
         console.error('[Error]', {
           message: error.message,
-          code: (error as any).code,
+          code: httpError.code,
           status,
           url: ctx.request.url(),
           method: ctx.request.method(),

@@ -102,8 +102,8 @@ export default class SettingsController {
       await this.storeService.update(storeId, data)
       session.flash('success', 'Store settings updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -118,21 +118,21 @@ export default class SettingsController {
       // Structured format: { group: 'general', settings: { key: { value, type, isPublic } } }
       try {
         for (const [key, value] of Object.entries(body.settings as Record<string, any>)) {
-          const settingValue = value as { value: unknown; type: string; isPublic: boolean }
+          const settingValue = value as { value: unknown; type: 'string' | 'number' | 'boolean' | 'json' | 'array'; isPublic: boolean }
           await this.storeService.setSetting(
             storeId,
             body.group,
             key,
             settingValue.value,
-            settingValue.type as any,
+            settingValue.type,
             settingValue.isPublic
           )
         }
 
         session.flash('success', 'Settings updated')
         return response.redirect().back()
-      } catch (error) {
-        session.flash('error', error.message)
+      } catch (error: unknown) {
+        session.flash('error', (error as Error).message)
         return response.redirect().back()
       }
     }
@@ -190,8 +190,8 @@ export default class SettingsController {
 
       session.flash('success', 'Settings updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -239,8 +239,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax class created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -260,8 +260,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax class updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -273,8 +273,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax class deleted')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -298,8 +298,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax rate added')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -322,8 +322,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax rate updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -335,8 +335,8 @@ export default class SettingsController {
 
       session.flash('success', 'Tax rate deleted')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -407,7 +407,7 @@ export default class SettingsController {
 
       session.flash('success', 'Payment provider updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -453,7 +453,7 @@ export default class SettingsController {
 
       session.flash('success', 'Shipping method updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -502,8 +502,8 @@ export default class SettingsController {
       await Currency.create(data)
       session.flash('success', 'Currency created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -534,8 +534,8 @@ export default class SettingsController {
 
       session.flash('success', 'Currency updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -568,8 +568,8 @@ export default class SettingsController {
       await Locale.create(data)
       session.flash('success', 'Locale created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -589,8 +589,8 @@ export default class SettingsController {
 
       session.flash('success', 'Locale updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -644,7 +644,7 @@ export default class SettingsController {
 
       session.flash('success', 'Webhook created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -671,7 +671,7 @@ export default class SettingsController {
 
       session.flash('success', 'Webhook updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -687,7 +687,7 @@ export default class SettingsController {
       await webhook.delete()
       session.flash('success', 'Webhook deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -719,7 +719,7 @@ export default class SettingsController {
       } else {
         return response.json({ success: false, error: result?.errorMessage || 'Delivery failed' })
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return response.json({ success: false, error: (error as Error).message })
     }
   }
@@ -780,7 +780,7 @@ export default class SettingsController {
 
       session.flash('success', 'User created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -801,7 +801,7 @@ export default class SettingsController {
 
       session.flash('success', 'User updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -819,7 +819,7 @@ export default class SettingsController {
       await user.delete()
       session.flash('success', 'User deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -874,7 +874,7 @@ export default class SettingsController {
 
       session.flash('success', 'Role created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -897,7 +897,7 @@ export default class SettingsController {
 
       session.flash('success', 'Role updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -916,7 +916,7 @@ export default class SettingsController {
       await role.delete()
       session.flash('success', 'Role deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -949,13 +949,13 @@ export default class SettingsController {
 
     try {
       for (const [key, value] of Object.entries(data)) {
-        const type = typeof value === 'boolean' ? 'boolean' : 'string'
-        await this.storeService.setSetting(store.id, 'seo', key, value, type as any, true)
+        const type: 'string' | 'boolean' = typeof value === 'boolean' ? 'boolean' : 'string'
+        await this.storeService.setSetting(store.id, 'seo', key, value, type, true)
       }
 
       session.flash('success', 'SEO settings updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1015,7 +1015,7 @@ export default class SettingsController {
 
       session.flash('success', 'Store settings updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1081,7 +1081,7 @@ export default class SettingsController {
 
       session.flash('success', 'Attribute created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1125,7 +1125,7 @@ export default class SettingsController {
 
       session.flash('success', 'Attribute updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1143,7 +1143,7 @@ export default class SettingsController {
 
       session.flash('success', 'Attribute deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1210,7 +1210,7 @@ export default class SettingsController {
 
       session.flash('success', 'Region created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1226,7 +1226,7 @@ export default class SettingsController {
       await this.regionService.update(store.id, params.id, data)
       session.flash('success', 'Region updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1237,7 +1237,7 @@ export default class SettingsController {
       await this.regionService.delete(store.id, params.id)
       session.flash('success', 'Region deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1250,7 +1250,7 @@ export default class SettingsController {
       await this.regionService.addCountries(store.id, params.id, countries)
       session.flash('success', 'Countries added')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1261,7 +1261,7 @@ export default class SettingsController {
       await this.regionService.removeCountry(store.id, params.id, params.countryCode)
       session.flash('success', 'Country removed')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1307,7 +1307,7 @@ export default class SettingsController {
 
       session.flash('success', 'Sales channel created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1320,7 +1320,7 @@ export default class SettingsController {
       await this.salesChannelService.update(store.id, params.id, data)
       session.flash('success', 'Sales channel updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1331,7 +1331,7 @@ export default class SettingsController {
       await this.salesChannelService.delete(store.id, params.id)
       session.flash('success', 'Sales channel deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1344,7 +1344,7 @@ export default class SettingsController {
       await this.salesChannelService.addProducts(store.id, params.id, productIds)
       session.flash('success', 'Products added to channel')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1357,7 +1357,7 @@ export default class SettingsController {
       await this.salesChannelService.removeProducts(store.id, params.id, productIds)
       session.flash('success', 'Products removed from channel')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1408,7 +1408,7 @@ export default class SettingsController {
 
       session.flash('success', 'Customer group created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1421,7 +1421,7 @@ export default class SettingsController {
       await this.customerGroupService.update(store.id, params.id, data)
       session.flash('success', 'Customer group updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1432,7 +1432,7 @@ export default class SettingsController {
       await this.customerGroupService.delete(store.id, params.id)
       session.flash('success', 'Customer group deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1445,7 +1445,7 @@ export default class SettingsController {
       await this.customerGroupService.addCustomers(store.id, params.id, customerIds)
       session.flash('success', 'Customers added to group')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1458,7 +1458,7 @@ export default class SettingsController {
       await this.customerGroupService.removeCustomers(store.id, params.id, customerIds)
       session.flash('success', 'Customers removed from group')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1495,7 +1495,7 @@ export default class SettingsController {
       await this.returnService.createReason(storeId, data)
       session.flash('success', 'Return reason created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1509,7 +1509,7 @@ export default class SettingsController {
       await this.returnService.updateReason(storeId, params.id, data)
       session.flash('success', 'Return reason updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1522,7 +1522,7 @@ export default class SettingsController {
       await this.returnService.deleteReason(storeId, params.id)
       session.flash('success', 'Return reason deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1538,7 +1538,7 @@ export default class SettingsController {
         id: p.id,
         name: p.name,
         type: p.type,
-        productsCount: (p as any).$extras.products_count || 0,
+        productsCount: p.$extras.products_count || 0,
         createdAt: p.createdAt.toISO(),
       })),
     })
@@ -1552,7 +1552,7 @@ export default class SettingsController {
       await this.shippingProfileService.create(storeId, data)
       session.flash('success', 'Shipping profile created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1566,7 +1566,7 @@ export default class SettingsController {
       await this.shippingProfileService.update(storeId, params.id, data)
       session.flash('success', 'Shipping profile updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1579,7 +1579,7 @@ export default class SettingsController {
       await this.shippingProfileService.delete(storeId, params.id)
       session.flash('success', 'Shipping profile deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1624,7 +1624,7 @@ export default class SettingsController {
       session.flash('success', 'API key created')
       session.flash('newToken', rawToken)
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1637,7 +1637,7 @@ export default class SettingsController {
       await this.apiKeyService.revoke(storeId, params.id)
       session.flash('success', 'API key revoked')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1650,7 +1650,7 @@ export default class SettingsController {
       await this.apiKeyService.delete(storeId, params.id)
       session.flash('success', 'API key deleted')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1671,6 +1671,27 @@ export default class SettingsController {
   async plugins({ inertia }: HttpContext) {
     return inertia.render('admin/plugins/Index', {
       plugins: [],
+    })
+  }
+
+  async updatePlugin({ params, request, response }: HttpContext) {
+    const { isActive } = request.only(['isActive'])
+    // Plugin toggle logic - placeholder for plugin system
+    void params.id
+    void isActive
+    return response.redirect().back()
+  }
+
+  async destroyPlugin({ params, response }: HttpContext) {
+    // Plugin uninstall logic - placeholder for plugin system
+    void params.id
+    return response.redirect().back()
+  }
+
+  async pluginSettings({ params, inertia }: HttpContext) {
+    return inertia.render('admin/plugins/Settings', {
+      pluginId: params.id,
+      settings: {},
     })
   }
 
@@ -1738,7 +1759,7 @@ export default class SettingsController {
 
       session.flash('success', 'Redirect created')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1768,7 +1789,7 @@ export default class SettingsController {
 
       session.flash('success', 'Redirect updated')
       return response.redirect().back()
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -1820,7 +1841,7 @@ export default class SettingsController {
       }
 
       session.flash('success', `Cache cleared successfully (${cleared} entries removed)`)
-    } catch (error) {
+    } catch (error: unknown) {
       session.flash('error', `Failed to clear cache: ${(error as Error).message}`)
     }
 

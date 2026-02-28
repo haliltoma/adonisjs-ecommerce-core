@@ -49,7 +49,7 @@ export async function handleSendEmail(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[SendEmailJob] Email sent to ${payload.to}`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[SendEmailJob] Failed to send email to ${payload.to}: ${(error as Error).message}`)
     throw error
   }

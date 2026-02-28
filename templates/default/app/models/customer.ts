@@ -9,6 +9,7 @@ import Cart from './cart.js'
 import Wishlist from './wishlist.js'
 import Review from './review.js'
 import CustomerGroup from './customer_group.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Customer extends BaseModel {
   @column({ isPrimary: true })
@@ -50,7 +51,7 @@ export default class Customer extends BaseModel {
   @column.dateTime()
   declare lastOrderAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare tags: string[]
 
   @column()
@@ -59,7 +60,7 @@ export default class Customer extends BaseModel {
   @column()
   declare groupId: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column()

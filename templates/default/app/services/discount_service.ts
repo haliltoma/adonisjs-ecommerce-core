@@ -346,7 +346,7 @@ export default class DiscountService {
     const hasItemsWithProducts =
       cart.items &&
       cart.items.length > 0 &&
-      (cart.items[0] as any).$preloaded?.product
+      cart.items[0]?.$preloaded?.product
 
     if (!cart.items || cart.items.length === 0 || !hasItemsWithProducts) {
       await cart.load('items', (q) => {
@@ -358,7 +358,7 @@ export default class DiscountService {
       id: item.id,
       productId: item.productId,
       variantId: item.variantId || undefined,
-      categoryIds: (item as any).product?.categories?.map((c: any) => c.id) || [],
+      categoryIds: item.product?.categories?.map((c: { id: string }) => c.id) || [],
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
       totalPrice: Number(item.totalPrice),

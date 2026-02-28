@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import { ArrowLeft, Eye, Loader2, Save } from 'lucide-react'
+import { useRef } from 'react'
 
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
@@ -76,8 +77,9 @@ export default function BlogEdit({ post, categories }: Props) {
     }
   }
 
+  const slugManuallyEdited = useRef(!!post?.slug)
   const generateSlug = () => {
-    if (data.title && !data.slug) {
+    if (data.title && !slugManuallyEdited.current) {
       setData('slug', data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''))
     }
   }
@@ -135,7 +137,7 @@ export default function BlogEdit({ post, categories }: Props) {
                     <Input
                       id="slug"
                       value={data.slug}
-                      onChange={(e) => setData('slug', e.target.value)}
+                      onChange={(e) => { slugManuallyEdited.current = true; setData('slug', e.target.value) }}
                       placeholder="post-url-slug"
                     />
                   </div>

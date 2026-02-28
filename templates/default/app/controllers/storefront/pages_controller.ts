@@ -16,7 +16,7 @@ export default class PagesController {
    * Convert page content blocks to HTML string
    */
   private contentToHtml(content: Record<string, unknown> | null): string {
-    const blocks = (content as any)?.blocks
+    const blocks = content?.blocks as unknown[] | undefined
     if (!blocks?.length) return ''
     return blocks
       .map((block: unknown) => {

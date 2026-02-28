@@ -59,14 +59,14 @@ export class LocalMediaProvider extends MediaProvider {
         size: fileStat.size,
         mimeType: params.mimeType,
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         filePath: '',
         url: '',
         size: 0,
         mimeType: params.mimeType,
-        errorMessage: error instanceof Error ? error.message : 'Upload failed',
+        errorMessage: error instanceof Error ? (error as Error).message : 'Upload failed',
       }
     }
   }

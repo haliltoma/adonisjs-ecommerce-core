@@ -68,13 +68,13 @@ export default class InventoryController {
     let result
     switch (type) {
       case 'products':
-        result = await this.importExportService.importProducts(store.id, rows as any)
+        result = await this.importExportService.importProducts(store.id, rows)
         break
       case 'customers':
-        result = await this.importExportService.importCustomers(store.id, rows as any)
+        result = await this.importExportService.importCustomers(store.id, rows)
         break
       default:
-        result = await this.importExportService.importInventory(store.id, rows as any)
+        result = await this.importExportService.importInventory(store.id, rows)
     }
 
     session.flash('success', `Import complete: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`)
@@ -253,8 +253,8 @@ export default class InventoryController {
 
       session.flash('success', 'Location created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -279,8 +279,8 @@ export default class InventoryController {
       await this.inventoryService.updateLocation(params.id, data)
       session.flash('success', 'Location updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -351,7 +351,7 @@ export default class InventoryController {
       }
 
       // Map frontend types to valid service types
-      const typeMap: Record<string, string> = {
+      const typeMap: Record<string, 'received' | 'adjusted'> = {
         addition: 'received',
         subtraction: 'adjusted',
       }
@@ -361,14 +361,14 @@ export default class InventoryController {
         variantId: params.id,
         locationId,
         quantity: adjustQuantity,
-        type: mappedType as any,
+        type: mappedType,
         reason: reason || (type === 'subtraction' ? 'Manual removal' : 'Manual addition'),
       })
 
       session.flash('success', `Stock ${type === 'subtraction' ? 'decreased' : 'increased'} by ${Math.abs(adjustQuantity)}`)
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -388,8 +388,8 @@ export default class InventoryController {
       await this.inventoryService.setStock(params.id, locationId, newQuantity)
       session.flash('success', `Stock set to ${newQuantity}`)
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -414,8 +414,8 @@ export default class InventoryController {
 
       session.flash('success', 'Stock transferred')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -430,8 +430,8 @@ export default class InventoryController {
 
       session.flash('success', 'Inventory updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }

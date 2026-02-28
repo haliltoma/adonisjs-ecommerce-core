@@ -1,5 +1,6 @@
 import { defineConfig } from '@adonisjs/inertia'
 import type { InferSharedProps } from '@adonisjs/inertia/types'
+import Customer from '#models/customer'
 
 const inertiaConfig = defineConfig({
   /**
@@ -46,10 +47,21 @@ const inertiaConfig = defineConfig({
         }
       }),
     customer: (ctx) =>
-      ctx.inertia.always(() => {
+      ctx.inertia.always(async () => {
         const customerId = ctx.session?.get('customer_id')
         if (!customerId) return null
-        return { id: customerId }
+        try {
+          const customer = await Customer.find(customerId)
+          if (!customer) return null
+          return {
+            id: customer.id,
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            email: customer.email,
+          }
+        } catch {
+          return null
+        }
       }),
     cartCount: (ctx) =>
       ctx.inertia.always(() => {
@@ -60,10 +72,12 @@ const inertiaConfig = defineConfig({
 
   /**
    * Options for the server-side rendering
+   *
+   * TEMPORARILY DISABLED for testing
    */
   ssr: {
-    enabled: true,
-    entrypoint: 'inertia/app/ssr.tsx'
+    enabled: false,
+    entrypoint: 'inertia/app/ssr.tsx',
   }
 })
 

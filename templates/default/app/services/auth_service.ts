@@ -1,6 +1,7 @@
 import User from '#models/user'
 import Customer from '#models/customer'
 import hash from '@adonisjs/core/services/hash'
+import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 import string from '@adonisjs/core/helpers/string'
 import * as OTPAuth from 'otpauth'
@@ -140,34 +141,72 @@ export default class AuthService {
   // Password Reset
   async generatePasswordResetToken(email: string, isAdmin: boolean = false): Promise<string | null> {
     const token = string.random(64)
-    // Token expires in 24 hours - would be stored in password_resets table
 
     if (isAdmin) {
       const user = await User.query().where('email', email.toLowerCase()).first()
       if (!user) return null
-
-      // Store token in database (would need a password_resets table)
-      // For now, returning the token
-      return token
     } else {
       const customer = await Customer.query().where('email', email.toLowerCase()).first()
       if (!customer) return null
-
-      // Store token in database
-      return token
     }
+
+    // Delete any existing tokens for this email
+    await db
+      .from('password_resets')
+      .where('email', email.toLowerCase())
+      .where('is_admin', isAdmin)
+      .delete()
+
+    // Store new token with 24h expiry
+    await db.table('password_resets').insert({
+      id: db.rawQuery('gen_random_uuid()').knexQuery,
+      email: email.toLowerCase(),
+      token,
+      is_admin: isAdmin,
+      expires_at: DateTime.now().plus({ hours: 24 }).toSQL(),
+      created_at: DateTime.now().toSQL(),
+    })
+
+    return token
   }
 
-  async verifyPasswordResetToken(_token: string): Promise<boolean> {
-    // Would verify against password_resets table
-    return true
+  async verifyPasswordResetToken(token: string): Promise<{ email: string; isAdmin: boolean } | null> {
+    const record = await db
+      .from('password_resets')
+      .where('token', token)
+      .whereNull('used_at')
+      .where('expires_at', '>', DateTime.now().toSQL()!)
+      .first()
+
+    if (!record) return null
+
+    return { email: record.email, isAdmin: record.is_admin }
   }
 
   async resetPassword(data: PasswordResetDTO, _isAdmin: boolean = false): Promise<boolean> {
-    const isValid = await this.verifyPasswordResetToken(data.token)
-    if (!isValid) return false
+    const result = await this.verifyPasswordResetToken(data.token)
+    if (!result) return false
 
-    // Would look up the email from the token and update password
+    const newHash = await hash.make(data.password)
+
+    if (result.isAdmin) {
+      const user = await User.query().where('email', result.email).first()
+      if (!user) return false
+      user.password = newHash
+      await user.save()
+    } else {
+      const customer = await Customer.query().where('email', result.email).first()
+      if (!customer) return false
+      customer.passwordHash = newHash
+      await customer.save()
+    }
+
+    // Mark token as used
+    await db
+      .from('password_resets')
+      .where('token', data.token)
+      .update({ used_at: DateTime.now().toSQL() })
+
     return true
   }
 

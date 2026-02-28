@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Order from './order.js'
 import User from './user.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class OrderEdit extends BaseModel {
   @column({ isPrimary: true })
@@ -27,7 +28,7 @@ export default class OrderEdit extends BaseModel {
   @column()
   declare differenceAmount: number
 
-  @column()
+  @column(jsonColumn())
   declare changes: Record<string, unknown>[]
 
   @column.dateTime()
@@ -39,7 +40,7 @@ export default class OrderEdit extends BaseModel {
   @column.dateTime()
   declare declinedAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

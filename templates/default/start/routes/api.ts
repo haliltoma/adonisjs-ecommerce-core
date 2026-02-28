@@ -98,7 +98,7 @@ router
         router.delete('/me/wishlist/:productId', [CustomersController, 'removeFromWishlist'])
       })
       .prefix('/customers')
-      .use(middleware.auth({ guards: ['web'] }))
+      .use(middleware.customerAuth())
 
     /*
     |--------------------------------------------------------------------------
@@ -115,7 +115,7 @@ router
         router.post('/:id/cancel', [OrdersController, 'cancel'])
       })
       .prefix('/orders')
-      .use(middleware.auth({ guards: ['web'] }))
+      .use(middleware.customerAuth())
 
     /*
     |--------------------------------------------------------------------------

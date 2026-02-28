@@ -146,7 +146,7 @@ export class DatabaseSearchProvider extends SearchProvider {
     try {
       await Product.query().limit(1)
       return { healthy: true }
-    } catch (error) {
+    } catch (error: unknown) {
       return { healthy: false, message: String(error) }
     }
   }

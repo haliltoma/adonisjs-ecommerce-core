@@ -107,8 +107,8 @@ export class HttpWebhookDispatcher extends WebhookDispatcher {
       if (!success) {
         errorMessage = `HTTP ${statusCode}: ${responseBody?.substring(0, 200)}`
       }
-    } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Network error'
+    } catch (error: unknown) {
+      errorMessage = error instanceof Error ? (error as Error).message : 'Network error'
       logger.error(`[Webhook] Failed to deliver to ${webhook.url}: ${errorMessage}`)
     }
 
@@ -125,7 +125,7 @@ export class HttpWebhookDispatcher extends WebhookDispatcher {
       status: success ? 'success' : 'failed',
       attempts: 1,
     }).catch((err) => {
-      logger.error(`[Webhook] Failed to log delivery: ${err.message}`)
+      logger.error(`[Webhook] Failed to log delivery: ${(err as Error).message}`)
     })
 
     // Update webhook last triggered

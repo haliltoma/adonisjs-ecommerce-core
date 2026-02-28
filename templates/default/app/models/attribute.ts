@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import AttributeOption from './attribute_option.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Attribute extends BaseModel {
   @column({ isPrimary: true })
@@ -35,7 +36,7 @@ export default class Attribute extends BaseModel {
   @column()
   declare sortOrder: number
 
-  @column()
+  @column(jsonColumn())
   declare validationRules: Record<string, unknown> | null
 
   @column.dateTime({ autoCreate: true })

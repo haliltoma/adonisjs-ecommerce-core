@@ -3,6 +3,7 @@ import OrderService from '#services/order_service'
 import FulfillmentService from '#services/fulfillment_service'
 import RefundService from '#services/refund_service'
 import ReturnService from '#services/return_service'
+import InvoiceService from '#services/invoice_service'
 import Order from '#models/order'
 import Claim from '#models/claim'
 import ClaimItem from '#models/claim_item'
@@ -15,6 +16,7 @@ export default class OrdersController {
   private orderService: OrderService
   private fulfillmentService: FulfillmentService
   private refundService: RefundService
+  private invoiceService: InvoiceService
 
   private returnService: ReturnService
 
@@ -23,6 +25,7 @@ export default class OrdersController {
     this.fulfillmentService = new FulfillmentService()
     this.refundService = new RefundService()
     this.returnService = new ReturnService()
+    this.invoiceService = new InvoiceService()
   }
 
   async index({ inertia, request, store }: HttpContext) {
@@ -181,8 +184,8 @@ export default class OrdersController {
       await this.orderService.updateStatus(params.id, status, note, admin?.id)
       session.flash('success', 'Order status updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -208,8 +211,8 @@ export default class OrdersController {
       )
       session.flash('success', 'Fulfillment created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -229,8 +232,8 @@ export default class OrdersController {
       })
       session.flash('success', 'Fulfillment marked as shipped')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -240,8 +243,8 @@ export default class OrdersController {
       await this.fulfillmentService.markDelivered(params.fulfillmentId)
       session.flash('success', 'Fulfillment marked as delivered')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -251,8 +254,8 @@ export default class OrdersController {
       await this.fulfillmentService.cancel(params.fulfillmentId)
       session.flash('success', 'Fulfillment cancelled')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -274,8 +277,8 @@ export default class OrdersController {
 
       session.flash('success', 'Refund processed successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -287,8 +290,8 @@ export default class OrdersController {
       await this.orderService.cancel(params.id, reason, admin?.id)
       session.flash('success', 'Order cancelled')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -341,8 +344,8 @@ export default class OrdersController {
       })
       session.flash('success', 'Return request created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -355,8 +358,8 @@ export default class OrdersController {
       await this.returnService.receiveReturn(storeId, params.returnId, { items, receivedBy })
       session.flash('success', 'Return items received')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -368,8 +371,8 @@ export default class OrdersController {
       await this.returnService.cancelReturn(storeId, params.returnId)
       session.flash('success', 'Return cancelled')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -382,8 +385,8 @@ export default class OrdersController {
       await this.returnService.completeReturn(storeId, params.returnId, refundAmount)
       session.flash('success', 'Return completed')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -424,8 +427,8 @@ export default class OrdersController {
 
       session.flash('success', 'Claim created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -448,8 +451,8 @@ export default class OrdersController {
 
       session.flash('success', 'Claim updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -479,8 +482,8 @@ export default class OrdersController {
 
       session.flash('success', 'Exchange created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -501,8 +504,8 @@ export default class OrdersController {
 
       session.flash('success', 'Exchange updated')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -526,8 +529,8 @@ export default class OrdersController {
 
       session.flash('success', 'Order edit created')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -548,8 +551,8 @@ export default class OrdersController {
 
       session.flash('success', 'Order edit requested for confirmation')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -566,7 +569,7 @@ export default class OrdersController {
       const order = await Order.findOrFail(edit.orderId)
 
       // Apply changes to order
-      for (const change of edit.changes as any[]) {
+      for (const change of edit.changes) {
         if (change.type === 'item_add') {
           // Add item to order
         } else if (change.type === 'item_remove') {
@@ -591,8 +594,8 @@ export default class OrdersController {
 
       session.flash('success', 'Order edit confirmed and applied')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -612,8 +615,8 @@ export default class OrdersController {
 
       session.flash('success', 'Order edit declined')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -745,5 +748,15 @@ export default class OrdersController {
     ])
 
     return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n')
+  }
+
+  async invoice({ params, response }: HttpContext) {
+    try {
+      const html = await this.invoiceService.generateHtml(params.id)
+      response.header('Content-Type', 'text/html')
+      return response.send(html)
+    } catch (error: unknown) {
+      return response.notFound({ error: 'Order not found' })
+    }
   }
 }

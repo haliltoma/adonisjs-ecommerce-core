@@ -98,7 +98,7 @@ export async function handleProcessOrder(job: JobContext): Promise<void> {
 
     await job.updateProgress(100)
     logger.info(`[ProcessOrderJob] Order ${payload.orderId} ${payload.action} completed`)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(
       `[ProcessOrderJob] Failed to process order ${payload.orderId}: ${(error as Error).message}`
     )

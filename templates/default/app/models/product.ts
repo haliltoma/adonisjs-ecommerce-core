@@ -13,6 +13,7 @@ import Collection from './collection.js'
 import ProductAttributeValue from './product_attribute_value.js'
 import SalesChannel from './sales_channel.js'
 import ShippingProfile from './shipping_profile.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -99,7 +100,7 @@ export default class Product extends BaseModel {
   @column()
   declare metaKeywords: string | null
 
-  @column()
+  @column(jsonColumn())
   declare customFields: Record<string, unknown>
 
   @column.dateTime()

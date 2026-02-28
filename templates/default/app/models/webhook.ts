@@ -3,6 +3,7 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import WebhookLog from './webhook_log.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Webhook extends BaseModel {
   @column({ isPrimary: true })
@@ -17,13 +18,13 @@ export default class Webhook extends BaseModel {
   @column()
   declare url: string
 
-  @column()
+  @column(jsonColumn())
   declare events: string[]
 
   @column({ serializeAs: null })
   declare secret: string | null
 
-  @column()
+  @column(jsonColumn())
   declare headers: Record<string, string> | null
 
   @column()

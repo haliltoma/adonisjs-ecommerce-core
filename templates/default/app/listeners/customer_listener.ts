@@ -49,7 +49,7 @@ export default class CustomerListener {
           },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[CustomerListener] Failed to queue welcome email: ${(err as Error).message}`)
     }
 
@@ -74,7 +74,7 @@ export default class CustomerListener {
           },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[CustomerListener] Failed to queue verification email: ${(err as Error).message}`)
     }
 
@@ -101,7 +101,7 @@ export default class CustomerListener {
           },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[CustomerListener] Failed to queue reset email: ${(err as Error).message}`)
     }
 
@@ -147,7 +147,7 @@ export default class CustomerListener {
           },
         },
       })
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error(`[CustomerListener] Failed to queue deactivation email: ${(err as Error).message}`)
     }
 
@@ -166,7 +166,6 @@ export default class CustomerListener {
 
     if (!daily) {
       daily = await DailyAnalytics.create({
-        id: randomUUID(),
         storeId,
         date: DateTime.fromFormat(today, 'yyyy-MM-dd'),
         pageViews: 0,

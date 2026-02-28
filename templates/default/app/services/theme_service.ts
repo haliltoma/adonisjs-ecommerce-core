@@ -6,7 +6,6 @@
  */
 
 import Setting from '#models/setting'
-import { randomUUID } from 'node:crypto'
 
 export interface ThemeConfig {
   name: string
@@ -111,7 +110,6 @@ export default class ThemeService {
       await existing.save()
     } else {
       await Setting.create({
-        id: randomUUID(),
         storeId,
         group: 'theme',
         key: 'config',

@@ -15,6 +15,7 @@ import Return from './return.js'
 import Exchange from './exchange.js'
 import Claim from './claim.js'
 import OrderEdit from './order_edit.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Order extends BaseModel {
   @column({ isPrimary: true })
@@ -74,10 +75,10 @@ export default class Order extends BaseModel {
   @column()
   declare discountId: string | null
 
-  @column()
+  @column(jsonColumn())
   declare billingAddress: Record<string, unknown>
 
-  @column()
+  @column(jsonColumn())
   declare shippingAddress: Record<string, unknown>
 
   @column()
@@ -104,7 +105,7 @@ export default class Order extends BaseModel {
   @column()
   declare salesChannelId: string | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column()

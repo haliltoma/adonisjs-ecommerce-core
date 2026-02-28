@@ -199,6 +199,7 @@ router.group(() => {
     router.delete('/products/:id', [AdminProductsController, 'destroy']).as('admin.products.destroy')
     router.post('/products/:id/duplicate', [AdminProductsController, 'duplicate']).as('admin.products.duplicate')
     router.post('/products/bulk', [AdminProductsController, 'bulkAction']).as('admin.products.bulk')
+    router.post('/upload/images', [AdminProductsController, 'uploadImages']).as('admin.upload.images')
 
     // Categories
     router.get('/categories', [AdminCategoriesController, 'index']).as('admin.categories.index')
@@ -221,6 +222,7 @@ router.group(() => {
     router.post('/orders/:id/fulfillments/:fulfillmentId/deliver', [AdminOrdersController, 'deliverFulfillment']).as('admin.orders.fulfillments.deliver')
     router.delete('/orders/:id/fulfillments/:fulfillmentId', [AdminOrdersController, 'cancelFulfillment']).as('admin.orders.fulfillments.cancel')
     router.post('/orders/:id/refunds', [AdminOrdersController, 'createRefund']).as('admin.orders.refunds.create')
+    router.get('/orders/:id/invoice', [AdminOrdersController, 'invoice']).as('admin.orders.invoice')
 
     // Order Returns
     router.post('/orders/:id/returns', [AdminOrdersController, 'createReturn']).as('admin.orders.returns.create')
@@ -257,6 +259,7 @@ router.group(() => {
     router.post('/gift-cards', [AdminGiftCardsController, 'store']).as('admin.giftCards.store')
     router.get('/gift-cards/:id', [AdminGiftCardsController, 'show']).as('admin.giftCards.show')
     router.patch('/gift-cards/:id', [AdminGiftCardsController, 'update']).as('admin.giftCards.update')
+    router.delete('/gift-cards/:id', [AdminGiftCardsController, 'destroy']).as('admin.giftCards.destroy')
     router.post('/gift-cards/:id/adjust', [AdminGiftCardsController, 'adjustBalance']).as('admin.giftCards.adjust')
     router.post('/gift-cards/:id/toggle', [AdminGiftCardsController, 'toggleStatus']).as('admin.giftCards.toggle')
 
@@ -364,7 +367,12 @@ router.group(() => {
     // Marketing
     router.get('/marketing', [AdminMarketingController, 'index']).as('admin.marketing.index')
     router.get('/marketing/abandoned-carts', [AdminMarketingController, 'abandonedCarts']).as('admin.marketing.abandonedCarts')
+    router.post('/marketing/abandoned-carts/:id/recover', [AdminMarketingController, 'sendRecoveryEmail']).as('admin.marketing.abandonedCarts.recover')
+    router.delete('/marketing/abandoned-carts/:id', [AdminMarketingController, 'destroyAbandonedCart']).as('admin.marketing.abandonedCarts.destroy')
     router.get('/marketing/email-campaigns', [AdminMarketingController, 'emailCampaigns']).as('admin.marketing.emailCampaigns')
+    router.post('/marketing/email-campaigns', [AdminMarketingController, 'storeEmailCampaign']).as('admin.marketing.emailCampaigns.store')
+    router.post('/marketing/email-campaigns/:id/send', [AdminMarketingController, 'sendEmailCampaign']).as('admin.marketing.emailCampaigns.send')
+    router.delete('/marketing/email-campaigns/:id', [AdminMarketingController, 'destroyEmailCampaign']).as('admin.marketing.emailCampaigns.destroy')
 
     // Settings - Webhooks
     router.get('/settings/webhooks', [AdminSettingsController, 'webhooks']).as('admin.settings.webhooks')
@@ -462,6 +470,9 @@ router.group(() => {
 
     // Plugins
     router.get('/plugins', [AdminSettingsController, 'plugins']).as('admin.plugins.index')
+    router.patch('/plugins/:id', [AdminSettingsController, 'updatePlugin']).as('admin.plugins.update')
+    router.delete('/plugins/:id', [AdminSettingsController, 'destroyPlugin']).as('admin.plugins.destroy')
+    router.get('/plugins/:id/settings', [AdminSettingsController, 'pluginSettings']).as('admin.plugins.settings')
 
     // Analytics Sub-Pages
     router.get('/analytics/sales', [AdminDashboardController, 'analyticsSales']).as('admin.analytics.sales')

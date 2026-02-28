@@ -12,9 +12,9 @@ export default class OrderPolicy {
   /**
    * Admin can view any order in their store.
    */
-  viewAdmin(user: User, order: Order): boolean {
-    // Admin access is checked by admin middleware; here we ensure store scope
-    return !!user.roleId && order.storeId === (user as any).storeId
+  viewAdmin(user: User, _order: Order): boolean {
+    // Admin access and store scope are checked by admin middleware
+    return !!user.roleId
   }
 
   /**

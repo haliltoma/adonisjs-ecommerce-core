@@ -1,7 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { createReadStream } from 'node:fs'
 import ProductService from '#services/product_service'
 import CategoryService from '#services/category_service'
 import ImportExportService from '#services/import_export_service'
+import { LocalMediaProvider } from '#services/media/local_media_provider'
 import Product from '#models/product'
 import TaxClass from '#models/tax_class'
 import Tag from '#models/tag'
@@ -126,6 +128,21 @@ export default class ProductsController {
       metaTitle: raw.metaTitle || undefined,
       metaDescription: raw.metaDescription || undefined,
       metaKeywords: raw.metaKeywords || undefined,
+      variants: raw.variants?.map((v: any, idx: number) => ({
+        title: v.title || '',
+        sku: v.sku || '',
+        barcode: v.barcode || undefined,
+        price: v.price !== '' && v.price != null ? Number(v.price) : 0,
+        compareAtPrice: v.compareAtPrice !== '' && v.compareAtPrice != null ? Number(v.compareAtPrice) : undefined,
+        costPrice: v.costPrice !== '' && v.costPrice != null ? Number(v.costPrice) : undefined,
+        option1: v.option1 || undefined,
+        option2: v.option2 || undefined,
+        option3: v.option3 || undefined,
+        weight: v.weight !== '' && v.weight != null ? Number(v.weight) : undefined,
+        position: v.position ?? idx,
+        isActive: v.isActive ?? true,
+        inventoryQuantity: v.inventoryQuantity != null ? Number(v.inventoryQuantity) : 0,
+      })),
     }
 
     try {
@@ -136,8 +153,8 @@ export default class ProductsController {
 
       session.flash('success', 'Product created successfully')
       return response.redirect().toRoute('admin.products.edit', { id: product.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -200,6 +217,9 @@ export default class ProductsController {
       'customFields',
       'categoryIds',
       'tagIds',
+      'options',
+      'variants',
+      'images',
     ])
 
     const data = {
@@ -217,14 +237,29 @@ export default class ProductsController {
       metaTitle: raw.metaTitle || undefined,
       metaDescription: raw.metaDescription || undefined,
       metaKeywords: raw.metaKeywords || undefined,
+      variants: raw.variants?.map((v: any, idx: number) => ({
+        title: v.title || '',
+        sku: v.sku || '',
+        barcode: v.barcode || undefined,
+        price: v.price !== '' && v.price != null ? Number(v.price) : 0,
+        compareAtPrice: v.compareAtPrice !== '' && v.compareAtPrice != null ? Number(v.compareAtPrice) : undefined,
+        costPrice: v.costPrice !== '' && v.costPrice != null ? Number(v.costPrice) : undefined,
+        option1: v.option1 || undefined,
+        option2: v.option2 || undefined,
+        option3: v.option3 || undefined,
+        weight: v.weight !== '' && v.weight != null ? Number(v.weight) : undefined,
+        position: v.position ?? idx,
+        isActive: v.isActive ?? true,
+        inventoryQuantity: v.inventoryQuantity != null ? Number(v.inventoryQuantity) : 0,
+      })),
     }
 
     try {
       await this.productService.update(params.id, data)
       session.flash('success', 'Product updated successfully')
       return response.redirect().back()
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -234,8 +269,8 @@ export default class ProductsController {
       await this.productService.delete(params.id)
       session.flash('success', 'Product deleted successfully')
       return response.redirect().toRoute('admin.products.index')
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -277,8 +312,8 @@ export default class ProductsController {
 
       session.flash('success', 'Product duplicated successfully')
       return response.redirect().toRoute('admin.products.edit', { id: duplicate.id })
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
   }
@@ -320,8 +355,8 @@ export default class ProductsController {
         default:
           session.flash('error', 'Unknown action')
       }
-    } catch (error) {
-      session.flash('error', error.message)
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
     }
 
     return response.redirect().back()
@@ -346,7 +381,7 @@ export default class ProductsController {
 
     const content = await import('node:fs/promises').then((fs) => fs.readFile(file.tmpPath!, 'utf-8'))
     const rows = this.importExportService.parseCSV(content)
-    const result = await this.importExportService.importProducts(store.id, rows as any)
+    const result = await this.importExportService.importProducts(store.id, rows)
 
     session.flash('success', `Import complete: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`)
     if (result.errors.length > 0) {
@@ -392,6 +427,43 @@ export default class ProductsController {
     response.header('Content-Type', 'text/csv')
     response.header('Content-Disposition', 'attachment; filename="products-template.csv"')
     return response.send(csv)
+  }
+
+  async uploadImages({ request, response }: HttpContext) {
+    const files = request.files('files', {
+      size: '5mb',
+      extnames: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    })
+
+    if (!files || files.length === 0) {
+      return response.status(400).json({ error: 'No files provided' })
+    }
+
+    const mediaProvider = new LocalMediaProvider()
+    const results = []
+
+    for (const file of files) {
+      if (file.hasErrors) continue
+
+      const result = await mediaProvider.upload({
+        file: createReadStream(file.tmpPath!),
+        fileName: file.clientName,
+        mimeType: `${file.type}/${file.subtype}`,
+        directory: 'products',
+      })
+
+      if (result.success) {
+        results.push({
+          id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          url: result.url,
+          name: file.clientName,
+          size: result.size,
+          type: `${file.type}/${file.subtype}`,
+        })
+      }
+    }
+
+    return response.json(results)
   }
 
   private serializeProduct(product: Product) {

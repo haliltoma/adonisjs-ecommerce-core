@@ -335,7 +335,7 @@ export default class CartService {
     if (items.length > 0) {
       try {
         // Temporarily save items on cart for the discount service context builder
-        ;(cart as any).items = items
+        cart.$setRelated('items', items)
         const discountResult = await this.discountService.applyAllDiscounts(
           cart,
           cart.storeId,

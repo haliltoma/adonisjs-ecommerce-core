@@ -4,6 +4,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import Order from './order.js'
 import ReturnItem from './return_item.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Return extends BaseModel {
   @column({ isPrimary: true })
@@ -39,7 +40,7 @@ export default class Return extends BaseModel {
   @column.dateTime()
   declare receivedAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

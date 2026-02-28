@@ -23,7 +23,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring session package
   |----------------------------------------------------------
   */
-  SESSION_DRIVER: Env.schema.enum(['cookie', 'memory'] as const),
+  SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'redis'] as const),
 
   /*
   |----------------------------------------------------------
@@ -41,11 +41,41 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring payment providers
   |----------------------------------------------------------
   */
-  PAYMENT_PROVIDER: Env.schema.enum.optional(['manual', 'stripe', 'iyzico'] as const),
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring mail
+  |----------------------------------------------------------
+  */
+  SMTP_HOST: Env.schema.string.optional(),
+  SMTP_PORT: Env.schema.string.optional(),
+  SMTP_USERNAME: Env.schema.string.optional(),
+  SMTP_PASSWORD: Env.schema.string.optional(),
+  MAIL_FROM_ADDRESS: Env.schema.string.optional(),
+  MAIL_FROM_NAME: Env.schema.string.optional(),
+  MAIL_REPLY_TO: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring Redis
+  |----------------------------------------------------------
+  */
+  REDIS_HOST: Env.schema.string.optional(),
+  REDIS_PORT: Env.schema.number.optional(),
+  REDIS_PASSWORD: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring payment providers
+  |----------------------------------------------------------
+  */
+  PAYMENT_PROVIDER: Env.schema.enum.optional(['manual', 'stripe', 'iyzico', 'paypal', 'bank_transfer', 'cod'] as const),
   STRIPE_SECRET_KEY: Env.schema.string.optional(),
   STRIPE_PUBLIC_KEY: Env.schema.string.optional(),
   STRIPE_WEBHOOK_SECRET: Env.schema.string.optional(),
   IYZICO_API_KEY: Env.schema.string.optional(),
   IYZICO_SECRET_KEY: Env.schema.string.optional(),
   IYZICO_BASE_URL: Env.schema.string.optional(),
+  PAYPAL_CLIENT_ID: Env.schema.string.optional(),
+  PAYPAL_CLIENT_SECRET: Env.schema.string.optional(),
+  PAYPAL_MODE: Env.schema.enum.optional(['sandbox', 'live'] as const),
 })

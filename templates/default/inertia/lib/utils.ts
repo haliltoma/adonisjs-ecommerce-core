@@ -6,10 +6,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency?: string, locale?: string): string {
-  return new Intl.NumberFormat(locale || getLocaleForFormatting(), {
-    style: 'currency',
-    currency: currency || getStoredCurrency(),
-  }).format(amount)
+  const currencyCode = currency && currency.length === 3 ? currency : getStoredCurrency()
+  try {
+    return new Intl.NumberFormat(locale || getLocaleForFormatting(), {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(amount)
+  } catch {
+    // Fallback for invalid currency codes
+    return new Intl.NumberFormat(locale || getLocaleForFormatting(), {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
 }
 
 export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions): string {

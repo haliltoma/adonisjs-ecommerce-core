@@ -16,7 +16,7 @@ export default class HealthController {
     try {
       // Check database connection
       await db.rawQuery('SELECT 1')
-    } catch (error) {
+    } catch (error: unknown) {
       health.status = 'error'
       health.checks.database = 'error'
     }

@@ -17,23 +17,23 @@ export default class ShippingProfileService {
       .firstOrFail()
   }
 
-  async create(storeId: string, data: { name: string; type?: string }) {
+  async create(storeId: string, data: { name: string; type?: 'default' | 'gift_card' | 'custom' }) {
     return ShippingProfile.create({
       storeId,
       name: data.name,
-      type: (data.type as any) || 'custom',
+      type: data.type || 'custom',
       metadata: {},
     })
   }
 
-  async update(storeId: string, profileId: string, data: { name?: string; type?: string }) {
+  async update(storeId: string, profileId: string, data: { name?: string; type?: 'default' | 'gift_card' | 'custom' }) {
     const profile = await ShippingProfile.query()
       .where('storeId', storeId)
       .where('id', profileId)
       .firstOrFail()
 
     if (data.name) profile.name = data.name
-    if (data.type) profile.type = data.type as any
+    if (data.type) profile.type = data.type
     await profile.save()
     return profile
   }

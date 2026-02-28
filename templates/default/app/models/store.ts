@@ -16,6 +16,7 @@ import Region from './region.js'
 import SalesChannel from './sales_channel.js'
 import CustomerGroup from './customer_group.js'
 import PriceList from './price_list.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class Store extends BaseModel {
   @column({ isPrimary: true })
@@ -45,10 +46,10 @@ export default class Store extends BaseModel {
   @column()
   declare isActive: boolean
 
-  @column({ columnName: 'settings' })
+  @column(jsonColumn({ columnName: 'settings' }))
   declare config: Record<string, unknown>
 
-  @column()
+  @column(jsonColumn())
   declare meta: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })

@@ -44,7 +44,7 @@ export class BullMQQueueProvider extends QueueProvider {
         },
       })
       queue.on('error', (err) => {
-        logger.error(`[Queue:${name}] Error: ${err.message}`)
+        logger.error(`[Queue:${name}] Error: ${(err as Error).message}`)
       })
       this.queues.set(name, queue)
     }
@@ -183,11 +183,11 @@ export class BullMQQueueProvider extends QueueProvider {
     })
 
     worker.on('failed', (job, err) => {
-      logger.error(`[Queue:${queueName}] Job "${job?.name}" (${job?.id}) failed: ${err.message}`)
+      logger.error(`[Queue:${queueName}] Job "${job?.name}" (${job?.id}) failed: ${(err as Error).message}`)
     })
 
     worker.on('error', (err) => {
-      logger.error(`[Worker:${queueName}] Error: ${err.message}`)
+      logger.error(`[Worker:${queueName}] Error: ${(err as Error).message}`)
     })
 
     this.workers.set(queueName, worker)
@@ -272,7 +272,7 @@ export class BullMQQueueProvider extends QueueProvider {
       try {
         await worker.close()
         logger.debug(`[Worker:${name}] Closed`)
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error(`[Worker:${name}] Error closing: ${(err as Error).message}`)
       }
     })
@@ -284,7 +284,7 @@ export class BullMQQueueProvider extends QueueProvider {
         try {
           await events.close()
           logger.debug(`[QueueEvents:${name}] Closed`)
-        } catch (err) {
+        } catch (err: unknown) {
           logger.error(`[QueueEvents:${name}] Error closing: ${(err as Error).message}`)
         }
       }
@@ -296,7 +296,7 @@ export class BullMQQueueProvider extends QueueProvider {
       try {
         await queue.close()
         logger.debug(`[Queue:${name}] Closed`)
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error(`[Queue:${name}] Error closing: ${(err as Error).message}`)
       }
     })

@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import ProductVariant from './product_variant.js'
 import InventoryLocation from './inventory_location.js'
+import { jsonColumn } from '#helpers/json_column'
 
 export default class InventoryReservation extends BaseModel {
   @column({ isPrimary: true })
@@ -36,7 +37,7 @@ export default class InventoryReservation extends BaseModel {
   @column.dateTime()
   declare expiresAt: DateTime | null
 
-  @column()
+  @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
   @column.dateTime({ autoCreate: true })
