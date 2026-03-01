@@ -1,0 +1,60 @@
+{
+  "name": "create-adoniscommerce",
+  "version": "2.0.0",
+  "description": "Create a new AdonisCommerce e-commerce application",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "create-adoniscommerce": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "adonisjs",
+    "ecommerce",
+    "create",
+    "scaffold",
+    "react",
+    "inertia",
+    "typescript",
+    "cli"
+  ],
+  "author": "laserkopf",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haliltoma/adonisjs-ecommerce-core.git",
+    "directory": "packages/create-adoniscommerce"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/haliltoma/adonisjs-ecommerce-core#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.8.2",
+    "citty": "^0.1.6",
+    "degit": "^2.8.4",
+    "execa": "^9.5.2",
+    "fs-extra": "^11.2.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/degit": "^2.8.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.15.18",
+    "tsup": "^8.3.5",
+    "typescript": "^5.8.0",
+    "vitest": "^2.1.8"
+  }
+}

@@ -13,8 +13,10 @@
   "scripts": {
     "dev": "pnpm --filter @adoniscommerce/template dev",
     "dev:cli": "pnpm --filter @adonisjs-ecommerce-core/create dev",
+    "dev:cli:new": "pnpm --filter create-adoniscommerce dev",
     "build": "pnpm -r build",
     "build:cli": "pnpm --filter @adonisjs-ecommerce-core/create build",
+    "build:cli:new": "pnpm --filter create-adoniscommerce build",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @adoniscommerce/template test:e2e",
     "lint": "pnpm -r lint",
@@ -31,9 +33,13 @@
     "docker:dev": "pnpm --filter @adoniscommerce/template docker:dev",
     "docker:stop": "pnpm --filter @adoniscommerce/template docker:stop",
     "publish:cli": "pnpm --filter @adonisjs-ecommerce-core/create publish --access public",
+    "publish:cli:new": "pnpm --filter create-adoniscommerce publish --access public",
     "version:patch": "pnpm --filter @adonisjs-ecommerce-core/create version patch",
     "version:minor": "pnpm --filter @adonisjs-ecommerce-core/create version minor",
     "version:major": "pnpm --filter @adonisjs-ecommerce-core/create version major",
+    "version:patch:new": "pnpm --filter create-adoniscommerce version patch",
+    "version:minor:new": "pnpm --filter create-adoniscommerce version minor",
+    "version:major:new": "pnpm --filter create-adoniscommerce version major",
     "prepare": "pnpm build:cli"
   },
   "repository": {

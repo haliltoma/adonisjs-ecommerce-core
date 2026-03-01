@@ -1,0 +1,39 @@
+{
+  "name": "default",
+  "version": "1.0.0",
+  "description": "Full-stack e-commerce with admin panel",
+  "minCliVersion": "2.0.0",
+  "features": [
+    "admin",
+    "storefront",
+    "docker",
+    "redis",
+    "inertia",
+    "react",
+    "tailwind"
+  ],
+  "variables": {
+    "PROJECT_NAME": {
+      "type": "string",
+      "required": true
+    },
+    "DB_TYPE": {
+      "type": "enum",
+      "values": ["postgres", "mysql", "sqlite"],
+      "default": "postgres"
+    },
+    "APP_KEY": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "postInstall": {
+    "message": "Your AdonisCommerce store is ready!",
+    "steps": [
+      "cd {{PROJECT_NAME}}",
+      "pnpm docker:dev",
+      "pnpm docker:db:reset",
+      "pnpm dev"
+    ]
+  }
+}
