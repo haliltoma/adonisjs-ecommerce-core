@@ -10,7 +10,7 @@ export default class AuthController {
   }
 
   async showLogin({ inertia }: HttpContext) {
-    return inertia.render('admin/auth/Login')
+    return inertia.render('admin/auth/Login', {})
   }
 
   async login({ request, response, auth, session }: HttpContext) {
@@ -46,7 +46,7 @@ export default class AuthController {
       return response.redirect().toRoute('admin.auth.login')
     }
 
-    return inertia.render('admin/auth/TwoFactor')
+    return inertia.render('admin/auth/TwoFactor', {})
   }
 
   async verify2FA({ request, response, auth, session }: HttpContext) {
@@ -86,7 +86,7 @@ export default class AuthController {
   }
 
   async showForgotPassword({ inertia }: HttpContext) {
-    return inertia.render('admin/auth/ForgotPassword')
+    return inertia.render('admin/auth/ForgotPassword', {})
   }
 
   async forgotPassword({ request, response, session }: HttpContext) {

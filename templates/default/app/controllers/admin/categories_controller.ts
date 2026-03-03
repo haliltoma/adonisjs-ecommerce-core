@@ -29,7 +29,7 @@ export default class CategoriesController {
   }
 
   async createCollection({ inertia }: HttpContext) {
-    return inertia.render('admin/collections/Create')
+    return inertia.render('admin/collections/Create', {})
   }
 
   async storeCollection({ request, response, session, store }: HttpContext) {

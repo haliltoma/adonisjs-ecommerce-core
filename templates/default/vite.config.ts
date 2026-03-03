@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import adonisjs from '@adonisjs/vite/client'
-import inertia from '@adonisjs/inertia/client'
+import inertia from '@adonisjs/inertia/vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 

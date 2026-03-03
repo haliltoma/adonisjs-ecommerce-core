@@ -130,13 +130,13 @@ export default class AccountController {
     const { orderNumber, email } = request.qs()
 
     if (!orderNumber || !email) {
-      return inertia.render('storefront/account/OrderTracking')
+      return inertia.render('storefront/account/OrderTracking', {})
     }
 
     const order = await this.orderService.findByOrderNumber(store.id, orderNumber)
 
     if (!order || order.email !== email) {
-      return inertia.render('storefront/account/OrderTracking')
+      return inertia.render('storefront/account/OrderTracking', {})
     }
 
     const events: Array<Record<string, unknown>> = []
@@ -202,7 +202,7 @@ export default class AccountController {
   }
 
   async showLogin({ inertia }: HttpContext) {
-    return inertia.render('storefront/account/Login')
+    return inertia.render('storefront/account/Login', {})
   }
 
   async login({ request, response, session, store }: HttpContext) {
@@ -243,7 +243,7 @@ export default class AccountController {
   }
 
   async showRegister({ inertia }: HttpContext) {
-    return inertia.render('storefront/account/Register')
+    return inertia.render('storefront/account/Register', {})
   }
 
   async register({ request, response, session, store }: HttpContext) {
@@ -660,7 +660,7 @@ export default class AccountController {
   }
 
   async showForgotPassword({ inertia }: HttpContext) {
-    return inertia.render('storefront/account/ForgotPassword')
+    return inertia.render('storefront/account/ForgotPassword', {})
   }
 
   async forgotPassword({ request, response, session }: HttpContext) {

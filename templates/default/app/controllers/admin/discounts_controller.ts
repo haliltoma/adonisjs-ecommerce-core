@@ -57,7 +57,7 @@ export default class DiscountsController {
   }
 
   async create({ inertia }: HttpContext) {
-    return inertia.render('admin/discounts/Create')
+    return inertia.render('admin/discounts/Create', {})
   }
 
   async store({ request, response, session, store }: HttpContext) {

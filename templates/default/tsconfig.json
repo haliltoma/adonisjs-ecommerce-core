@@ -3,11 +3,8 @@
   "compilerOptions": {
     "rootDir": "./",
     "outDir": "./build",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./inertia/*"]
-    },
     "types": ["@adonisjs/core/providers/edge_provider", "@types/jest"]
   },
+  "include": ["**/*.ts", "app/types/**/*.ts"],
   "exclude": ["node_modules", "build", "inertia", "tests"]
 }

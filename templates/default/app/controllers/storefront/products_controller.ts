@@ -280,7 +280,7 @@ export default class ProductsController {
   }
 
   async compare({ inertia }: HttpContext) {
-    return inertia.render('storefront/Compare')
+    return inertia.render('storefront/Compare', {})
   }
 
   async allCategories({ inertia, store }: HttpContext) {
