@@ -396,6 +396,21 @@ export type ScannedRoutes = {
     'admin.settings.customerGroups.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.customers.add': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.customers.remove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.index': { paramsTuple?: []; params?: {} }
+    'admin.segments.create': { paramsTuple?: []; params?: {} }
+    'admin.segments.store': { paramsTuple?: []; params?: {} }
+    'admin.segments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.recalculate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.recalculateAll': { paramsTuple?: []; params?: {} }
+    'admin.segments.customers': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.assign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.remove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.stats': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.bulkAssign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.bulkRemove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.clone': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -595,6 +610,11 @@ export type ScannedRoutes = {
     'admin.settings.regions': { paramsTuple?: []; params?: {} }
     'admin.settings.salesChannels': { paramsTuple?: []; params?: {} }
     'admin.settings.customerGroups': { paramsTuple?: []; params?: {} }
+    'admin.segments.index': { paramsTuple?: []; params?: {} }
+    'admin.segments.create': { paramsTuple?: []; params?: {} }
+    'admin.segments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.customers': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.stats': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -775,6 +795,11 @@ export type ScannedRoutes = {
     'admin.settings.regions': { paramsTuple?: []; params?: {} }
     'admin.settings.salesChannels': { paramsTuple?: []; params?: {} }
     'admin.settings.customerGroups': { paramsTuple?: []; params?: {} }
+    'admin.segments.index': { paramsTuple?: []; params?: {} }
+    'admin.segments.create': { paramsTuple?: []; params?: {} }
+    'admin.segments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.customers': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.stats': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -840,6 +865,9 @@ export type ScannedRoutes = {
     'admin.settings.salesChannels.products.remove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.customers.remove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.remove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.bulkRemove': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.apiKeys.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.returnReasons.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -978,6 +1006,12 @@ export type ScannedRoutes = {
     'admin.settings.salesChannels.products.add': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.create': { paramsTuple?: []; params?: {} }
     'admin.settings.customerGroups.customers.add': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.store': { paramsTuple?: []; params?: {} }
+    'admin.segments.recalculate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.recalculateAll': { paramsTuple?: []; params?: {} }
+    'admin.segments.assign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.bulkAssign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.clone': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.revoke': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1040,6 +1074,7 @@ export type ScannedRoutes = {
     'admin.settings.regions.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.salesChannels.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.customerGroups.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.segments.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.shippingProfiles.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.returnReasons.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.settings.payments.provider': { paramsTuple?: []; params?: {} }

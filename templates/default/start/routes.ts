@@ -55,6 +55,7 @@ const AdminGiftCardsController = () => import('#controllers/admin/gift_cards_con
 const AdminBlogController = () => import('#controllers/admin/blog_controller')
 const AdminCustomizerController = () => import('#controllers/admin/customizer_controller')
 const AdminAiController = () => import('#controllers/admin/ai_controller')
+const AdminCustomerSegmentsController = () => import('#controllers/admin/customer_segments_controller')
 const StorefrontBlogController = () => import('#controllers/storefront/blog_controller')
 
 /*
@@ -452,6 +453,23 @@ router.group(() => {
     router.delete('/settings/customer-groups/:id', [AdminSettingsController, 'destroyCustomerGroup']).as('admin.settings.customerGroups.destroy')
     router.post('/settings/customer-groups/:id/customers', [AdminSettingsController, 'addCustomersToGroup']).as('admin.settings.customerGroups.customers.add')
     router.delete('/settings/customer-groups/:id/customers', [AdminSettingsController, 'removeCustomersFromGroup']).as('admin.settings.customerGroups.customers.remove')
+
+    // Customer Segments
+    router.get('/segments', [AdminCustomerSegmentsController, 'index']).as('admin.segments.index')
+    router.get('/segments/create', [AdminCustomerSegmentsController, 'create']).as('admin.segments.create')
+    router.post('/segments', [AdminCustomerSegmentsController, 'store']).as('admin.segments.store')
+    router.get('/segments/:id', [AdminCustomerSegmentsController, 'show']).as('admin.segments.show')
+    router.patch('/segments/:id', [AdminCustomerSegmentsController, 'update']).as('admin.segments.update')
+    router.delete('/segments/:id', [AdminCustomerSegmentsController, 'destroy']).as('admin.segments.destroy')
+    router.post('/segments/:id/recalculate', [AdminCustomerSegmentsController, 'recalculate']).as('admin.segments.recalculate')
+    router.post('/segments/recalculate-all', [AdminCustomerSegmentsController, 'recalculateAll']).as('admin.segments.recalculateAll')
+    router.get('/segments/:id/customers', [AdminCustomerSegmentsController, 'customers']).as('admin.segments.customers')
+    router.post('/segments/:id/assign', [AdminCustomerSegmentsController, 'assignCustomer']).as('admin.segments.assign')
+    router.delete('/segments/:id/remove', [AdminCustomerSegmentsController, 'removeCustomer']).as('admin.segments.remove')
+    router.get('/segments/:id/stats', [AdminCustomerSegmentsController, 'stats']).as('admin.segments.stats')
+    router.post('/segments/:id/bulk-assign', [AdminCustomerSegmentsController, 'bulkAssign']).as('admin.segments.bulkAssign')
+    router.delete('/segments/:id/bulk-remove', [AdminCustomerSegmentsController, 'bulkRemove']).as('admin.segments.bulkRemove')
+    router.post('/segments/:id/clone', [AdminCustomerSegmentsController, 'clone']).as('admin.segments.clone')
 
     // Settings - Shipping Profiles
     router.get('/settings/shipping-profiles', [AdminSettingsController, 'shippingProfiles']).as('admin.settings.shippingProfiles')

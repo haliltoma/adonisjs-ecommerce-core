@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import hash from '@adonisjs/core/services/hash'
 import Store from './store.js'
 import CustomerAddress from './customer_address.js'
@@ -9,6 +9,7 @@ import Cart from './cart.js'
 import Wishlist from './wishlist.js'
 import Review from './review.js'
 import CustomerGroup from './customer_group.js'
+import CustomerSegment from './customer_segment.js'
 import Currency from './currency.js'
 import { jsonColumn } from '#helpers/json_column'
 
@@ -111,6 +112,13 @@ export default class Customer extends BaseModel {
 
   @belongsTo(() => Currency, { foreignKey: 'preferredCurrencyCode' })
   declare preferredCurrency: BelongsTo<typeof Currency>
+
+  @manyToMany(() => CustomerSegment, {
+    pivotTable: 'customer_segment_assignments',
+    pivotTimestamps: true,
+    pivotColumns: ['metadata', 'assignedAt'],
+  })
+  declare segments: ManyToMany<typeof CustomerSegment>
 
   get fullName() {
     return `${this.firstName} ${this.lastName}`
