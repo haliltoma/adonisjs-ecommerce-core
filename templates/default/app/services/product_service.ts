@@ -72,7 +72,7 @@ interface ProductFilters {
 export default class ProductService {
   async create(data: CreateProductDTO): Promise<Product> {
     return await db.transaction(async (trx) => {
-      const baseSlug = data.slug || this.generateSlug(data.title)
+      const baseSlug = data.slug || this.generateSlug(data.title || `product-${Date.now()}`)
       const slug = await this.ensureUniqueSlug(data.storeId, baseSlug)
 
       const product = await Product.create(
@@ -425,6 +425,10 @@ export default class ProductService {
   }
 
   private generateSlug(title: string): string {
+    if (!title) {
+      return `product-${Date.now()}`
+    }
+
     const charMap: Record<string, string> = {
       'ş': 's', 'ç': 'c', 'ğ': 'g', 'ü': 'u', 'ö': 'o', 'ı': 'i',
       'Ş': 's', 'Ç': 'c', 'Ğ': 'g', 'Ü': 'u', 'Ö': 'o', 'İ': 'i',
