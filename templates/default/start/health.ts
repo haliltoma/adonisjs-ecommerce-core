@@ -1,148 +1,123 @@
 /**
  * Health Checks Registration
  *
- * Register all health checks for monitoring application health.
+ * Simple health check system without external dependencies.
  */
 
-import { HealthChecks, DiskSpaceCheck, MemoryHeapCheck, MemoryRSSCheck } from '@adonisjs/core/health'
-import { DbCheck, DbConnectionCountCheck } from '@adonisjs/lucid/health_checks'
-import { RedisCheck, RedisMemoryUsageCheck } from '@adonisjs/redis/health_checks'
-import redis from '@adonisjs/redis/services/main'
-import db from '@adonisjs/lucid/services/db'
-import app from '@adonisjs/core/services/app'
-import env from '#start/env'
-import healthChecksConfig from '#config/health_checks'
 import logger from '@adonisjs/core/services/logger'
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { QueueHealthCheck } from '#services/queue_health_check'
-import { ExternalAPIHealthCheck } from '#services/external_api_health_check'
-import { FileSystemHealthCheck } from '#services/filesystem_health_check'
 
 /**
- * Health checks instance
+ * Simple health check class
  */
-export const healthChecks = new HealthChecks({
-  /**
-   * Secret header value for protecting health endpoints
-   */
-  secret: healthChecksConfig.secretHeaderValue,
+class HealthChecks {
+  private checks: Map<string, () => Promise<{ status: 'ok' | 'error'; message?: string }>> = new Map()
 
   /**
-   * Cache duration in seconds
+   * Register a health check
    */
-  cacheDuration: healthChecksConfig.healthChecks.cacheDuration,
-})
-
-/**
- * Register built-in health checks
- */
-
-// Disk space check
-healthChecks.register([
-  new DiskSpaceCheck(healthChecksConfig.diskSpace.path)
-    .warnWhenExceeds(healthChecksConfig.diskSpace.warningThreshold)
-    .failWhenExceeds(healthChecksConfig.diskSpace.failureThreshold),
-])
-
-// Memory heap check
-healthChecks.register([
-  new MemoryHeapCheck()
-    .warnWhenExceeds(healthChecksConfig.memoryHeap.warningThreshold)
-    .failWhenExceeds(healthChecksConfig.memoryHeap.failureThreshold),
-])
-
-// Memory RSS check
-healthChecks.register([
-  new MemoryRSSCheck()
-    .warnWhenExceeds(healthChecksConfig.memoryRSS.warningThreshold)
-    .failWhenExceeds(healthChecksConfig.memoryRSS.failureThreshold),
-])
-
-/**
- * Register database health checks
- */
-if (healthChecksConfig.database.enabled) {
-  const dbConnection = db.connection(healthChecksConfig.database.connectionName)
-
-  // Database connection check
-  healthChecks.register([
-    new DbCheck(dbConnection),
-  ])
-
-  // Database connection count check
-  if (healthChecksConfig.database.connectionCount.enabled) {
-    healthChecks.register([
-      new DbConnectionCountCheck(dbConnection)
-        .warnWhenExceeds(healthChecksConfig.database.connectionCount.warningThreshold)
-        .failWhenExceeds(healthChecksConfig.database.connectionCount.failureThreshold),
-    ])
+  register(name: string, checkFn: () => Promise<{ status: 'ok' | 'error'; message?: string }>) {
+    this.checks.set(name, checkFn)
+    return this
   }
-}
 
-/**
- * Register Redis health checks
- */
-if (healthChecksConfig.redis.enabled) {
-  const redisConnection = redis.connection(healthChecksConfig.redis.connectionName)
+  /**
+   * Run all health checks
+   */
+  async run(): Promise<{
+    isHealthy: boolean
+    status: 'ok' | 'warning' | 'error'
+    checks: Array<{
+      name: string
+      status: 'ok' | 'error'
+      message?: string
+    }>
+  }> {
+    const results: Array<{
+      name: string
+      status: 'ok' | 'error'
+      message?: string
+    }> = []
 
-  // Redis connection check
-  healthChecks.register([
-    new RedisCheck(redisConnection),
-  ])
+    for (const [name, checkFn] of this.checks.entries()) {
+      try {
+        const result = await checkFn()
+        results.push({
+          name,
+          status: result.status,
+          message: result.message,
+        })
+      } catch (error) {
+        results.push({
+          name,
+          status: 'error',
+          message: (error as Error).message,
+        })
+      }
+    }
 
-  // Redis memory usage check
-  if (healthChecksConfig.redis.memoryUsage.enabled) {
-    healthChecks.register([
-      new RedisMemoryUsageCheck(redisConnection)
-        .warnWhenExceeds(healthChecksConfig.redis.memoryUsage.warningThreshold)
-        .failWhenExceeds(healthChecksConfig.redis.memoryUsage.failureThreshold),
-    ])
-  }
-}
+    const hasErrors = results.some(r => r.status === 'error')
+    const isHealthy = !hasErrors
 
-/**
- * Register file system health checks
- */
-if (healthChecksConfig.fileSystem.enabled) {
-  for (const checkPath of healthChecksConfig.fileSystem.paths) {
-    const fullPath = path.join(app.appRoot, checkPath)
-    healthChecks.register([
-      new FileSystemHealthCheck(fullPath, checkPath),
-    ])
-  }
-}
-
-/**
- * Register queue health checks
- */
-if (healthChecksConfig.queue.enabled) {
-  healthChecks.register([
-    new QueueHealthCheck(healthChecksConfig.queue),
-  ])
-}
-
-/**
- * Register external API health checks
- */
-if (healthChecksConfig.externalAPIs.enabled) {
-  for (const [apiName, apiConfig] of Object.entries(healthChecksConfig.externalAPIs.apis)) {
-    if (apiConfig.enabled) {
-      healthChecks.register([
-        new ExternalAPIHealthCheck(apiName, apiConfig.url, apiConfig.timeout),
-      ])
+    return {
+      isHealthy,
+      status: isHealthy ? 'ok' : 'error',
+      checks: results,
     }
   }
 }
 
 /**
- * Register custom health checks
+ * Health checks instance
  */
-for (const customCheck of healthChecksConfig.custom.checks) {
-  healthChecks.register([customCheck])
-}
+export const healthChecks = new HealthChecks()
 
 /**
- * Log health checks registration
+ * Register basic health checks
  */
+
+// Database health check
+try {
+  const db = require('@adonisjs/lucid/services/main').default
+  healthChecks.register('database', async () => {
+    try {
+      await db.connection().knex.raw('SELECT 1')
+      return { status: 'ok', message: 'Database connection healthy' }
+    } catch (error) {
+      return { status: 'error', message: `Database error: ${(error as Error).message}` }
+    }
+  })
+} catch {
+  // Database not configured
+}
+
+// Redis health check
+try {
+  const redis = require('@adonisjs/redis/services/main').default
+  healthChecks.register('redis', async () => {
+    try {
+      await redis.connection('local').ping()
+      return { status: 'ok', message: 'Redis connection healthy' }
+    } catch (error) {
+      return { status: 'error', message: `Redis error: ${(error as Error).message}` }
+    }
+  })
+} catch {
+  // Redis not configured
+}
+
+// File system health check
+healthChecks.register('filesystem', async () => {
+  const fs = require('node:fs/promises')
+  const path = require('node:path')
+  const app = require('@adonisjs/core/services/app').default
+
+  try {
+    const testPath = path.join(app.appRoot, 'tmp')
+    await fs.access(testPath, fs.constants.W_OK)
+    return { status: 'ok', message: 'File system accessible' }
+  } catch (error) {
+    return { status: 'error', message: `File system error: ${(error as Error).message}` }
+  }
+})
+
 logger.info('Health checks registered successfully')

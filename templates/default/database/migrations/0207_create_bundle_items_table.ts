@@ -10,23 +10,23 @@ export default class extends BaseSchema {
       table.uuid('componentProductId').references('id').inTable('products').onDelete('CASCADE')
 
       // Quantity and configuration
-      table.integer('quantity').default(1) // How many of this product in bundle
-      table.boolean('required').default(true) // Is this item required in bundle
-      table.integer('minQuantity').default(1) // Minimum quantity customer must select
+      table.integer('quantity').defaultTo(1) // How many of this product in bundle
+      table.boolean('required').defaultTo(true) // Is this item required in bundle
+      table.integer('minQuantity').defaultTo(1) // Minimum quantity customer must select
       table.integer('maxQuantity').nullable() // Maximum quantity customer can select
 
       // Pricing override (optional)
       table.decimal('overridePrice', 10, 2).nullable() // Custom price for this item in bundle
-      table.boolean('useOverridePrice').default(false) // Whether to use override price
+      table.boolean('useOverridePrice').defaultTo(false) // Whether to use override price
 
       // Display order
-      table.integer('position').default(0) // Order in bundle display
+      table.integer('position').defaultTo(0) // Order in bundle display
 
       // Variant selection (if product has variants)
       table.jsonb('variantSelection').nullable() // Pre-selected variant IDs
 
       // Metadata
-      table.jsonb('metadata').default('{}')
+      table.jsonb('metadata').defaultTo('{}')
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
       table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())
 

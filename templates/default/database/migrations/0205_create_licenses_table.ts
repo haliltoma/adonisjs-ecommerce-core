@@ -14,22 +14,22 @@ export default class extends BaseSchema {
       table.uuid('orderId').references('id').inTable('orders').onDelete('CASCADE')
 
       // License details
-      table.string('licenseType').default('standard') // standard, enterprise, educational, etc.
-      table.integer('maxActivations').default(3)
-      table.integer('currentActivations').default(0)
+      table.string('licenseType').defaultTo('standard') // standard, enterprise, educational, etc.
+      table.integer('maxActivations').defaultTo(3)
+      table.integer('currentActivations').defaultTo(0)
 
       // Validity
       table.dateTime('validFrom').notNullable()
       table.dateTime('validUntil').nullable()
 
       // Status
-      table.enum('status', ['active', 'suspended', 'revoked', 'expired']).default('active')
+      table.enum('status', ['active', 'suspended', 'revoked', 'expired']).defaultTo('active')
 
       // Activation tracking
-      table.jsonb('activations').default('[]') // Array of activation records
+      table.jsonb('activations').defaultTo('[]') // Array of activation records
 
       // Metadata
-      table.jsonb('metadata').default('{}')
+      table.jsonb('metadata').defaultTo('{}')
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
       table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())
 

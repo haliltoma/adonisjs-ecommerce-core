@@ -6,16 +6,16 @@ export default class extends BaseSchema {
   public async up() {
     this.schema.alterTable(this.tableName, (table) => {
       // Add product_type enum if not exists
-      table.enum('type', ['simple', 'variable', 'digital', 'bundle', 'subscription']).default('simple').alter()
+      table.enum('type', ['simple', 'variable', 'digital', 'bundle', 'subscription']).defaultTo('simple').alter()
 
       // Digital product fields
       table.string('fileUrl').nullable().after('metaTitle')
-      table.integer('downloadLimit').nullable().default(null).after('fileUrl')
-      table.dateTime('downloadExpiry').nullable().default(null).after('downloadLimit')
+      table.integer('downloadLimit').nullable().defaultTo(null).after('fileUrl')
+      table.dateTime('downloadExpiry').nullable().defaultTo(null).after('downloadLimit')
 
       // Subscription fields
-      table.enum('subscriptionInterval', ['daily', 'weekly', 'monthly', 'yearly']).nullable().default(null).after('downloadExpiry')
-      table.integer('trialPeriodDays').nullable().default(null).after('subscriptionInterval')
+      table.enum('subscriptionInterval', ['daily', 'weekly', 'monthly', 'yearly']).nullable().defaultTo(null).after('downloadExpiry')
+      table.integer('trialPeriodDays').nullable().defaultTo(null).after('subscriptionInterval')
     })
   }
 

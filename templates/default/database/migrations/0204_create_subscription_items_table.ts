@@ -11,13 +11,13 @@ export default class extends BaseSchema {
 
       // Pricing
       table.decimal('amount', 10, 2).notNullable()
-      table.integer('quantity').default(1)
+      table.integer('quantity').defaultTo(1)
 
       // Description
       table.string('description').nullable()
 
       // Metadata
-      table.jsonb('metadata').default('{}')
+      table.jsonb('metadata').defaultTo('{}')
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
       table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())
 

@@ -14,7 +14,7 @@ export default class extends BaseSchema {
       table.string('fileHash').nullable()
 
       // License management
-      table.boolean('requiresLicense').default(false)
+      table.boolean('requiresLicense').defaultTo(false)
       table.integer('licenseDurationDays').nullable()
 
       // Version tracking

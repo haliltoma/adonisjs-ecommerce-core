@@ -11,8 +11,8 @@ export default class extends BaseSchema {
       table.uuid('customerId').references('id').inTable('customers').onDelete('CASCADE')
 
       // Download tracking
-      table.integer('downloadCount').default(0)
-      table.integer('maxDownloads').default(5)
+      table.integer('downloadCount').defaultTo(0)
+      table.integer('maxDownloads').defaultTo(5)
       table.dateTime('expiresAt').nullable()
       table.timestamp('lastDownloadedAt', { useTz: true }).nullable()
 
@@ -21,7 +21,7 @@ export default class extends BaseSchema {
       table.text('userAgent').nullable()
 
       // Status
-      table.enum('status', ['active', 'expired', 'revoked']).default('active')
+      table.enum('status', ['active', 'expired', 'revoked']).defaultTo('active')
 
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
       table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())

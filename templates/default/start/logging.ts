@@ -96,7 +96,7 @@ export function extractUserContext(ctx: HttpContext): Record<string, any> {
  */
 export function logRequest(
   ctx: HttpContext,
-  duration: number,
+  duration: [number, number],
   statusCode: number
 ): void {
   const context = extractUserContext(ctx)
@@ -148,7 +148,7 @@ export function logSecurityEvent(
     })
   }
 
-  logger.security(context, `Security event: ${eventType}`)
+  logger.info(context, `Security event: ${eventType}`)
 }
 
 /**
@@ -167,7 +167,7 @@ export function logPerformance(
     ...sanitizeData(context || {}),
   }
 
-  logger.performance(logContext, `Performance: ${metricType} = ${value}${unit}`)
+  logger.info(logContext, `Performance: ${metricType} = ${value}${unit}`)
 }
 
 /**
@@ -186,7 +186,7 @@ export function logDatabaseQuery(
     connection,
   }
 
-  logger.database(context, 'Database query executed')
+  logger.debug(context, 'Database query executed')
 }
 
 /**
@@ -209,7 +209,7 @@ export function logPaymentEvent(
     ...sanitizeData(details),
   }
 
-  logger.payments(sanitizedDetails, `Payment event: ${eventType}`)
+  logger.info(sanitizedDetails, `Payment event: ${eventType}`)
 }
 
 /**

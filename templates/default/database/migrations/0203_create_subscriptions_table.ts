@@ -14,13 +14,13 @@ export default class extends BaseSchema {
       table.uuid('orderId').nullable().references('id').inTable('orders').onDelete('SET NULL')
 
       // Status
-      table.enum('status', ['active', 'paused', 'cancelled', 'expired', 'past_due', 'trialing']).default('active')
+      table.enum('status', ['active', 'paused', 'cancelled', 'expired', 'past_due', 'trialing']).defaultTo('active')
 
       // Billing
       table.enum('billingInterval', ['daily', 'weekly', 'monthly', 'yearly']).notNullable()
-      table.integer('intervalCount').default(1)
+      table.integer('intervalCount').defaultTo(1)
       table.decimal('amount', 10, 2).notNullable()
-      table.string('currencyCode', 3).default('USD')
+      table.string('currencyCode', 3).defaultTo('USD')
 
       // Trial
       table.integer('trialPeriodDays').nullable()
@@ -39,7 +39,7 @@ export default class extends BaseSchema {
       table.string('providerPlanId').nullable()
 
       // Metadata
-      table.jsonb('metadata').default('{}')
+      table.jsonb('metadata').defaultTo('{}')
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
       table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())
 
