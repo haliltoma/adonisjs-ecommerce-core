@@ -179,16 +179,16 @@ export default class UploadSecurityService {
     threatName?: string
   }): Promise<UploadAttemptRecord> {
     const attempt: UploadAttemptRecord = {
-      id = Math.random().toString(36).substring(2),
-      ipAddress = data.ipAddress,
-      userId = data.userId,
-      fileName = data.fileName,
-      fileSize = data.fileSize,
-      mimeType = data.mimeType,
-      status = data.status || 'pending',
-      threatFound = data.threatFound,
-      threatName = data.threatName,
-      createdAt = DateTime.now(),
+      id: Math.random().toString(36).substring(2),
+      ipAddress: data.ipAddress,
+      userId: data.userId,
+      fileName: data.fileName,
+      fileSize: data.fileSize,
+      mimeType: data.mimeType,
+      status: data.status || 'pending',
+      threatFound: data.threatFound,
+      threatName: data.threatName,
+      createdAt: DateTime.now(),
     }
 
     this.uploadAttempts.push(attempt)
