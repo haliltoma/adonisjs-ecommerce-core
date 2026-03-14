@@ -205,6 +205,11 @@ export default class ProductsController {
    * Full-text search products
    */
   async search({ request, response, store }: HttpContext) {
+    // Support both `query` and `q` as search parameter
+    const qs = request.qs()
+    if (qs.q && !qs.query) {
+      request.updateQs({ ...qs, query: qs.q })
+    }
     const payload = await request.validateUsing(productSearchValidator)
     const storeId = store.id
 

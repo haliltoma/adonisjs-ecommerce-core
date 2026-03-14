@@ -24,6 +24,9 @@ export default class Page extends BaseModel {
   declare template: string
 
   @column()
+  declare pageType: 'custom' | 'home' | 'product' | 'category' | 'collection'
+
+  @column()
   declare status: 'draft' | 'published'
 
   @column()

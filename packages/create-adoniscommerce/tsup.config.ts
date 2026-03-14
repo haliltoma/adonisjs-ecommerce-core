@@ -10,9 +10,4 @@ export default defineConfig({
   banner: {
     js: '#!/usr/bin/env node',
   },
-  esbuildOptions(options) {
-    options.banner = {
-      js: '#!/usr/bin/env node',
-    }
-  },
 })

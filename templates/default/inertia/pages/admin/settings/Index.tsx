@@ -2,6 +2,7 @@ import { Head, useForm, router, usePage } from '@inertiajs/react'
 import { useState } from 'react'
 import {
   Box,
+  Bot,
   Database,
   DollarSign,
   Globe,
@@ -60,6 +61,130 @@ interface Props {
   locales: Array<{ code: string; name: string }>
 }
 
+function AiSettingsTab() {
+  const [aiData, setAiData] = useState({
+    enabled: false,
+    provider: 'openai',
+    model: 'gpt-4o',
+    apiKey: '',
+    baseUrl: '',
+  })
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiMessage, setAiMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const handleAiSave = () => {
+    setAiSaving(true)
+    setAiMessage(null)
+    router.patch('/admin/settings/ai', aiData, {
+      preserveScroll: true,
+      onSuccess: () => setAiMessage({ type: 'success', text: 'AI settings saved' }),
+      onError: () => setAiMessage({ type: 'error', text: 'Failed to save AI settings' }),
+      onFinish: () => setAiSaving(false),
+    })
+  }
+
+  const providerModels: Record<string, string[]> = {
+    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
+    anthropic: ['claude-sonnet-4-20250514', 'claude-haiku-4-20250414'],
+    custom: [],
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-display text-lg">AI Settings</CardTitle>
+        <CardDescription className="text-sm">
+          Configure AI-powered component generation for the theme customizer.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {aiMessage && (
+          <div className={`rounded-lg border p-4 text-sm ${aiMessage.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
+            {aiMessage.text}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">Enable AI</Label>
+            <p className="text-xs text-muted-foreground">Allow AI-powered component generation in the customizer</p>
+          </div>
+          <Switch
+            checked={aiData.enabled}
+            onCheckedChange={(checked) => setAiData({ ...aiData, enabled: checked })}
+          />
+        </div>
+
+        {aiData.enabled && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Provider</Label>
+              <Select value={aiData.provider} onValueChange={(v) => setAiData({ ...aiData, provider: v, model: providerModels[v]?.[0] || '' })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="openai">OpenAI</SelectItem>
+                  <SelectItem value="anthropic">Anthropic</SelectItem>
+                  <SelectItem value="custom">Custom (OpenAI-compatible)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Model</Label>
+              {providerModels[aiData.provider]?.length ? (
+                <Select value={aiData.model} onValueChange={(v) => setAiData({ ...aiData, model: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {providerModels[aiData.provider].map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={aiData.model}
+                  onChange={(e) => setAiData({ ...aiData, model: e.target.value })}
+                  placeholder="e.g., gpt-4o"
+                />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">API Key</Label>
+              <Input
+                type="password"
+                value={aiData.apiKey}
+                onChange={(e) => setAiData({ ...aiData, apiKey: e.target.value })}
+                placeholder="sk-..."
+              />
+              <p className="text-xs text-muted-foreground">Your API key is stored securely and never exposed publicly.</p>
+            </div>
+
+            {aiData.provider === 'custom' && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Base URL</Label>
+                <Input
+                  value={aiData.baseUrl}
+                  onChange={(e) => setAiData({ ...aiData, baseUrl: e.target.value })}
+                  placeholder="https://api.example.com/v1"
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        <Button onClick={handleAiSave} disabled={aiSaving}>
+          {aiSaving ? 'Saving...' : 'Save AI Settings'}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function SettingsIndex({ settings, currencies, timezones, locales }: Props) {
   const { data, setData, patch, processing, errors } = useForm(settings)
   const { props } = usePage<{ flash?: { success?: string; error?: string } }>()
@@ -93,7 +218,7 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
       <div className="animate-fade-in">
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="general" className="gap-2 text-sm">
                 <Store className="h-4 w-4" />
                 <span className="hidden sm:inline">General</span>
@@ -113,6 +238,10 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
               <TabsTrigger value="seo" className="gap-2 text-sm">
                 <Search className="h-4 w-4" />
                 <span className="hidden sm:inline">SEO</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="gap-2 text-sm">
+                <Bot className="h-4 w-4" />
+                <span className="hidden sm:inline">AI</span>
               </TabsTrigger>
               <TabsTrigger value="system" className="gap-2 text-sm">
                 <Database className="h-4 w-4" />
@@ -452,6 +581,10 @@ export default function SettingsIndex({ settings, currencies, timezones, locales
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="ai" className="animate-fade-up">
+              <AiSettingsTab />
             </TabsContent>
 
             <TabsContent value="system" className="animate-fade-up">

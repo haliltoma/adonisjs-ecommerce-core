@@ -1,6 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react'
 import { useState } from 'react'
 import { Shield, User } from 'lucide-react'
+import { csrfFetchJson } from '@/lib/csrf'
 
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -223,14 +224,10 @@ function TwoFactorCard({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/admin/profile/2fa/enable', {
+      const data = await csrfFetchJson<{ qrCode?: string; secret?: string; error?: string }>('/admin/profile/2fa/enable', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
-        },
+        headers: { 'Content-Type': 'application/json' },
       })
-      const data = await response.json()
       if (data.qrCode) {
         setSetupData(data)
       } else {
@@ -247,15 +244,11 @@ function TwoFactorCard({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/admin/profile/2fa/confirm', {
+      const data = await csrfFetchJson<{ success?: boolean; error?: string }>('/admin/profile/2fa/confirm', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: confirmCode }),
       })
-      const data = await response.json()
       if (data.success) {
         setSetupData(null)
         setConfirmCode('')

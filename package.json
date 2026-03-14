@@ -2,7 +2,7 @@
   "name": "@adoniscommerce/monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "AdonisCommerce - Modern E-Commerce Framework with AdonisJS 6 + React",
+  "description": "AdonisCommerce - Modern E-Commerce Framework with AdonisJS 7 + React",
   "author": "AdonisCommerce Team",
   "license": "MIT",
   "engines": {

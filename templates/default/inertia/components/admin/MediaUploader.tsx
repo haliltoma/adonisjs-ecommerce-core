@@ -34,11 +34,13 @@ function MediaUploader({
 }: MediaUploaderProps) {
   const [isDragging, setIsDragging] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const dragCounter = React.useRef(0)
 
   const handleFiles = React.useCallback(
     async (fileList: FileList | File[]) => {
+      setUploadError(null)
       const files = Array.from(fileList).filter((f) => {
         if (f.size > maxSize) return false
         return true
@@ -54,6 +56,8 @@ function MediaUploader({
         try {
           const uploaded = await onUpload(toUpload)
           onChange?.([...value, ...uploaded])
+        } catch (err) {
+          setUploadError(err instanceof Error ? err.message : 'Upload failed')
         } finally {
           setIsUploading(false)
         }
@@ -146,6 +150,15 @@ function MediaUploader({
           Max {maxFiles} files, up to {Math.round(maxSize / 1024 / 1024)}MB each
         </p>
       </div>
+
+      {uploadError && (
+        <div className="flex items-center justify-between rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <span>{uploadError}</span>
+          <button onClick={() => setUploadError(null)} className="ml-2 shrink-0 hover:opacity-70">
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
 
       {value.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">

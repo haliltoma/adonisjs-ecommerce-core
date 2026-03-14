@@ -1,0 +1,27 @@
+{
+  "all": true,
+  "include": [
+    "app/**/*.ts"
+  ],
+  "exclude": [
+    "app/**/*.spec.ts",
+    "app/**/*.test.ts",
+    "database",
+    "start",
+    "tests",
+    "build",
+    "node_modules"
+  ],
+  "reporter": [
+    "html",
+    "lcov",
+    "text",
+    "text-summary"
+  ],
+  "report-dir": "coverage",
+  "check-coverage": true,
+  "lines": 80,
+  "functions": 80,
+  "branches": 75,
+  "statements": 80
+}

@@ -10,7 +10,7 @@ import { execSync } from 'child_process'
 import validatePackageName from 'validate-npm-package-name'
 
 const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core/templates/default#main'
-const VERSION = '1.0.1'
+const VERSION = '2.0.0'
 
 interface ProjectOptions {
   projectName: string
@@ -53,7 +53,7 @@ function printBanner() {
     chalk.gray('  |  ') +
     chalk.hex('#B388FF')(`v${VERSION}`)
   )
-  console.log(chalk.gray('  Modern e-commerce platform powered by AdonisJS 6 + React'))
+  console.log(chalk.gray('  Modern e-commerce platform powered by AdonisJS 7 + React'))
   console.log()
   console.log(chalk.gray('  ─────────────────────────────────────────────────────────'))
   console.log()

@@ -6,6 +6,7 @@ import CustomerService from '#services/customer_service'
 import { SearchProvider } from '#contracts/search_provider'
 import Banner from '#models/banner'
 import Collection from '#models/collection'
+import Page from '#models/page'
 import { DateTime } from 'luxon'
 
 export default class HomeController {
@@ -21,6 +22,13 @@ export default class HomeController {
 
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id
+
+    // Check for Puck home template
+    const homeTemplate = await Page.query()
+      .where('storeId', storeId)
+      .where('pageType', 'home')
+      .where('status', 'published')
+      .first()
 
     // Get featured products
     const featuredProducts = await this.productService.getFeatured(storeId, 8)
@@ -63,6 +71,7 @@ export default class HomeController {
         name: store.name,
         logoUrl: store.logoUrl,
       },
+      puckContent: homeTemplate?.content || null,
       banners: banners.map((b) => ({
         id: b.id,
         title: b.title,

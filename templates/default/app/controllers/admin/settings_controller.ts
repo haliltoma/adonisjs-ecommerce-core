@@ -961,6 +961,26 @@ export default class SettingsController {
     }
   }
 
+  // AI Settings
+  async updateAi({ request, response, session, store }: HttpContext) {
+    const data = request.only(['enabled', 'provider', 'model', 'apiKey', 'baseUrl'])
+
+    try {
+      for (const [key, value] of Object.entries(data)) {
+        if (value === undefined || value === null) continue
+        const isPublic = key !== 'apiKey'
+        const type: 'string' | 'boolean' = key === 'enabled' ? 'boolean' : 'string'
+        await this.storeService.setSetting(store.id, 'ai', key, value, type, isPublic)
+      }
+
+      session.flash('success', 'AI settings updated')
+      return response.redirect().back()
+    } catch (error: unknown) {
+      session.flash('error', (error as Error).message)
+      return response.redirect().back()
+    }
+  }
+
   // Store Settings
   async store({ inertia, store }: HttpContext) {
     const allSettings = await this.storeService.getAllSettings(store.id)
@@ -1808,6 +1828,10 @@ export default class SettingsController {
   }
 
   // ── Cache Management ──────────────────────────────────────
+
+  async cacheManagement({ inertia }: HttpContext) {
+    return inertia.render('admin/settings/Cache', {})
+  }
 
   async clearCache({ request, response, session, store }: HttpContext) {
     const scope = request.input('scope', 'all') as string

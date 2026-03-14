@@ -1,4 +1,5 @@
 import { Link, useForm } from '@inertiajs/react'
+import { useState, useEffect, type ComponentType } from 'react'
 import { ArrowRight, Package, RefreshCw, Shield, Truck } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
@@ -49,6 +50,7 @@ interface Banner {
 
 interface Props {
   store: { name: string; logoUrl: string | null }
+  puckContent?: Record<string, unknown> | null
   banners: Banner[]
   featuredProducts: ProductCard[]
   newArrivals: ProductCard[]
@@ -56,8 +58,32 @@ interface Props {
   categories: Category[]
 }
 
+function HomePuckRenderer({ data }: { data: Record<string, unknown> }) {
+  const [RenderComponent, setRenderComponent] = useState<ComponentType<any> | null>(null)
+  const [config, setConfig] = useState<any>(null)
+
+  useEffect(() => {
+    Promise.all([
+      import('@puckeditor/core'),
+      import('@/lib/puck-config'),
+    ]).then(([puckModule, configModule]) => {
+      setRenderComponent(() => puckModule.Render)
+      setConfig(configModule.puckConfig)
+    }).catch(() => {})
+  }, [])
+
+  if (!RenderComponent || !config) {
+    return <div className="flex justify-center py-12">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-foreground" />
+    </div>
+  }
+
+  return <RenderComponent config={config} data={data} />
+}
+
 export default function Home({
   store,
+  puckContent,
   banners,
   featuredProducts,
   newArrivals,
@@ -67,6 +93,20 @@ export default function Home({
   const { t } = useTranslation()
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+
+  // If there's a Puck template for the home page, render it instead
+  if (puckContent && typeof puckContent === 'object' && 'content' in puckContent) {
+    return (
+      <StorefrontLayout>
+        <HomeSeo
+          storeName={store.name}
+          baseUrl={baseUrl}
+          logoUrl={store.logoUrl}
+        />
+        <HomePuckRenderer data={puckContent} />
+      </StorefrontLayout>
+    )
+  }
 
   return (
     <StorefrontLayout>

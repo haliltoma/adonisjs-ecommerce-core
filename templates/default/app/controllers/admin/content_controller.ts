@@ -72,6 +72,7 @@ export default class ContentController {
         slug: raw.slug,
         content: raw.content || null,
         template: raw.template || 'default',
+        pageType: 'custom' as const,
         status: raw.status || 'draft',
         isSystem: false,
         metaTitle: raw.metaTitle || null,

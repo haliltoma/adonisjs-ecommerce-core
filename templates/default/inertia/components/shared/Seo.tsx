@@ -1,3 +1,4 @@
+import type React from 'react'
 import { Head } from '@inertiajs/react'
 
 interface SeoProps {
@@ -203,57 +204,58 @@ export default function Seo({
     structuredData.push(...jsonLd)
   }
 
+  // Inertia's <Head> does not filter falsy children — collect elements in an array
+  const headElements: React.ReactElement[] = [
+    <title key="title">{title}</title>,
+    <meta key="description" head-key="description" name="description" content={description} />,
+    <meta key="robots" head-key="robots" name="robots" content={robotsContent} />,
+    <meta key="googlebot" head-key="googlebot" name="googlebot" content={robotsContent} />,
+    <meta key="og:type" head-key="og:type" property="og:type" content={ogType} />,
+    <meta key="og:title" head-key="og:title" property="og:title" content={title} />,
+    <meta key="og:description" head-key="og:description" property="og:description" content={description} />,
+    <meta key="og:site_name" head-key="og:site_name" property="og:site_name" content={ogSiteName} />,
+    <meta key="twitter:card" head-key="twitter:card" name="twitter:card" content={twitterCard} />,
+    <meta key="twitter:title" head-key="twitter:title" name="twitter:title" content={title} />,
+    <meta key="twitter:description" head-key="twitter:description" name="twitter:description" content={description} />,
+    <meta key="format-detection" head-key="format-detection" name="format-detection" content="telephone=no" />,
+    <meta key="theme-color" head-key="theme-color" name="theme-color" content="#1c1917" />,
+  ]
+
+  if (keywords.length > 0) {
+    headElements.push(<meta key="keywords" head-key="keywords" name="keywords" content={keywords.join(', ')} />)
+  }
+  if (canonical) {
+    headElements.push(<link key="canonical" rel="canonical" href={canonical} />)
+  }
+  if (ogUrl) {
+    headElements.push(<meta key="og:url" head-key="og:url" property="og:url" content={ogUrl} />)
+  }
+  if (ogImage) {
+    headElements.push(
+      <meta key="og:image" head-key="og:image" property="og:image" content={ogImage} />,
+      <meta key="og:image:width" head-key="og:image:width" property="og:image:width" content="1200" />,
+      <meta key="og:image:height" head-key="og:image:height" property="og:image:height" content="630" />,
+    )
+    if (ogImageAlt) {
+      headElements.push(<meta key="og:image:alt" head-key="og:image:alt" property="og:image:alt" content={ogImageAlt} />)
+    }
+    headElements.push(<meta key="twitter:image" head-key="twitter:image" name="twitter:image" content={ogImage} />)
+  }
+  if (twitterSite) {
+    headElements.push(<meta key="twitter:site" head-key="twitter:site" name="twitter:site" content={twitterSite} />)
+  }
+  if (twitterCreator) {
+    headElements.push(<meta key="twitter:creator" head-key="twitter:creator" name="twitter:creator" content={twitterCreator} />)
+  }
+  structuredData.forEach((data, index) => {
+    headElements.push(
+      <script key={`ld-${index}`} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+    )
+  })
+
   return (
     <Head>
-      {/* Primary Meta Tags */}
-      <title>{title}</title>
-      <meta head-key="description" name="description" content={description} />
-      {keywords.length > 0 && (
-        <meta head-key="keywords" name="keywords" content={keywords.join(', ')} />
-      )}
-
-      {/* Robots */}
-      <meta head-key="robots" name="robots" content={robotsContent} />
-      <meta head-key="googlebot" name="googlebot" content={robotsContent} />
-
-      {/* Canonical */}
-      {canonical && <link rel="canonical" href={canonical} />}
-
-      {/* Open Graph / Facebook */}
-      <meta head-key="og:type" property="og:type" content={ogType} />
-      <meta head-key="og:title" property="og:title" content={title} />
-      <meta head-key="og:description" property="og:description" content={description} />
-      <meta head-key="og:site_name" property="og:site_name" content={ogSiteName} />
-      {ogUrl && <meta head-key="og:url" property="og:url" content={ogUrl} />}
-      {ogImage && (
-        <>
-          <meta head-key="og:image" property="og:image" content={ogImage} />
-          <meta head-key="og:image:width" property="og:image:width" content="1200" />
-          <meta head-key="og:image:height" property="og:image:height" content="630" />
-          {ogImageAlt && <meta head-key="og:image:alt" property="og:image:alt" content={ogImageAlt} />}
-        </>
-      )}
-
-      {/* Twitter */}
-      <meta head-key="twitter:card" name="twitter:card" content={twitterCard} />
-      <meta head-key="twitter:title" name="twitter:title" content={title} />
-      <meta head-key="twitter:description" name="twitter:description" content={description} />
-      {twitterSite && <meta head-key="twitter:site" name="twitter:site" content={twitterSite} />}
-      {twitterCreator && <meta head-key="twitter:creator" name="twitter:creator" content={twitterCreator} />}
-      {ogImage && <meta head-key="twitter:image" name="twitter:image" content={ogImage} />}
-
-      {/* Additional SEO Tags */}
-      <meta head-key="format-detection" name="format-detection" content="telephone=no" />
-      <meta head-key="theme-color" name="theme-color" content="#1c1917" />
-
-      {/* Structured Data / JSON-LD */}
-      {structuredData.map((data, index) => (
-        <script
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-        />
-      ))}
+      {headElements}
     </Head>
   )
 }

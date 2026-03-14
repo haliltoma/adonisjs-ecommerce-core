@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "mcp-gateway": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/laserkopf/Desktop/freelance/mcp-gateway-multiple-lk/build/index.js",
+        "--config=/home/laserkopf/Desktop/freelance/mcp-gateway-multiple-lk/gateway.config.json"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -63,12 +63,12 @@ export default function Redirects({ redirects, filters }: Props) {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    router.get('/admin/settings/redirects', { search }, { preserveState: true })
+    router.get('/admin/settings/url-redirects', { search }, { preserveState: true })
   }
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    createForm.post('/admin/settings/redirects', {
+    createForm.post('/admin/settings/url-redirects', {
       onSuccess: () => {
         setShowCreate(false)
         createForm.reset()
@@ -77,14 +77,14 @@ export default function Redirects({ redirects, filters }: Props) {
   }
 
   function handleToggle(redirect: Redirect) {
-    router.patch(`/admin/settings/redirects/${redirect.id}`, {
+    router.patch(`/admin/settings/url-redirects/${redirect.id}`, {
       isActive: !redirect.isActive,
     }, { preserveState: true })
   }
 
   function handleDelete(id: string) {
     if (confirm('Delete this redirect?')) {
-      router.delete(`/admin/settings/redirects/${id}`)
+      router.delete(`/admin/settings/url-redirects/${id}`)
     }
   }
 
@@ -234,7 +234,7 @@ export default function Redirects({ redirects, filters }: Props) {
                 key={page}
                 variant={page === redirects.meta.currentPage ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => router.get('/admin/settings/redirects', { page, search: filters.search }, { preserveState: true })}
+                onClick={() => router.get('/admin/settings/url-redirects', { page, search: filters.search }, { preserveState: true })}
               >
                 {page}
               </Button>

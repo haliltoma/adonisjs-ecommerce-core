@@ -18,20 +18,34 @@ interface Props {
 function PuckRenderer({ data }: { data: Record<string, unknown> }) {
   const [RenderComponent, setRenderComponent] = useState<ComponentType<any> | null>(null)
   const [config, setConfig] = useState<any>(null)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
+  const load = () => {
+    setError(false)
     Promise.all([
       import('@puckeditor/core'),
       import('@/lib/puck-config'),
     ]).then(([puckModule, configModule]) => {
-      if (!cancelled) {
-        setRenderComponent(() => puckModule.Render)
-        setConfig(configModule.puckConfig)
-      }
+      setRenderComponent(() => puckModule.Render)
+      setConfig(configModule.puckConfig)
+    }).catch((err) => {
+      console.error('Failed to load page renderer:', err)
+      setError(true)
     })
-    return () => { cancelled = true }
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <p className="text-sm text-muted-foreground">Failed to load page content.</p>
+        <button onClick={load} className="text-sm underline underline-offset-4 hover:text-foreground text-muted-foreground">
+          Try again
+        </button>
+      </div>
+    )
+  }
 
   if (!RenderComponent || !config) {
     return <div className="flex justify-center py-12">

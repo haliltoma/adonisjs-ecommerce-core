@@ -11,6 +11,11 @@ import Cart from '#models/cart'
 import CartItem from '#models/cart_item'
 import Discount from '#models/discount'
 import Review from '#models/review'
+import DigitalProduct from '#models/digital_product'
+import Download from '#models/download'
+import Subscription from '#models/subscription'
+import SubscriptionItem from '#models/subscription_item'
+import License from '#models/license'
 
 export const StoreFactory = factory
   .define(Store, ({ faker }) => ({
@@ -174,5 +179,74 @@ export const ReviewFactory = factory
     status: 'pending' as const,
     helpfulCount: 0,
     reportCount: 0,
+  }))
+  .build()
+
+export const DigitalProductFactory = factory
+  .define(DigitalProduct, ({ faker }) => ({
+    fileName: faker.system.fileName({ extensionCount: 1 }),
+    filePath: `/uploads/digital/${faker.string.uuid()}.pdf`,
+    fileMimeType: 'application/pdf',
+    fileSize: faker.number.int({ min: 100000, max: 50000000 }),
+    fileHash: faker.string.hexadecimal({ length: 64 }),
+    requiresLicense: faker.datatype.boolean(),
+    licenseDurationDays: faker.datatype.boolean() ? 365 : null,
+    version: faker.system.semver(),
+    releaseNotes: faker.lorem.paragraph(),
+  }))
+  .build()
+
+export const DownloadFactory = factory
+  .define(Download, ({ faker }) => ({
+    downloadCount: faker.number.int({ min: 0, max: 5 }),
+    maxDownloads: faker.number.int({ min: 3, max: 10 }),
+    expiresAt: faker.date.future({ years: 1 }),
+    lastDownloadedAt: faker.date.recent({ days: 10 }),
+    ipAddress: faker.internet.ip(),
+    userAgent: faker.internet.userAgent(),
+    status: 'active' as const,
+  }))
+  .relation(() => ProductFactory)
+  .build()
+
+export const SubscriptionFactory = factory
+  .define(Subscription, ({ faker }) => ({
+    status: 'active' as const,
+    billingInterval: 'monthly' as const,
+    intervalCount: 1,
+    amount: parseFloat(faker.commerce.price({ min: 9.99, max: 99.99 })),
+    currencyCode: 'USD',
+    trialPeriodDays: faker.datatype.boolean() ? 14 : null,
+    trialEndsAt: faker.date.future({ days: 14 }),
+    startsAt: faker.date.recent({ days: 30 }),
+    currentPeriodStartsAt: faker.date.recent({ days: 10 }),
+    currentPeriodEndsAt: faker.date.future({ days: 20 }),
+    providerSubscriptionId: faker.string.uuid(),
+    providerCustomerId: faker.string.uuid(),
+    providerPlanId: faker.string.uuid(),
+    metadata: {},
+  }))
+  .build()
+
+export const SubscriptionItemFactory = factory
+  .define(SubscriptionItem, ({ faker }) => ({
+    amount: parseFloat(faker.commerce.price({ min: 9.99, max: 99.99 })),
+    quantity: 1,
+    description: faker.commerce.productName(),
+    metadata: {},
+  }))
+  .build()
+
+export const LicenseFactory = factory
+  .define(License, ({ faker }) => ({
+    licenseKey: faker.string.alphanumeric(16).toUpperCase(),
+    licenseType: 'standard',
+    maxActivations: faker.number.int({ min: 1, max: 5 }),
+    currentActivations: faker.number.int({ min: 0, max: 2 }),
+    validFrom: faker.date.past({ years: 1 }),
+    validUntil: faker.date.future({ years: 1 }),
+    status: 'active' as const,
+    activations: [],
+    metadata: {},
   }))
   .build()

@@ -5,6 +5,7 @@ import {
   FileSpreadsheet,
   CheckCircle2,
 } from 'lucide-react'
+import { getXsrfToken } from '@/lib/csrf'
 
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -65,14 +66,11 @@ export default function InventoryExport() {
     form.method = 'POST'
     form.action = '/admin/inventory/export/download'
 
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]')
-    if (csrfMeta) {
-      const csrfInput = document.createElement('input')
-      csrfInput.type = 'hidden'
-      csrfInput.name = '_csrf'
-      csrfInput.value = csrfMeta.getAttribute('content') || ''
-      form.appendChild(csrfInput)
-    }
+    const csrfInput = document.createElement('input')
+    csrfInput.type = 'hidden'
+    csrfInput.name = '_csrf'
+    csrfInput.value = getXsrfToken() || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    form.appendChild(csrfInput)
 
     const typeInput = document.createElement('input')
     typeInput.type = 'hidden'

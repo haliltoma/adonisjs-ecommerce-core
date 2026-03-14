@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react'
+import { csrfFetchJson } from '@/lib/csrf'
 import { useState } from 'react'
 import {
   Check,
@@ -117,8 +118,10 @@ export default function WebhooksPage({ webhooks, availableEvents }: Props) {
     setTestingId(id)
     setTestResult(null)
     try {
-      const res = await fetch(`/admin/settings/webhooks/${id}/test`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-      const data = await res.json()
+      const data = await csrfFetchJson<{ success: boolean; durationMs?: number; statusCode?: number; error?: string }>(
+        `/admin/settings/webhooks/${id}/test`,
+        { method: 'POST' }
+      )
       setTestResult({
         id,
         success: data.success,
@@ -137,8 +140,7 @@ export default function WebhooksPage({ webhooks, availableEvents }: Props) {
     setLogsModal({ id, url })
     setLoadingLogs(true)
     try {
-      const res = await fetch(`/admin/settings/webhooks/${id}/logs`)
-      const data = await res.json()
+      const data = await csrfFetchJson<{ logs: any[] }>(`/admin/settings/webhooks/${id}/logs`)
       setLogs(data.logs || [])
     } catch {
       setLogs([])

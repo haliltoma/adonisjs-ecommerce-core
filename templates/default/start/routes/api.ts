@@ -16,6 +16,8 @@ const CartController = () => import('#controllers/api/cart_controller')
 const OrdersController = () => import('#controllers/api/orders_controller')
 const CategoriesController = () => import('#controllers/api/categories_controller')
 const CustomersController = () => import('#controllers/api/customers_controller')
+const DigitalProductsController = () => import('#controllers/api/digital_products_controller')
+const SubscriptionsController = () => import('#controllers/api/subscriptions_controller')
 
 router
   .group(() => {
@@ -158,5 +160,53 @@ router
         timestamp: new Date().toISOString(),
       })
     })
+
+    /*
+    |--------------------------------------------------------------------------
+    | Digital Products API
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        router.post('/upload', [DigitalProductsController, 'upload'])
+        router.get('/downloads/:id', [DigitalProductsController, 'getDownloadLink'])
+        router.post('/downloads/:id/record', [DigitalProductsController, 'recordDownload'])
+        router.delete('/downloads/:id', [DigitalProductsController, 'revokeDownload'])
+        router.get('/customer/:customerId/downloads', [DigitalProductsController, 'getCustomerDownloads'])
+
+        // Licenses
+        router.post('/licenses/validate', [DigitalProductsController, 'validateLicense'])
+        router.post('/licenses/activate', [DigitalProductsController, 'activateLicense'])
+        router.post('/licenses/deactivate', [DigitalProductsController, 'deactivateLicense'])
+        router.get('/licenses/:id/suspend', [DigitalProductsController, 'suspendLicense'])
+        router.get('/customer/:customerId/licenses', [DigitalProductsController, 'getCustomerLicenses'])
+      })
+      .prefix('/digital-products')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Subscriptions API
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        router.post('/', [SubscriptionsController, 'create'])
+        router.get('/:id', [SubscriptionsController, 'show'])
+        router.patch('/:id', [SubscriptionsController, 'update'])
+        router.post('/:id/pause', [SubscriptionsController, 'pause'])
+        router.post('/:id/resume', [SubscriptionsController, 'resume'])
+        router.post('/:id/cancel', [SubscriptionsController, 'cancel'])
+        router.post('/:id/renew', [SubscriptionsController, 'renew'])
+        router.get('/customer/:customerId', [SubscriptionsController, 'getCustomerSubscriptions'])
+
+        // Subscription items
+        router.post('/:id/items', [SubscriptionsController, 'addItem'])
+        router.patch('/items/:itemId', [SubscriptionsController, 'updateItem'])
+        router.delete('/items/:itemId', [SubscriptionsController, 'removeItem'])
+
+        // Webhooks
+        router.post('/webhook/stripe', [SubscriptionsController, 'stripeWebhook'])
+      })
+      .prefix('/subscriptions')
   })
   .prefix('/api')

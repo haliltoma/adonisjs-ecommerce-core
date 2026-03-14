@@ -19,6 +19,7 @@ import {
   LogOut,
   Megaphone,
   Package,
+  Paintbrush,
   Percent,
   PieChart,
   Plug,
@@ -152,6 +153,11 @@ const mainNav = [
 ]
 
 const contentNav = [
+  {
+    title: 'Theme Customizer',
+    url: '/admin/customizer/home',
+    icon: Paintbrush,
+  },
   {
     title: 'Pages',
     url: '/admin/content/pages',

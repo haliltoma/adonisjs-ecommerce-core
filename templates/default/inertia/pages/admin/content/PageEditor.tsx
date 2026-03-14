@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react'
+import { Head, router, usePage } from '@inertiajs/react'
 import { useState, useCallback, useEffect, useRef, type ComponentType } from 'react'
 import {
   ArrowLeft,
@@ -9,6 +9,9 @@ import {
   Trash,
   Eye,
   Loader2,
+  X,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,6 +56,19 @@ interface Props {
 const emptyPuckData = { root: {}, content: [] }
 
 export default function PageEditor({ page }: Props) {
+  const { props } = usePage<{ flash?: { success?: string; error?: string } }>()
+  const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  useEffect(() => {
+    if (props.flash?.error) {
+      setFlashMessage({ type: 'error', message: props.flash.error })
+    } else if (props.flash?.success) {
+      setFlashMessage({ type: 'success', message: props.flash.success })
+      const timer = setTimeout(() => setFlashMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [props.flash])
+
   const isEditing = !!page
   const [title, setTitle] = useState(page?.title || '')
   const [slug, setSlug] = useState(page?.slug || '')
@@ -63,21 +79,27 @@ export default function PageEditor({ page }: Props) {
   const [saving, setSaving] = useState(false)
   const [PuckEditor, setPuckEditor] = useState<ComponentType<any> | null>(null)
   const [puckConfig, setPuckConfig] = useState<any>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const puckDataRef = useRef<any>(null)
 
-  useEffect(() => {
-    let cancelled = false
+  const loadEditor = useCallback(() => {
+    setLoadError(null)
     Promise.all([
       import('@puckeditor/core'),
       import('@puckeditor/core/puck.css'),
       import('@/lib/puck-config'),
     ]).then(([puckModule, , configModule]) => {
-      if (!cancelled) {
-        setPuckEditor(() => puckModule.Puck)
-        setPuckConfig(configModule.puckConfig)
-      }
+      setPuckEditor(() => puckModule.Puck)
+      setPuckConfig(configModule.puckConfig)
+    }).catch((err) => {
+      console.error('Failed to load editor:', err)
+      setLoadError(err?.message || 'Failed to load the editor. Please try again.')
     })
-    return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    loadEditor()
+  }, [loadEditor])
 
   const initialData = (page?.content as any) || emptyPuckData
 
@@ -168,6 +190,10 @@ export default function PageEditor({ page }: Props) {
         .puck-editor-wrapper ._Puck-root {
           height: 100%;
         }
+        /* Ensure Sheet overlay sits above Puck and the editor bar */
+        [data-slot="sheet-overlay"] {
+          z-index: 200 !important;
+        }
       `}</style>
 
       <div className="page-editor-bar">
@@ -220,7 +246,7 @@ export default function PageEditor({ page }: Props) {
                 Settings
               </Button>
             </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
+            <SheetContent className="overflow-y-auto z-[200]">
               <SheetHeader>
                 <SheetTitle>Page Settings</SheetTitle>
                 <SheetDescription>
@@ -228,7 +254,7 @@ export default function PageEditor({ page }: Props) {
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="space-y-6 py-6">
+              <div className="space-y-6 px-4 py-6">
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Title
@@ -352,21 +378,64 @@ export default function PageEditor({ page }: Props) {
         </div>
       </div>
 
+      {flashMessage && (
+        <div
+          className={`fixed top-[56px] left-0 right-0 z-[101] flex items-center justify-between px-4 py-2.5 text-sm ${
+            flashMessage.type === 'error'
+              ? 'bg-destructive text-destructive-foreground'
+              : 'bg-green-600 text-white'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {flashMessage.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            )}
+            {flashMessage.message}
+          </div>
+          <button onClick={() => setFlashMessage(null)} className="shrink-0 hover:opacity-80">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div className="puck-editor-wrapper">
         {PuckEditor && puckConfig ? (
           <PuckEditor
             config={puckConfig}
             data={initialData}
+            onChange={(data: any) => { puckDataRef.current = data }}
             onPublish={handleSave}
             overrides={{
               headerActions: () => (
-                <Button size="sm" className="h-8" disabled={saving}>
+                <Button
+                  size="sm"
+                  className="h-8"
+                  disabled={saving}
+                  onClick={() => handleSave(puckDataRef.current || initialData)}
+                >
                   <Save className="mr-1.5 h-3.5 w-3.5" />
                   {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
                 </Button>
               ),
             }}
           />
+        ) : loadError ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-foreground">Failed to load editor</p>
+              <p className="text-xs text-muted-foreground max-w-sm">{loadError}</p>
+              <Button variant="outline" size="sm" onClick={loadEditor} className="mt-2">
+                Try Again
+              </Button>
+            </div>
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">

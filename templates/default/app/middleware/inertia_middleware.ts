@@ -34,7 +34,16 @@ export default class InertiaMiddleware extends BaseInertiaMiddleware {
       }
     }
 
+    // Expose fresh CSRF token so the frontend can keep its meta tag in sync
+    let csrfToken: string | null = null
+    try {
+      csrfToken = (ctx.request as any).csrfToken ?? null
+    } catch {
+      // Shield may not be loaded yet
+    }
+
     return {
+      csrfToken,
       flash: session?.flashMessages?.all() ?? {},
 
       user: auth?.user

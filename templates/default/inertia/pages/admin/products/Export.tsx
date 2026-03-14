@@ -11,6 +11,7 @@ import {
   Boxes,
 } from 'lucide-react'
 
+import { getXsrfToken } from '@/lib/csrf'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
 import {
@@ -156,15 +157,12 @@ export default function ProductExport({ stats }: Props) {
     form.method = 'POST'
     form.action = '/admin/products/export/download'
 
-    // Add CSRF token
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]')
-    if (csrfMeta) {
-      const csrfInput = document.createElement('input')
-      csrfInput.type = 'hidden'
-      csrfInput.name = '_csrf'
-      csrfInput.value = csrfMeta.getAttribute('content') || ''
-      form.appendChild(csrfInput)
-    }
+    // Add CSRF token (prefer fresh cookie, fall back to meta tag)
+    const csrfInput = document.createElement('input')
+    csrfInput.type = 'hidden'
+    csrfInput.name = '_csrf'
+    csrfInput.value = getXsrfToken() || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    form.appendChild(csrfInput)
 
     // Add type
     const typeInput = document.createElement('input')

@@ -1,5 +1,6 @@
 import { useForm, router } from '@inertiajs/react'
 import { FormEvent, useState, useCallback, KeyboardEvent, useRef } from 'react'
+import { csrfFetchJson } from '@/lib/csrf'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -335,21 +336,10 @@ export default function Edit({ product, categories, taxClasses, tags }: Props) {
   const handleImageUpload = async (files: File[]): Promise<MediaFile[]> => {
     const formData = new FormData()
     files.forEach((f) => formData.append('files', f))
-
-    const csrfToken = document.cookie
-      .split('; ')
-      .find((c) => c.startsWith('XSRF-TOKEN='))
-      ?.split('=')[1]
-
-    const res = await fetch('/admin/upload/images', {
+    return csrfFetchJson<MediaFile[]>('/admin/upload/images', {
       method: 'POST',
       body: formData,
-      credentials: 'same-origin',
-      headers: csrfToken ? { 'x-xsrf-token': decodeURIComponent(csrfToken) } : {},
     })
-
-    if (!res.ok) throw new Error('Upload failed')
-    return res.json()
   }
 
   const handleSubmit = (e?: FormEvent) => {

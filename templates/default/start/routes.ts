@@ -53,6 +53,8 @@ const AdminPriceListsController = () => import('#controllers/admin/price_lists_c
 const AdminDraftOrdersController = () => import('#controllers/admin/draft_orders_controller')
 const AdminGiftCardsController = () => import('#controllers/admin/gift_cards_controller')
 const AdminBlogController = () => import('#controllers/admin/blog_controller')
+const AdminCustomizerController = () => import('#controllers/admin/customizer_controller')
+const AdminAiController = () => import('#controllers/admin/ai_controller')
 const StorefrontBlogController = () => import('#controllers/storefront/blog_controller')
 
 /*
@@ -139,6 +141,7 @@ router.post('/account/reset-password', [AccountController, 'resetPassword']).as(
 
 // Account - Protected routes
 router.get('/account', [AccountController, 'dashboard']).as('storefront.account.dashboard')
+router.get('/account/dashboard', ({ response }) => response.redirect().toRoute('storefront.account.dashboard'))
 router.get('/account/orders', [AccountController, 'orders']).as('storefront.account.orders')
 router.get('/account/orders/:id', [AccountController, 'orderDetail']).as('storefront.account.orders.show')
 router.get('/account/reviews', [AccountController, 'reviews']).as('storefront.account.reviews')
@@ -327,6 +330,17 @@ router.group(() => {
     router.patch('/settings/locales/:id', [AdminSettingsController, 'updateLocale']).as('admin.settings.locales.update')
     router.get('/settings/payments', [AdminSettingsController, 'payments']).as('admin.settings.payments')
     router.get('/settings/shipping', [AdminSettingsController, 'shipping']).as('admin.settings.shipping')
+    router.get('/settings/general', ({ response }) => response.redirect('/admin/settings'))
+    router.get('/settings/plugins', ({ response }) => response.redirect('/admin/plugins'))
+
+    // Theme Customizer
+    router.get('/customizer/:pageType/:pageId?', [AdminCustomizerController, 'editor']).as('admin.customizer.editor')
+    router.post('/customizer/:pageType', [AdminCustomizerController, 'save']).as('admin.customizer.save')
+
+    // AI
+    router.post('/api/ai/generate', [AdminAiController, 'generate']).as('admin.ai.generate')
+    router.post('/api/ai/image-to-component', [AdminAiController, 'imageToComponent']).as('admin.ai.imageToComponent')
+    router.patch('/settings/ai', [AdminSettingsController, 'updateAi']).as('admin.settings.ai')
 
     // Content Management
     router.get('/content/pages', [AdminContentController, 'pages']).as('admin.content.pages')
@@ -349,6 +363,7 @@ router.group(() => {
 
     // Blog
     router.get('/blog', [AdminBlogController, 'index']).as('admin.blog.index')
+    router.get('/blog/posts', ({ response }) => response.redirect('/admin/blog'))
     router.get('/blog/create', [AdminBlogController, 'create']).as('admin.blog.create')
     router.post('/blog', [AdminBlogController, 'store']).as('admin.blog.store')
     router.get('/blog/:id/edit', [AdminBlogController, 'edit']).as('admin.blog.edit')
@@ -395,10 +410,10 @@ router.group(() => {
     router.delete('/settings/roles/:id', [AdminSettingsController, 'destroyRole']).as('admin.settings.roles.destroy')
 
     // Settings - URL Redirects
-    router.get('/settings/redirects', [AdminSettingsController, 'redirects']).as('admin.settings.redirects')
-    router.post('/settings/redirects', [AdminSettingsController, 'createRedirect']).as('admin.settings.redirects.create')
-    router.patch('/settings/redirects/:id', [AdminSettingsController, 'updateRedirect']).as('admin.settings.redirects.update')
-    router.delete('/settings/redirects/:id', [AdminSettingsController, 'destroyRedirect']).as('admin.settings.redirects.destroy')
+    router.get('/settings/url-redirects', [AdminSettingsController, 'redirects']).as('admin.settings.redirects')
+    router.post('/settings/url-redirects', [AdminSettingsController, 'createRedirect']).as('admin.settings.redirects.create')
+    router.patch('/settings/url-redirects/:id', [AdminSettingsController, 'updateRedirect']).as('admin.settings.redirects.update')
+    router.delete('/settings/url-redirects/:id', [AdminSettingsController, 'destroyRedirect']).as('admin.settings.redirects.destroy')
 
     // Settings - SEO
     router.get('/settings/seo', [AdminSettingsController, 'seo']).as('admin.settings.seo')
@@ -466,6 +481,7 @@ router.group(() => {
     router.patch('/settings/shipping/method', [AdminSettingsController, 'updateShippingMethod']).as('admin.settings.shipping.method')
 
     // Settings - Cache Management
+    router.get('/settings/cache', [AdminSettingsController, 'cacheManagement']).as('admin.settings.cache')
     router.post('/settings/cache/clear', [AdminSettingsController, 'clearCache']).as('admin.settings.cache.clear')
 
     // Plugins
