@@ -16,6 +16,8 @@ import Download from '#models/download'
 import Subscription from '#models/subscription'
 import SubscriptionItem from '#models/subscription_item'
 import License from '#models/license'
+import BundleProduct from '#models/bundle_product'
+import BundleItem from '#models/bundle_item'
 
 export const StoreFactory = factory
   .define(Store, ({ faker }) => ({
@@ -247,6 +249,33 @@ export const LicenseFactory = factory
     validUntil: faker.date.future({ years: 1 }),
     status: 'active' as const,
     activations: [],
+    metadata: {},
+  }))
+  .build()
+
+export const BundleProductFactory = factory
+  .define(BundleProduct, ({ faker }) => ({
+    pricingType: faker.helpers.arrayElement(['fixed', 'discount_percentage', 'discount_fixed']) as any,
+    fixedPrice: parseFloat(faker.commerce.price({ min: 49.99, max: 299.99 })),
+    discountPercentage: faker.datatype.boolean() ? faker.number.int({ min: 5, max: 30 }) : null,
+    discountFixed: faker.datatype.boolean() ? parseFloat(faker.commerce.price({ min: 10, max: 50 })) : null,
+    trackInventory: faker.datatype.boolean(),
+    stockQuantity: faker.number.int({ min: 0, max: 100 }),
+    isVisible: faker.datatype.boolean(),
+    metadata: {},
+  }))
+  .build()
+
+export const BundleItemFactory = factory
+  .define(BundleItem, ({ faker }) => ({
+    quantity: faker.number.int({ min: 1, max: 5 }),
+    required: faker.datatype.boolean(),
+    minQuantity: 1,
+    maxQuantity: faker.datatype.boolean() ? faker.number.int({ min: 2, max: 10 }) : null,
+    overridePrice: faker.datatype.boolean() ? parseFloat(faker.commerce.price({ min: 9.99, max: 99.99 })) : null,
+    useOverridePrice: faker.datatype.boolean(),
+    position: faker.number.int({ min: 0, max: 10 }),
+    variantSelection: null,
     metadata: {},
   }))
   .build()

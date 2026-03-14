@@ -18,6 +18,7 @@ const CategoriesController = () => import('#controllers/api/categories_controlle
 const CustomersController = () => import('#controllers/api/customers_controller')
 const DigitalProductsController = () => import('#controllers/api/digital_products_controller')
 const SubscriptionsController = () => import('#controllers/api/subscriptions_controller')
+const BundlesController = () => import('#controllers/api/bundles_controller')
 
 router
   .group(() => {
@@ -208,5 +209,31 @@ router
         router.post('/webhook/stripe', [SubscriptionsController, 'stripeWebhook'])
       })
       .prefix('/subscriptions')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bundles API
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        router.post('/', [BundlesController, 'create'])
+        router.get('/', [BundlesController, 'index'])
+        router.get('/available', [BundlesController, 'available'])
+        router.get('/:id', [BundlesController, 'show'])
+        router.patch('/:id', [BundlesController, 'update'])
+        router.delete('/:id', [BundlesController, 'destroy'])
+        router.get('/:id/pricing', [BundlesController, 'pricing'])
+        router.post('/:id/duplicate', [BundlesController, 'duplicate'])
+        router.get('/:id/stock/:quantity', [BundlesController, 'validateStock'])
+        router.get('/product/:productId', [BundlesController, 'getByProduct'])
+
+        // Bundle items
+        router.post('/:id/items', [BundlesController, 'addItem'])
+        router.patch('/items/:itemId', [BundlesController, 'updateItem'])
+        router.delete('/items/:itemId', [BundlesController, 'removeItem'])
+        router.post('/:id/reorder', [BundlesController, 'reorderItems'])
+      })
+      .prefix('/bundles')
   })
   .prefix('/api')
