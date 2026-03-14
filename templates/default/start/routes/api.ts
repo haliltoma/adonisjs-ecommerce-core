@@ -19,6 +19,7 @@ const CustomersController = () => import('#controllers/api/customers_controller'
 const DigitalProductsController = () => import('#controllers/api/digital_products_controller')
 const SubscriptionsController = () => import('#controllers/api/subscriptions_controller')
 const BundlesController = () => import('#controllers/api/bundles_controller')
+const ImagesController = () => import('#controllers/api/images_controller')
 
 router
   .group(() => {
@@ -235,5 +236,22 @@ router
         router.post('/:id/reorder', [BundlesController, 'reorderItems'])
       })
       .prefix('/bundles')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Images API
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        router.post('/upload', [ImagesController, 'upload'])
+        router.post('/batch-upload', [ImagesController, 'batchUpload'])
+        router.post('/optimize', [ImagesController, 'optimize'])
+        router.post('/convert-webp', [ImagesController, 'convertToWebP'])
+        router.get('/urls', [ImagesController, 'getImageUrls'])
+        router.get('/dimensions', [ImagesController, 'getDimensions'])
+        router.get('/metadata', [ImagesController, 'getMetadata'])
+      })
+      .prefix('/images')
   })
   .prefix('/api')

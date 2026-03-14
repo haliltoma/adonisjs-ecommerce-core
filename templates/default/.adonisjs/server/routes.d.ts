@@ -75,6 +75,13 @@ export type ScannedRoutes = {
     'bundles.update_item': { paramsTuple: [ParamValue]; params: {'itemId': ParamValue} }
     'bundles.remove_item': { paramsTuple: [ParamValue]; params: {'itemId': ParamValue} }
     'bundles.reorder_items': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'images.upload': { paramsTuple?: []; params?: {} }
+    'images.batch_upload': { paramsTuple?: []; params?: {} }
+    'images.optimize': { paramsTuple?: []; params?: {} }
+    'images.convert_to_web_p': { paramsTuple?: []; params?: {} }
+    'images.get_image_urls': { paramsTuple?: []; params?: {} }
+    'images.get_dimensions': { paramsTuple?: []; params?: {} }
+    'images.get_metadata': { paramsTuple?: []; params?: {} }
     'health': { paramsTuple?: []; params?: {} }
     'seo.robots': { paramsTuple?: []; params?: {} }
     'seo.sitemap': { paramsTuple?: []; params?: {} }
@@ -432,6 +439,9 @@ export type ScannedRoutes = {
     'bundles.pricing': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bundles.validate_stock': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'quantity': ParamValue} }
     'bundles.get_by_product': { paramsTuple: [ParamValue]; params: {'productId': ParamValue} }
+    'images.get_image_urls': { paramsTuple?: []; params?: {} }
+    'images.get_dimensions': { paramsTuple?: []; params?: {} }
+    'images.get_metadata': { paramsTuple?: []; params?: {} }
     'health': { paramsTuple?: []; params?: {} }
     'seo.robots': { paramsTuple?: []; params?: {} }
     'seo.sitemap': { paramsTuple?: []; params?: {} }
@@ -596,6 +606,9 @@ export type ScannedRoutes = {
     'bundles.pricing': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bundles.validate_stock': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'quantity': ParamValue} }
     'bundles.get_by_product': { paramsTuple: [ParamValue]; params: {'productId': ParamValue} }
+    'images.get_image_urls': { paramsTuple?: []; params?: {} }
+    'images.get_dimensions': { paramsTuple?: []; params?: {} }
+    'images.get_metadata': { paramsTuple?: []; params?: {} }
     'health': { paramsTuple?: []; params?: {} }
     'seo.robots': { paramsTuple?: []; params?: {} }
     'seo.sitemap': { paramsTuple?: []; params?: {} }
@@ -808,6 +821,10 @@ export type ScannedRoutes = {
     'bundles.duplicate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bundles.add_item': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bundles.reorder_items': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'images.upload': { paramsTuple?: []; params?: {} }
+    'images.batch_upload': { paramsTuple?: []; params?: {} }
+    'images.optimize': { paramsTuple?: []; params?: {} }
+    'images.convert_to_web_p': { paramsTuple?: []; params?: {} }
     'storefront.newsletter.subscribe': { paramsTuple?: []; params?: {} }
     'storefront.contact.submit': { paramsTuple?: []; params?: {} }
     'storefront.products.submitReview': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
