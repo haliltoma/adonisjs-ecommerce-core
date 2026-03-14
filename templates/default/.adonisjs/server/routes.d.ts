@@ -438,6 +438,20 @@ export type ScannedRoutes = {
     'admin.returns.statistics': { paramsTuple?: []; params?: {} }
     'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
     'admin.returns.bulk': { paramsTuple?: []; params?: {} }
+    'admin.inventory.statistics': { paramsTuple: [ParamValue]; params: {'storeId': ParamValue} }
+    'admin.inventory.alerts': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.acknowledge': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.alerts.resolve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.alerts.dismiss': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reservations': { paramsTuple?: []; params?: {} }
+    'admin.inventory.reserve': { paramsTuple?: []; params?: {} }
+    'admin.inventory.reservations.consume': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reservations.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reservations.cancel': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.cleanExpired': { paramsTuple?: []; params?: {} }
+    'admin.inventory.check': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.bulkAcknowledge': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.bulkResolve': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -656,6 +670,9 @@ export type ScannedRoutes = {
     'admin.returns.overdue': { paramsTuple?: []; params?: {} }
     'admin.returns.statistics': { paramsTuple?: []; params?: {} }
     'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
+    'admin.inventory.statistics': { paramsTuple: [ParamValue]; params: {'storeId': ParamValue} }
+    'admin.inventory.alerts': { paramsTuple?: []; params?: {} }
+    'admin.inventory.reservations': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -855,6 +872,9 @@ export type ScannedRoutes = {
     'admin.returns.overdue': { paramsTuple?: []; params?: {} }
     'admin.returns.statistics': { paramsTuple?: []; params?: {} }
     'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
+    'admin.inventory.statistics': { paramsTuple: [ParamValue]; params: {'storeId': ParamValue} }
+    'admin.inventory.alerts': { paramsTuple?: []; params?: {} }
+    'admin.inventory.reservations': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -1080,6 +1100,17 @@ export type ScannedRoutes = {
     'admin.returns.process': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.returns.cancel': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'admin.returns.bulk': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.acknowledge': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.alerts.resolve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.alerts.dismiss': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reserve': { paramsTuple?: []; params?: {} }
+    'admin.inventory.reservations.consume': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reservations.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.reservations.cancel': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.inventory.cleanExpired': { paramsTuple?: []; params?: {} }
+    'admin.inventory.check': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.bulkAcknowledge': { paramsTuple?: []; params?: {} }
+    'admin.inventory.alerts.bulkResolve': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.revoke': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

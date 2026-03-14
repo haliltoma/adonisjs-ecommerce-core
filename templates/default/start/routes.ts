@@ -58,6 +58,7 @@ const AdminAiController = () => import('#controllers/admin/ai_controller')
 const AdminCustomerSegmentsController = () => import('#controllers/admin/customer_segments_controller')
 const AdminSearchController = () => import('#controllers/admin/search_controller')
 const AdminReturnsController = () => import('#controllers/admin/returns_controller')
+const AdminAdvancedInventoryController = () => import('#controllers/admin/advanced_inventory_controller')
 const StorefrontBlogController = () => import('#controllers/storefront/blog_controller')
 
 /*
@@ -503,6 +504,22 @@ router.group(() => {
     router.get('/returns/statistics', [AdminReturnsController, 'statistics']).as('admin.returns.statistics')
     router.get('/customers/:customerId/returns', [AdminReturnsController, 'customerReturns']).as('admin.customers.returns')
     router.post('/returns/bulk', [AdminReturnsController, 'bulkUpdate']).as('admin.returns.bulk')
+
+    // Advanced Inventory Management
+    router.get('/inventory/statistics/:storeId', [AdminAdvancedInventoryController, 'statistics']).as('admin.inventory.statistics')
+    router.get('/inventory/alerts', [AdminAdvancedInventoryController, 'alerts']).as('admin.inventory.alerts')
+    router.post('/inventory/alerts/:id/acknowledge', [AdminAdvancedInventoryController, 'acknowledgeAlert']).as('admin.inventory.alerts.acknowledge')
+    router.post('/inventory/alerts/:id/resolve', [AdminAdvancedInventoryController, 'resolveAlert']).as('admin.inventory.alerts.resolve')
+    router.post('/inventory/alerts/:id/dismiss', [AdminAdvancedInventoryController, 'dismissAlert']).as('admin.inventory.alerts.dismiss')
+    router.get('/inventory/reservations', [AdminAdvancedInventoryController, 'reservations']).as('admin.inventory.reservations')
+    router.post('/inventory/reserve', [AdminAdvancedInventoryController, 'reserveInventory']).as('admin.inventory.reserve')
+    router.post('/inventory/reservations/:id/consume', [AdminAdvancedInventoryController, 'consumeReservation']).as('admin.inventory.reservations.consume')
+    router.post('/inventory/reservations/:id/release', [AdminAdvancedInventoryController, 'releaseReservation']).as('admin.inventory.reservations.release')
+    router.post('/inventory/reservations/:id/cancel', [AdminAdvancedInventoryController, 'cancelReservation']).as('admin.inventory.reservations.cancel')
+    router.post('/inventory/clean-expired', [AdminAdvancedInventoryController, 'cleanExpiredReservations']).as('admin.inventory.cleanExpired')
+    router.post('/inventory/check', [AdminAdvancedInventoryController, 'checkInventory']).as('admin.inventory.check')
+    router.post('/inventory/alerts/bulk-acknowledge', [AdminAdvancedInventoryController, 'bulkAcknowledgeAlerts']).as('admin.inventory.alerts.bulkAcknowledge')
+    router.post('/inventory/alerts/bulk-resolve', [AdminAdvancedInventoryController, 'bulkResolveAlerts']).as('admin.inventory.alerts.bulkResolve')
 
     // Settings - Shipping Profiles
     router.get('/settings/shipping-profiles', [AdminSettingsController, 'shippingProfiles']).as('admin.settings.shippingProfiles')
