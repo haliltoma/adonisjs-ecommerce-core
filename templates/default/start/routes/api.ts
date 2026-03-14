@@ -20,6 +20,7 @@ const DigitalProductsController = () => import('#controllers/api/digital_product
 const SubscriptionsController = () => import('#controllers/api/subscriptions_controller')
 const BundlesController = () => import('#controllers/api/bundles_controller')
 const ImagesController = () => import('#controllers/api/images_controller')
+const BackupsController = () => import('#controllers/api/backups_controller')
 
 router
   .group(() => {
@@ -267,5 +268,40 @@ router
         router.get('/metadata', [ImagesController, 'getMetadata'])
       })
       .prefix('/images')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backups API (Admin Only)
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        router.get('/', [BackupsController, 'index'])
+        router.get('/:id', [BackupsController, 'show'])
+
+        // Create backups
+        router.post('/database', [BackupsController, 'createDatabaseBackup'])
+        router.post('/media', [BackupsController, 'createMediaBackup'])
+        router.post('/full', [BackupsController, 'createFullBackup'])
+
+        // Backup actions
+        router.post('/:id/restore', [BackupsController, 'restore'])
+        router.delete('/:id', [BackupsController, 'destroy'])
+        router.post('/:id/retain', [BackupsController, 'retain'])
+        router.post('/:id/release', [BackupsController, 'release'])
+        router.get('/:id/download', [BackupsController, 'download'])
+
+        // Statistics and cleanup
+        router.get('/stats', [BackupsController, 'stats'])
+        router.post('/cleanup', [BackupsController, 'cleanup'])
+
+        // Recovery
+        router.post('/recovery/plan', [BackupsController, 'createRecoveryPlan'])
+        router.post('/recovery/execute', [BackupsController, 'executeRecovery'])
+        router.get('/recovery/status', [BackupsController, 'recoveryStatus'])
+        router.post('/recovery/cancel', [BackupsController, 'cancelRecovery'])
+      })
+      .prefix('/backups')
+      .use(middleware.adminAuth())
   })
   .prefix('/api')
