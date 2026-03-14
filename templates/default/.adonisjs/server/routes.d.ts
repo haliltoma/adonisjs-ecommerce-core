@@ -424,6 +424,20 @@ export type ScannedRoutes = {
     'admin.search.click': { paramsTuple?: []; params?: {} }
     'admin.search': { paramsTuple?: []; params?: {} }
     'admin.search.suggestions': { paramsTuple?: []; params?: {} }
+    'admin.returns.index': { paramsTuple?: []; params?: {} }
+    'admin.returns.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.findByNumber': { paramsTuple: [ParamValue]; params: {'number': ParamValue} }
+    'admin.returns.approve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.reject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.receive': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.inspect': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.process': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.cancel': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.pending': { paramsTuple?: []; params?: {} }
+    'admin.returns.overdue': { paramsTuple?: []; params?: {} }
+    'admin.returns.statistics': { paramsTuple?: []; params?: {} }
+    'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
+    'admin.returns.bulk': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -635,6 +649,13 @@ export type ScannedRoutes = {
     'admin.search.zeroResults': { paramsTuple?: []; params?: {} }
     'admin.search': { paramsTuple?: []; params?: {} }
     'admin.search.suggestions': { paramsTuple?: []; params?: {} }
+    'admin.returns.index': { paramsTuple?: []; params?: {} }
+    'admin.returns.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.findByNumber': { paramsTuple: [ParamValue]; params: {'number': ParamValue} }
+    'admin.returns.pending': { paramsTuple?: []; params?: {} }
+    'admin.returns.overdue': { paramsTuple?: []; params?: {} }
+    'admin.returns.statistics': { paramsTuple?: []; params?: {} }
+    'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -827,6 +848,13 @@ export type ScannedRoutes = {
     'admin.search.zeroResults': { paramsTuple?: []; params?: {} }
     'admin.search': { paramsTuple?: []; params?: {} }
     'admin.search.suggestions': { paramsTuple?: []; params?: {} }
+    'admin.returns.index': { paramsTuple?: []; params?: {} }
+    'admin.returns.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.findByNumber': { paramsTuple: [ParamValue]; params: {'number': ParamValue} }
+    'admin.returns.pending': { paramsTuple?: []; params?: {} }
+    'admin.returns.overdue': { paramsTuple?: []; params?: {} }
+    'admin.returns.statistics': { paramsTuple?: []; params?: {} }
+    'admin.customers.returns': { paramsTuple: [ParamValue]; params: {'customerId': ParamValue} }
     'admin.settings.shippingProfiles': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys': { paramsTuple?: []; params?: {} }
     'admin.settings.returnReasons': { paramsTuple?: []; params?: {} }
@@ -1045,6 +1073,13 @@ export type ScannedRoutes = {
     'admin.search.clean': { paramsTuple?: []; params?: {} }
     'admin.search.track': { paramsTuple?: []; params?: {} }
     'admin.search.click': { paramsTuple?: []; params?: {} }
+    'admin.returns.approve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.reject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.receive': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.inspect': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.process': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.cancel': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'admin.returns.bulk': { paramsTuple?: []; params?: {} }
     'admin.settings.shippingProfiles.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.create': { paramsTuple?: []; params?: {} }
     'admin.settings.apiKeys.revoke': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

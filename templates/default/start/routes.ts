@@ -57,6 +57,7 @@ const AdminCustomizerController = () => import('#controllers/admin/customizer_co
 const AdminAiController = () => import('#controllers/admin/ai_controller')
 const AdminCustomerSegmentsController = () => import('#controllers/admin/customer_segments_controller')
 const AdminSearchController = () => import('#controllers/admin/search_controller')
+const AdminReturnsController = () => import('#controllers/admin/returns_controller')
 const StorefrontBlogController = () => import('#controllers/storefront/blog_controller')
 
 /*
@@ -486,6 +487,22 @@ router.group(() => {
     router.post('/search/click', [AdminSearchController, 'trackClick']).as('admin.search.click')
     router.get('/search', [AdminSearchController, 'search']).as('admin.search')
     router.get('/search/suggestions', [AdminSearchController, 'suggestions']).as('admin.search.suggestions')
+
+    // Returns Management
+    router.get('/returns', [AdminReturnsController, 'index']).as('admin.returns.index')
+    router.get('/returns/:id', [AdminReturnsController, 'show']).as('admin.returns.show')
+    router.get('/returns/number/:number', [AdminReturnsController, 'findByNumber']).as('admin.returns.findByNumber')
+    router.post('/returns/:id/approve', [AdminReturnsController, 'approve']).as('admin.returns.approve')
+    router.post('/returns/:id/reject', [AdminReturnsController, 'reject']).as('admin.returns.reject')
+    router.post('/returns/:id/receive', [AdminReturnsController, 'markReceived']).as('admin.returns.receive')
+    router.post('/returns/:id/inspect', [AdminReturnsController, 'completeInspection']).as('admin.returns.inspect')
+    router.post('/returns/:id/process', [AdminReturnsController, 'process']).as('admin.returns.process')
+    router.post('/returns/:id/cancel', [AdminReturnsController, 'cancel']).as('admin.returns.cancel')
+    router.get('/returns/pending', [AdminReturnsController, 'pending']).as('admin.returns.pending')
+    router.get('/returns/overdue', [AdminReturnsController, 'overdue']).as('admin.returns.overdue')
+    router.get('/returns/statistics', [AdminReturnsController, 'statistics']).as('admin.returns.statistics')
+    router.get('/customers/:customerId/returns', [AdminReturnsController, 'customerReturns']).as('admin.customers.returns')
+    router.post('/returns/bulk', [AdminReturnsController, 'bulkUpdate']).as('admin.returns.bulk')
 
     // Settings - Shipping Profiles
     router.get('/settings/shipping-profiles', [AdminSettingsController, 'shippingProfiles']).as('admin.settings.shippingProfiles')
