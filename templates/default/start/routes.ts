@@ -56,6 +56,7 @@ const AdminBlogController = () => import('#controllers/admin/blog_controller')
 const AdminCustomizerController = () => import('#controllers/admin/customizer_controller')
 const AdminAiController = () => import('#controllers/admin/ai_controller')
 const AdminCustomerSegmentsController = () => import('#controllers/admin/customer_segments_controller')
+const AdminSearchController = () => import('#controllers/admin/search_controller')
 const StorefrontBlogController = () => import('#controllers/storefront/blog_controller')
 
 /*
@@ -470,6 +471,21 @@ router.group(() => {
     router.post('/segments/:id/bulk-assign', [AdminCustomerSegmentsController, 'bulkAssign']).as('admin.segments.bulkAssign')
     router.delete('/segments/:id/bulk-remove', [AdminCustomerSegmentsController, 'bulkRemove']).as('admin.segments.bulkRemove')
     router.post('/segments/:id/clone', [AdminCustomerSegmentsController, 'clone']).as('admin.segments.clone')
+
+    // Search Management
+    router.get('/search/status', [AdminSearchController, 'status']).as('admin.search.status')
+    router.post('/search/reindex', [AdminSearchController, 'reindex']).as('admin.search.reindex')
+    router.post('/search/clear', [AdminSearchController, 'clearIndex']).as('admin.search.clear')
+    router.post('/search/index', [AdminSearchController, 'createIndex']).as('admin.search.createIndex')
+    router.get('/search/analytics', [AdminSearchController, 'analytics']).as('admin.search.analytics')
+    router.get('/search/popular', [AdminSearchController, 'popularTerms']).as('admin.search.popular')
+    router.get('/search/trending', [AdminSearchController, 'trending']).as('admin.search.trending')
+    router.get('/search/zero-results', [AdminSearchController, 'zeroResults']).as('admin.search.zeroResults')
+    router.post('/search/clean', [AdminSearchController, 'cleanEvents']).as('admin.search.clean')
+    router.post('/search/track', [AdminSearchController, 'trackSearch']).as('admin.search.track')
+    router.post('/search/click', [AdminSearchController, 'trackClick']).as('admin.search.click')
+    router.get('/search', [AdminSearchController, 'search']).as('admin.search')
+    router.get('/search/suggestions', [AdminSearchController, 'suggestions']).as('admin.search.suggestions')
 
     // Settings - Shipping Profiles
     router.get('/settings/shipping-profiles', [AdminSettingsController, 'shippingProfiles']).as('admin.settings.shippingProfiles')

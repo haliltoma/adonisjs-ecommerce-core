@@ -4,6 +4,8 @@ import ProductService from '#services/product_service'
 import CategoryService from '#services/category_service'
 import CustomerService from '#services/customer_service'
 import { SearchProvider } from '#contracts/search_provider'
+import { meilisearchService } from '#services/meilisearch_service'
+import { searchAnalyticsService } from '#services/search_analytics_service'
 import Banner from '#models/banner'
 import Collection from '#models/collection'
 import Page from '#models/page'
@@ -106,6 +108,9 @@ export default class HomeController {
     const categoryId = request.input('category')
     const minPrice = request.input('minPrice')
     const maxPrice = request.input('maxPrice')
+    const inStock = request.input('inStock')
+    const onSale = request.input('onSale')
+    const tags = request.input('tags')
 
     if (!query) {
       const categories = await this.categoryService.getRootCategories(storeId)
@@ -121,17 +126,48 @@ export default class HomeController {
       })
     }
 
-    const products = await this.productService.list({
-      storeId,
-      status: 'active',
-      search: query,
+    // Determine sort parameters
+    let sortField: 'price' | 'name' | 'created_at' | 'popularity' = 'created_at'
+    let sortOrder: 'asc' | 'desc' = 'desc'
+
+    if (sortBy === 'price-asc') {
+      sortField = 'price'
+      sortOrder = 'asc'
+    } else if (sortBy === 'price-desc') {
+      sortField = 'price'
+      sortOrder = 'desc'
+    } else if (sortBy === 'name-asc') {
+      sortField = 'name'
+      sortOrder = 'asc'
+    } else if (sortBy === 'name-desc') {
+      sortField = 'name'
+      sortOrder = 'desc'
+    }
+
+    // Use MeiliSearch service
+    const offset = (page - 1) * 24
+    const searchResults = await meilisearchService.search({
+      query,
       categoryId,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      sortBy: sortBy === 'price-asc' || sortBy === 'price-desc' ? 'price' : 'createdAt',
-      sortDir: sortBy === 'price-asc' ? 'asc' : sortBy === 'price-desc' ? 'desc' : 'desc',
-      page,
+      priceMin: minPrice ? Number(minPrice) : undefined,
+      priceMax: maxPrice ? Number(maxPrice) : undefined,
+      inStock,
+      onSale,
+      tags: tags ? (Array.isArray(tags) ? tags : [tags]) : undefined,
+      sortBy: sortField,
+      sortOrder,
       limit: 24,
+      offset,
+    })
+
+    // Track search for analytics
+    searchAnalyticsService.trackSearch({
+      query,
+      resultsCount: searchResults.estimatedTotalHits,
+      filters: { categoryId, minPrice, maxPrice, inStock, onSale, tags },
+      sessionId: request.cookie('session_id'),
+      ipAddress: request.ip(),
+      userAgent: request.header('user-agent'),
     })
 
     const categories = await this.categoryService.getRootCategories(storeId)
@@ -139,10 +175,15 @@ export default class HomeController {
     return inertia.render('storefront/Search', {
       query,
       products: {
-        data: products.all().map((p) => this.serializeProductCard(p)),
-        meta: products.getMeta(),
+        data: searchResults.hits.map((p) => this.serializeProductCard(p)),
+        meta: {
+          total: searchResults.estimatedTotalHits,
+          currentPage: page,
+          perPage: 24,
+          lastPage: Math.ceil(searchResults.estimatedTotalHits / 24),
+        },
       },
-      filters: { sortBy, categoryId, minPrice, maxPrice },
+      filters: { sortBy, categoryId, minPrice, maxPrice, inStock, onSale, tags },
       categories: categories.map((c) => ({
         id: c.id,
         name: c.name,
@@ -151,7 +192,7 @@ export default class HomeController {
     })
   }
 
-  async searchSuggestions({ request, response, store }: HttpContext) {
+  async searchSuggestions({ request, response }: HttpContext) {
     const query = request.input('q', '')
 
     if (!query || query.length < 2) {
@@ -159,8 +200,7 @@ export default class HomeController {
     }
 
     try {
-      const search = await app.container.make(SearchProvider)
-      const suggestions = await search.getSuggestions(query, store.id, 6)
+      const suggestions = await meilisearchService.getSuggestions(query, 6)
       return response.json({ suggestions })
     } catch {
       return response.json({ suggestions: [] })
