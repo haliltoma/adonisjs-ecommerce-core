@@ -140,8 +140,8 @@ export default class HealthChecksController {
     const safeConfig = {
       app: {
         name: env.get('APP_NAME'),
-        env: app.nodeEnvironment,
-        debug: app.inDevelopment,
+        env: app.nodeEnv,
+        debug: app.inDev,
         timezone: env.get('TZ', 'UTC'),
       },
       logging: {
