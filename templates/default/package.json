@@ -102,6 +102,7 @@
     "@adonisjs/ally": "^6.0.0",
     "@adonisjs/auth": "^10.0.0",
     "@adonisjs/core": "^7.0.0",
+    "@adonisjs/health": "^3.1.0",
     "@adonisjs/inertia": "^4.1.0",
     "@adonisjs/lucid": "^22.0.0",
     "@adonisjs/mail": "^10.0.0",

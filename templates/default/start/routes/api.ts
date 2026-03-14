@@ -153,15 +153,29 @@ router
 
     /*
     |--------------------------------------------------------------------------
-    | Health Check
+    | Health Checks & Diagnostics API
     |--------------------------------------------------------------------------
     */
-    router.get('/health', async ({ response }) => {
-      return response.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
+    const HealthChecksController = () => import('#controllers/api/health_checks_controller')
+
+    router
+      .group(() => {
+        router.get('/live', [HealthChecksController, 'live'])
+        router.get('/ready', [HealthChecksController, 'ready'])
+        router.get('/detailed', [HealthChecksController, 'detailed'])
       })
-    })
+      .prefix('/health')
+
+    // Diagnostics endpoints
+    router
+      .group(() => {
+        router.get('/version', [HealthChecksController, 'version'])
+        router.get('/config', [HealthChecksController, 'config'])
+        router.get('/metrics', [HealthChecksController, 'metrics'])
+        router.get('/routes', [HealthChecksController, 'routes'])
+        router.get('/cache', [HealthChecksController, 'cache'])
+      })
+      .prefix('/diagnostics')
 
     /*
     |--------------------------------------------------------------------------
