@@ -7,7 +7,7 @@
 import { MeiliSearch } from 'meilisearch'
 import Product from '#models/product'
 import env from '#start/env'
-import { logger } from '#services/logger_service'
+import logger from '@adonisjs/core/services/logger'
 
 export interface SearchFilters {
   query?: string

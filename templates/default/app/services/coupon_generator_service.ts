@@ -139,7 +139,7 @@ export default class CouponGenerator {
     recipientEmail: string
     recipientName?: string
     message?: string
-    expiresIn?: { number: unit: 'days' | 'weeks' | 'months' }
+    expiresIn?: { number: number; unit: 'days' | 'weeks' | 'months' }
     prefix?: string
   }): Promise<{
     code: string
@@ -193,7 +193,7 @@ export default class CouponGenerator {
     recipientEmail: string
     recipientName?: string
     message?: string
-    expiresIn?: { number: unit: 'days' | 'weeks' | 'months' }
+    expiresIn?: { number: number; unit: 'days' | 'weeks' | 'months' }
     prefix?: string
   }): Promise<{
     code: string
@@ -217,7 +217,7 @@ export default class CouponGenerator {
     })
 
     // Generate personalized coupon
-    const result = await this.generatePersonalCoupon({
+    const result = await this.generatePersonalizedCoupon({
       discountId: discount.id,
       customerId: '', // TODO: guest checkout
       recipientEmail,
@@ -249,7 +249,7 @@ export default class CouponGenerator {
       baseCode: string
       variants: number
       discountId: string
-      expiresAfter?: { number: unit: 'days' | 'weeks' }
+      expiresAfter?: { number: number; unit: 'days' | 'weeks' }
     }
   ): Promise<string[]> {
     const codes: string[] = []

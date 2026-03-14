@@ -7,7 +7,7 @@
 import Product from '#models/product'
 import { db } from '@adonisjs/lucid/services/database'
 import { DateTime } from 'luxon'
-import { logger } from '#services/logger_service'
+import logger from '@adonisjs/core/services/logger'
 
 export interface ReservationOptions {
   productId: string
