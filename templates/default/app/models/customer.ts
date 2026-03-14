@@ -9,6 +9,7 @@ import Cart from './cart.js'
 import Wishlist from './wishlist.js'
 import Review from './review.js'
 import CustomerGroup from './customer_group.js'
+import Currency from './currency.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class Customer extends BaseModel {
@@ -60,6 +61,9 @@ export default class Customer extends BaseModel {
   @column()
   declare groupId: string | null
 
+  @column()
+  declare preferredCurrencyCode: string | null
+
   @column(jsonColumn())
   declare metadata: Record<string, unknown>
 
@@ -104,6 +108,9 @@ export default class Customer extends BaseModel {
 
   @belongsTo(() => CustomerGroup, { foreignKey: 'groupId' })
   declare group: BelongsTo<typeof CustomerGroup>
+
+  @belongsTo(() => Currency, { foreignKey: 'preferredCurrencyCode' })
+  declare preferredCurrency: BelongsTo<typeof Currency>
 
   get fullName() {
     return `${this.firstName} ${this.lastName}`
