@@ -5,7 +5,7 @@
  */
 
 import Product from '#models/product'
-import { db } from '@adonisjs/lucid/services/database'
+import Database from '@adonisjs/lucid/services/database'
 import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
 
@@ -269,7 +269,7 @@ export default class AdvancedInventoryService {
         })
     } else {
       // Create new alert
-      await db.table('inventory_alerts').insert({
+      await Database.table('inventory_alerts').insert({
         productId: alert.productId,
         variantId: alert.variantId || null,
         storeId: alert.storeId,
