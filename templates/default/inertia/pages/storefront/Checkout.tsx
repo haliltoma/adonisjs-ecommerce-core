@@ -66,15 +66,15 @@ interface Props {
 
 export default function Checkout({
   cart,
-  shippingMethods,
-  paymentMethods,
+  shippingMethods = [],
+  paymentMethods = [],
   customer,
 }: Props) {
   const [step, setStep] = useState(1)
   const { t, currency } = useTranslation()
   const cur = cart?.currency || currency
 
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, transform } = useForm({
     email: customer?.email || '',
     firstName: customer?.firstName || '',
     lastName: customer?.lastName || '',
@@ -104,10 +104,16 @@ export default function Checkout({
       phone: '',
     },
     sameAsBilling: true,
-    shippingMethodId: shippingMethods[0]?.id || '',
-    paymentMethodId: paymentMethods[0]?.id || '',
+    shippingMethod: shippingMethods[0]?.id || '',
+    paymentMethod: paymentMethods[0]?.id || '',
     notes: '',
   })
+
+  // Map frontend's sameAsBilling to backend's expected sameAsShipping
+  transform((data) => ({
+    ...data,
+    sameAsShipping: data.sameAsBilling,
+  }))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,7 +121,7 @@ export default function Checkout({
   }
 
   const selectedShipping = shippingMethods.find(
-    (m) => m.id === data.shippingMethodId
+    (m) => m.id === data.shippingMethod
   )
   const total =
     cart.subtotal -
@@ -406,7 +412,7 @@ export default function Checkout({
                     <label
                       key={method.id}
                       className={`flex cursor-pointer items-center justify-between rounded-xl border p-5 transition-all duration-300 animate-fade-up delay-${Math.min((i + 2) * 100, 500)} ${
-                        data.shippingMethodId === method.id
+                        data.shippingMethod === method.id
                           ? 'border-accent bg-accent/5 shadow-sm'
                           : 'border-border/60 hover:border-accent/40'
                       }`}
@@ -416,10 +422,8 @@ export default function Checkout({
                           type="radio"
                           name="shippingMethod"
                           value={method.id}
-                          checked={data.shippingMethodId === method.id}
-                          onChange={(e) =>
-                            setData('shippingMethodId', e.target.value)
-                          }
+                          checked={data.shippingMethod === method.id}
+                          onChange={(e) => setData('shippingMethod', e.target.value)}
                           className="text-accent h-4 w-4 accent-accent"
                         />
                         <div className="flex items-center gap-4">
@@ -485,7 +489,7 @@ export default function Checkout({
                     <label
                       key={method.id}
                       className={`flex cursor-pointer items-center justify-between rounded-xl border p-5 transition-all duration-300 animate-fade-up delay-${Math.min((i + 2) * 100, 500)} ${
-                        data.paymentMethodId === method.id
+                        data.paymentMethod === method.id
                           ? 'border-accent bg-accent/5 shadow-sm'
                           : 'border-border/60 hover:border-accent/40'
                       }`}
@@ -495,10 +499,8 @@ export default function Checkout({
                           type="radio"
                           name="paymentMethod"
                           value={method.id}
-                          checked={data.paymentMethodId === method.id}
-                          onChange={(e) =>
-                            setData('paymentMethodId', e.target.value)
-                          }
+                          checked={data.paymentMethod === method.id}
+                          onChange={(e) => setData('paymentMethod', e.target.value)}
                           className="text-accent h-4 w-4 accent-accent"
                         />
                         <div>

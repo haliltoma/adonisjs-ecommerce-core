@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect, useCallback } from 'react'
-import { Link, usePage } from '@inertiajs/react'
+import { Link, usePage, router } from '@inertiajs/react'
 import { Heart, LogOut, Menu, Moon, Package, Search, ShoppingBag, Sun, User, UserCircle, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -23,9 +23,18 @@ interface StorefrontLayoutProps {
   children: ReactNode
 }
 
-interface CartData {
-  itemCount: number
-  total: number
+interface SharedProps {
+  cartCount?: number
+  flash?: {
+    success: string | null
+    error: string | null
+    info: string | null
+  }
+  currentCustomer?: {
+    id: string
+    name: string
+    email: string
+  } | null
 }
 
 function useStorefrontTheme() {
@@ -53,13 +62,30 @@ function useStorefrontTheme() {
 
 export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
   const [searchOpen, setSearchOpen] = useState(false)
+  const [flashMessage, setFlashMessage] = useState<{ type: string; text: string } | null>(null)
   const { props } = usePage()
-  const cart = (props as { cart?: CartData }).cart
+  const { cartCount, flash, currentCustomer } = props as unknown as SharedProps
   const store = (props as { store?: { name: string } }).store
-  const customer = (props as { customer?: { id: string } | null }).customer
+  const customer = currentCustomer || (props as { customer?: { id: string } | null }).customer
   const { t } = useTranslation()
   const { locale, currency, setLocale: changeLocale, setCurrency } = useLocaleStore()
   const { theme, toggleTheme, mounted } = useStorefrontTheme()
+
+  // Show flash messages as toast
+  useEffect(() => {
+    if (flash?.success) {
+      setFlashMessage({ type: 'success', text: flash.success })
+    } else if (flash?.error) {
+      setFlashMessage({ type: 'error', text: flash.error })
+    }
+  }, [flash?.success, flash?.error])
+
+  useEffect(() => {
+    if (flashMessage) {
+      const timer = setTimeout(() => setFlashMessage(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [flashMessage])
 
   const navigation = [
     { name: t('storefront.layout.navShop'), href: '/products' },
@@ -71,6 +97,23 @@ export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
+      {/* Flash Message Toast */}
+      {flashMessage && (
+        <div className={`fixed top-4 right-4 z-[100] animate-fade-in px-5 py-3 rounded-xl shadow-lg text-sm font-medium tracking-wide ${
+          flashMessage.type === 'success'
+            ? 'bg-green-600 text-white'
+            : 'bg-red-600 text-white'
+        }`}>
+          {flashMessage.text}
+          <button
+            onClick={() => setFlashMessage(null)}
+            className="ml-3 opacity-70 hover:opacity-100 transition-opacity"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Announcement Bar */}
       <div className="bg-foreground text-background">
         <div className="mx-auto max-w-7xl px-4 py-2.5 text-center text-xs font-medium tracking-widest uppercase">
@@ -299,9 +342,9 @@ export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
               <Button variant="ghost" size="icon" className="relative" asChild>
                 <Link href="/cart">
                   <ShoppingBag className="h-[18px] w-[18px]" />
-                  {cart && cart.itemCount > 0 && (
+                  {cartCount !== undefined && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white">
-                      {cart.itemCount}
+                      {cartCount}
                     </span>
                   )}
                   <span className="sr-only">{t('storefront.layout.cart')}</span>

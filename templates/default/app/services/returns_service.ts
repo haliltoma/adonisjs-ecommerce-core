@@ -8,7 +8,7 @@ import Return from '#models/return'
 import ReturnItem from '#models/return_item'
 import Order from '#models/order'
 import { DateTime } from 'luxon'
-import Database from '@adonisjs/lucid/services/database'
+import db from '@adonisjs/lucid/services/db'
 
 export interface CreateReturnOptions {
   orderId: string
@@ -78,7 +78,7 @@ export default class ReturnsService {
     const returnNumber = await this.generateReturnNumber()
 
     // Create return in transaction
-    const trx = await Database.transaction()
+    const trx = await db.transaction()
 
     try {
       const returnRecord = await Return.create(

@@ -7,7 +7,7 @@
 import Customer from '#models/customer'
 import CustomerSegment from '#models/customer_segment'
 import { DateTime } from 'luxon'
-import Database from '@adonisjs/lucid/services/database'
+import db from '@adonisjs/lucid/services/db'
 
 export default class SegmentAssignmentService {
   private static instance: SegmentAssignmentService
@@ -39,7 +39,7 @@ export default class SegmentAssignmentService {
     const removed: string[] = []
 
     // Use transaction for consistency
-    const trx = await Database.transaction()
+    const trx = await db.transaction()
 
     try {
       for (const segment of segments) {
@@ -106,7 +106,7 @@ export default class SegmentAssignmentService {
     let added = 0
     let removed = 0
 
-    const trx = await Database.transaction()
+    const trx = await db.transaction()
 
     try {
       for (const customer of customers) {
@@ -210,7 +210,7 @@ export default class SegmentAssignmentService {
     }
 
     // Assign
-    await Database.table('customer_segment_assignments').insert({
+    await db.from('customer_segment_assignments').insert({
       customerId,
       segmentId,
       assignedAt: DateTime.now().toSQL(),

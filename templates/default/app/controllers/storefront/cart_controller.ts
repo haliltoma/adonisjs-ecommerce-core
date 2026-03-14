@@ -39,10 +39,15 @@ export default class CartController {
         quantity: quantity || 1,
       })
 
+      // Reload cart from DB to get fresh recalculated totals
+      await cart.refresh()
+
       session.flash('success', 'Item added to cart')
 
       if (this.isApiRequest(request)) {
-        await cart.load('items')
+        await cart.load('items', (query) => {
+          query.preload('product', (q) => q.preload('images')).preload('variant')
+        })
         return response.json({
           success: true,
           cart: this.serializeCart(cart),

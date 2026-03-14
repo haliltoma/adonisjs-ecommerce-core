@@ -8,6 +8,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server: {
     allowedHosts: true,
+    host: 'localhost',
+    hmr: {
+      host: 'localhost',
+    },
   },
   plugins: [
     adonisjs({

@@ -82,6 +82,7 @@ export default class ProductsController {
   }
 
   async store({ request, response, session, store }: HttpContext) {
+    console.log('\n--- RAW PAYLOAD ---', request.all(), '\n-------------------\n')
     const storeId = store.id
     const raw = request.only([
       'title',
@@ -154,8 +155,10 @@ export default class ProductsController {
       session.flash('success', 'Product created successfully')
       return response.redirect().toRoute('admin.products.edit', { id: product.id })
     } catch (error: unknown) {
-      session.flash('error', (error as Error).message)
-      return response.redirect().back()
+      console.error('\n*** PRODUCT CREATION ERROR ***\n', error, '\n****************************\n')
+      // session.flash('error', (error as Error).message)
+      // return response.redirect().back()
+      return response.status(400).send((error as Error).message)
     }
   }
 

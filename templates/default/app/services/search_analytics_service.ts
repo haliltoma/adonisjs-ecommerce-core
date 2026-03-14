@@ -4,7 +4,7 @@
  * Tracks search queries and provides analytics.
  */
 
-import Database from '@adonisjs/lucid/services/database'
+import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
 export interface SearchEvent {
@@ -43,7 +43,7 @@ export default class SearchAnalyticsService {
    */
   async trackSearch(event: SearchEvent): Promise<void> {
     try {
-      await Database.table('search_events').insert({
+      await db.from('search_events').insert({
         query: event.query.toLowerCase().trim(),
         results_count: event.resultsCount,
         filters: event.filters ? JSON.stringify(event.filters) : null,
@@ -64,7 +64,7 @@ export default class SearchAnalyticsService {
    */
   async trackClick(searchQuery: string, productId: string, position: number): Promise<void> {
     try {
-      await Database.table('search_clicks').insert({
+      await db.from('search_clicks').insert({
         search_query: searchQuery.toLowerCase().trim(),
         product_id: productId,
         position,

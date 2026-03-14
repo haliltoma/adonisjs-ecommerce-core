@@ -1,7 +1,7 @@
 # 🛒 AdonisCommerce
 
 <p align="center">
-  <strong>Modern, full-featured e-commerce framework built with AdonisJS 6 + InertiaJS + React 18</strong>
+  <strong>Modern, full-featured e-commerce framework built with AdonisJS 7 + InertiaJS + React 19</strong>
 </p>
 
 <p align="center">
@@ -12,9 +12,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/AdonisJS-6.0-5A45FF?style=for-the-badge&logo=adonisjs" alt="AdonisJS 6" />
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react" alt="React 18" />
-  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/AdonisJS-7.0-5A45FF?style=for-the-badge&logo=adonisjs" alt="AdonisJS 7" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
 </p>
 
@@ -44,8 +44,8 @@
 - ⚙️ Store settings (general, tax, shipping, SEO)
 
 ### 🛠 Technical Features
-- ⚡ **AdonisJS 6** with TypeScript - Full-featured backend framework
-- ⚛️ **React 18 + InertiaJS** - SPA experience with SSR support
+- ⚡ **AdonisJS 7** with TypeScript - Full-featured backend framework
+- ⚛️ **React 19 + InertiaJS** - SPA experience with SSR support
 - 🎨 **Tailwind CSS v4** - Modern utility-first styling
 - 🗄️ **PostgreSQL 16** - Robust database with JSONB support
 - ⚡ **Redis 7** - Caching, sessions, and queue backend
@@ -171,15 +171,16 @@ my-store/
 
 | Category | Technology |
 |----------|-----------|
-| **Backend** | AdonisJS 6 (Node.js) |
-| **Frontend** | React 18 + InertiaJS |
-| **Database** | PostgreSQL 16 |
-| **Cache/Session** | Redis 7 |
+| **Backend** | AdonisJS 7 (Node.js) |
+| **Frontend** | React 19 + InertiaJS 4 |
+| **Database** | PostgreSQL 16+ |
+| **Cache/Session** | Redis 7+ |
 | **Styling** | Tailwind CSS v4 |
-| **ORM** | Lucid ORM |
-| **Validation** | VineJS |
-| **Testing** | Japa + Puppeteer |
-| **Package Manager** | pnpm |
+| **ORM** | Lucid ORM 22 |
+| **Validation** | VineJS 4 |
+| **Build Tool** | Vite 7 |
+| **Testing** | Japa 5 + Puppeteer |
+| **Package Manager** | pnpm 9+ |
 
 ---
 

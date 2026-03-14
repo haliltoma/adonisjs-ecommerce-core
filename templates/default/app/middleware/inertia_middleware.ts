@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
 import BaseInertiaMiddleware from '@adonisjs/inertia/inertia_middleware'
 import Customer from '#models/customer'
+import Cart from '#models/cart'
 
 export default class InertiaMiddleware extends BaseInertiaMiddleware {
   /**
@@ -13,7 +14,6 @@ export default class InertiaMiddleware extends BaseInertiaMiddleware {
     const { session, auth } = ctx as Partial<HttpContext>
     const admin = (ctx as any).admin
     const store = (ctx as any).store
-    const cart = (ctx as any).cart
 
     // Get customer data
     let customerData = null
@@ -40,6 +40,34 @@ export default class InertiaMiddleware extends BaseInertiaMiddleware {
       csrfToken = (ctx.request as any).csrfToken ?? null
     } catch {
       // Shield may not be loaded yet
+    }
+
+    // Get cart item count from DB
+    let cartCount = 0
+    if (store) {
+      try {
+        const sessionId = session?.sessionId
+        let cart: Cart | null = null
+
+        if (customerId) {
+          cart = await Cart.query()
+            .where('storeId', store.id)
+            .where('customerId', customerId)
+            .whereNull('completedAt')
+            .first()
+        } else if (sessionId) {
+          cart = await Cart.query()
+            .where('storeId', store.id)
+            .where('sessionId', sessionId)
+            .whereNull('customerId')
+            .whereNull('completedAt')
+            .first()
+        }
+
+        cartCount = Number(cart?.totalItems) || 0
+      } catch (e) {
+        // Ignore cart fetch errors
+      }
     }
 
     return {
@@ -76,7 +104,7 @@ export default class InertiaMiddleware extends BaseInertiaMiddleware {
 
       customer: customerData,
 
-      cartCount: cart?.totalItems || 0,
+      cartCount,
     }
   }
 

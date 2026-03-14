@@ -4,7 +4,7 @@ Modern, full-featured e-commerce platform built with **AdonisJS 7**, InertiaJS, 
 
 ## 🚀 Tech Stack
 
-- **Backend:** AdonisJS 7 (Node.js 24+)
+- **Backend:** AdonisJS 7 (Node.js 20+)
 - **Frontend:** React 19 + InertiaJS + Vite
 - **Database:** PostgreSQL 16
 - **Cache/Session:** Redis 7
@@ -51,7 +51,7 @@ Modern, full-featured e-commerce platform built with **AdonisJS 7**, InertiaJS, 
 
 ## 📋 Prerequisites
 
-- Node.js >= 24.0.0
+- Node.js >= 20.0.0
 - pnpm >= 9.0.0
 - PostgreSQL >= 14
 - Redis >= 7 (optional, for cache/sessions)

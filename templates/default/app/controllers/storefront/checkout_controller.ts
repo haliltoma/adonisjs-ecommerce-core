@@ -137,6 +137,7 @@ export default class CheckoutController {
         phone: a.phone,
       })),
       shippingMethods: await this.getShippingMethods(storeId),
+      paymentMethods: await this.getPaymentMethods(storeId),
     })
   }
 
@@ -155,6 +156,9 @@ export default class CheckoutController {
 
     const data = request.only([
       'email',
+      'firstName',
+      'lastName',
+      'phone',
       'createAccount',
       'password',
       'billingAddress',
@@ -164,6 +168,11 @@ export default class CheckoutController {
       'notes',
     ])
 
+    // Ensure billingAddress is populated if sameAsShipping is true or billingAddress is missing
+    if (data.sameAsShipping || !data.billingAddress?.firstName) {
+      data.billingAddress = { ...data.shippingAddress }
+    }
+
     try {
       // Create customer account if requested
       if (!customerId && data.createAccount && data.password) {
@@ -171,9 +180,9 @@ export default class CheckoutController {
           storeId,
           email: data.email,
           password: data.password,
-          firstName: data.billingAddress.firstName,
-          lastName: data.billingAddress.lastName,
-          phone: data.billingAddress.phone,
+          firstName: data.firstName || data.billingAddress?.firstName,
+          lastName: data.lastName || data.billingAddress?.lastName,
+          phone: data.phone || data.billingAddress?.phone,
         })
         customerId = customer.id
         session.put('customer_id', customerId)
@@ -203,9 +212,9 @@ export default class CheckoutController {
           const guestCustomer = await this.customerService.create({
             storeId,
             email: data.email,
-            firstName: data.billingAddress.firstName,
-            lastName: data.billingAddress.lastName,
-            phone: data.billingAddress.phone,
+            firstName: data.firstName || data.billingAddress?.firstName,
+            lastName: data.lastName || data.billingAddress?.lastName,
+            phone: data.phone || data.billingAddress?.phone,
           })
           customerId = guestCustomer.id
         }
