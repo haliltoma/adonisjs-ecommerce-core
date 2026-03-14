@@ -24,7 +24,7 @@ export default class extends BaseSchema {
       table.enum('status', ['active', 'expired', 'revoked']).default('active')
 
       table.timestamp('createdAt', { useTz: true }).defaultTo(this.now())
-      table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now()
+      table.timestamp('updatedAt', { useTz: true }).defaultTo(this.now())
 
       // Indexes
       table.index(['customerId', 'status'])

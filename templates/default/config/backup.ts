@@ -4,10 +4,9 @@
  * Configure database, media, and full backup strategies.
  */
 
-import { defineConfig } from '@adonisjs/core/backup'
 import env from '#start/env'
 
-export default defineConfig({
+export default {
   /**
    * Enable/disable backup system
    */
@@ -330,4 +329,4 @@ export default defineConfig({
      */
     targetMinutes: parseInt(env.get('BACKUP_RTO_MINUTES', '240')),
   },
-})
+}

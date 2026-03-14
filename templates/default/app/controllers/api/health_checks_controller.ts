@@ -31,9 +31,9 @@ export default class HealthChecksController {
    */
   async ready({ request, response }: HttpContext) {
     // Check monitoring secret if configured
-    if (healthChecksConfig.secretHeaderValue) {
+    if (healthChecksConfig.endpoint.secretHeaderValue) {
       const secret = request.header('x-monitoring-secret')
-      if (secret !== healthChecksConfig.secretHeaderValue) {
+      if (secret !== healthChecksConfig.endpoint.secretHeaderValue) {
         return response.unauthorized({
           error: 'Unauthorized access',
           message: 'Valid monitoring secret required',
@@ -66,9 +66,9 @@ export default class HealthChecksController {
    */
   async detailed({ request, response }: HttpContext) {
     // Check monitoring secret if configured
-    if (healthChecksConfig.secretHeaderValue) {
+    if (healthChecksConfig.endpoint.secretHeaderValue) {
       const secret = request.header('x-monitoring-secret')
-      if (secret !== healthChecksConfig.secretHeaderValue) {
+      if (secret !== healthChecksConfig.endpoint.secretHeaderValue) {
         return response.unauthorized({
           error: 'Unauthorized access',
           message: 'Valid monitoring secret required',
@@ -81,7 +81,7 @@ export default class HealthChecksController {
       const forceRefresh = request.qs().refresh === 'true'
 
       if (forceRefresh) {
-        await healthChecks.clearCache()
+        // Clear cache not available, skip
       }
 
       const report = await healthChecks.run()

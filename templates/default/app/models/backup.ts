@@ -6,9 +6,7 @@
 
 import { DateTime } from 'luxon'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseSchema, SoftDeletes } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import AdminUser from '#admin_users/models/admin_user'
+import { BaseModel } from '@adonisjs/lucid/orm'
 
 export default class Backup extends compose(BaseSchema, SoftDeletes) {
   static self = this
@@ -56,15 +54,6 @@ export default class Backup extends compose(BaseSchema, SoftDeletes) {
   public declare completedAt: DateTime | null
 
   public declare createdBy: string | null
-
-  /**
-   * Relationships
-   */
-  @belongsTo(() => AdminUser, {
-    foreignKey: 'createdBy',
-    localKey: 'id',
-  })
-  declare creator: BelongsTo<typeof AdminUser>
 
   /**
    * Computed Properties

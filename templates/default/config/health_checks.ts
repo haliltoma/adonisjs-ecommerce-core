@@ -4,10 +4,9 @@
  * Configure health checks for monitoring application health and dependencies.
  */
 
-import { defineConfig } from '@adonisjs/core/health'
 import env from '#start/env'
 
-export default defineConfig({
+export default {
   /**
    * Health check endpoint configuration
    */
@@ -247,4 +246,4 @@ export default defineConfig({
      */
     checks: [],
   },
-})
+}

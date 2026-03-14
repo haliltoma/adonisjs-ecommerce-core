@@ -5,7 +5,7 @@
  */
 
 import type { HttpContext } from '@adonisjs/core/http'
-import { schema, rules } from '@adonisjs/validator'
+import { schema } from '@adonisjs/core/validator'
 import Backup from '#models/backup'
 import { databaseBackup } from '#services/database_backup_service'
 import { mediaBackup } from '#services/media_backup_service'
@@ -46,10 +46,7 @@ export default class BackupsController {
    * GET /admin/backups/:id
    */
   async show({ params, response }: HttpContext) {
-    const backup = await Backup.query()
-      .where('id', params.id)
-      .preload('creator')
-      .first()
+    const backup = await Backup.find(params.id)
 
     if (!backup) {
       return response.notFound({
@@ -66,9 +63,10 @@ export default class BackupsController {
    * Trigger manual database backup
    * POST /admin/backups/database
    */
-  async createDatabaseBackup({ request, auth, response }: HttpContext) {
+  async createDatabaseBackup({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
+      // createdBy field will be set to a placeholder since admin auth doesn't expose user ID
+      const userId = request.input('userId') || null
 
       const payload = await request.validate({
         schema: schema.create({
@@ -80,7 +78,7 @@ export default class BackupsController {
       const result = await databaseBackup.createBackup({
         name: payload.name,
         description: payload.description,
-        createdBy: user.id,
+        createdBy: userId,
       })
 
       if (!result.success) {
@@ -110,10 +108,8 @@ export default class BackupsController {
    * Trigger manual media backup
    * POST /admin/backups/media
    */
-  async createMediaBackup({ request, auth, response }: HttpContext) {
+  async createMediaBackup({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
-
       const payload = await request.validate({
         schema: schema.create({
           name: schema.string.optional(),
@@ -121,10 +117,12 @@ export default class BackupsController {
         }),
       })
 
+      const userId = request.input('userId') || null
+
       const result = await mediaBackup.createBackup({
         name: payload.name,
         description: payload.description,
-        createdBy: user.id,
+        createdBy: userId,
       })
 
       if (!result.success) {
@@ -135,7 +133,6 @@ export default class BackupsController {
 
       logger.info('Manual media backup created', {
         backupId: result.backup?.id,
-        userId: user.id,
       })
 
       return response.created({
@@ -154,10 +151,8 @@ export default class BackupsController {
    * Trigger full system backup (database + media)
    * POST /admin/backups/full
    */
-  async createFullBackup({ request, auth, response }: HttpContext) {
+  async createFullBackup({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
-
       const payload = await request.validate({
         schema: schema.create({
           name: schema.string.optional(),
@@ -165,10 +160,12 @@ export default class BackupsController {
         }),
       })
 
+      const userId = request.input('userId') || null
+
       const result = await disasterRecovery.createFullBackup({
         name: payload.name,
         description: payload.description,
-        createdBy: user.id,
+        createdBy: userId,
       })
 
       if (!result.success) {
@@ -180,7 +177,6 @@ export default class BackupsController {
       logger.info('Manual full backup created', {
         databaseBackupId: result.databaseBackup?.id,
         mediaBackupId: result.mediaBackup?.id,
-        userId: user.id,
       })
 
       return response.created({

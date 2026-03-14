@@ -48,7 +48,7 @@ export default class extends BaseSchema {
       table.timestamp('completed_at', { useTz: true }).nullable()
 
       // Created by
-      table.uuid('created_by').nullable().references('id').inTable('admin_users').onDelete('SET NULL')
+      table.uuid('created_by').nullable()
 
       // Indexes
       table.index('type')
