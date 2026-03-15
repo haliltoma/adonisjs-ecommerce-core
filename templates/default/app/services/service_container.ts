@@ -12,6 +12,20 @@ import CustomerRepository from '#repositories/implementations/customer_repositor
 import InventoryRepository from '#repositories/implementations/inventory_repository'
 import OrderService from '#services/order_service'
 import CartService from '#services/cart_service'
+import ProductService from '#services/product_service'
+import OrderItemFactory from '#services/order/order_item_factory'
+import OrderStatusManager from '#services/order/order_status_manager'
+import OrderNumberGenerator from '#services/order/order_number_generator'
+import CartTotalsCalculator from '#services/cart/cart_totals_calculator'
+import CartDiscountApplicator from '#services/cart/cart_discount_applicator'
+import CartTaxCalculator from '#services/cart/cart_tax_calculator'
+import CartItemManager from '#services/cart/cart_item_manager'
+import CartValidator from '#services/cart/cart_validator'
+import ProductSlugGenerator from '#services/product/product_slug_generator'
+import ProductVariantManager from '#services/product/product_variant_manager'
+import ProductImageManager from '#services/product/product_image_manager'
+import ProductCategoryManager from '#services/product/product_category_manager'
+import ProductInventoryManager from '#services/product/product_inventory_manager'
 import OrderItemFactory from '#services/order/order_item_factory'
 import OrderStatusManager from '#services/order/order_status_manager'
 import OrderNumberGenerator from '#services/order/order_number_generator'
@@ -63,6 +77,13 @@ class ServiceContainer {
     this.services.set('CartItemManager', new CartItemManager())
     this.services.set('CartValidator', new CartValidator())
 
+    // Product Service Components
+    this.services.set('ProductSlugGenerator', new ProductSlugGenerator())
+    this.services.set('ProductVariantManager', new ProductVariantManager())
+    this.services.set('ProductImageManager', new ProductImageManager())
+    this.services.set('ProductCategoryManager', new ProductCategoryManager())
+    this.services.set('ProductInventoryManager', new ProductInventoryManager())
+
     // Order Service (with dependencies)
     const orderRepository = this.services.get('OrderRepository')
     const cartRepository = this.services.get('CartRepository')
@@ -88,6 +109,13 @@ class ServiceContainer {
     const itemManager = this.services.get('CartItemManager')
     const validator = this.services.get('CartValidator')
 
+    // Product Service (with dependencies)
+    const slugGenerator = this.services.get('ProductSlugGenerator')
+    const variantManager = this.services.get('ProductVariantManager')
+    const imageManager = this.services.get('ProductImageManager')
+    const categoryManager = this.services.get('ProductCategoryManager')
+    const inventoryManager = this.services.get('ProductInventoryManager')
+
     // Note: DiscountService will be set later if needed
     this.services.set(
       'CartService',
@@ -102,6 +130,9 @@ class ServiceContainer {
         null // DiscountService (optional)
       )
     )
+
+    // Product Service (will be initialized when needed)
+    // ProductService is complex, will be refactored separately
 
     this.initialized = true
   }
@@ -162,6 +193,7 @@ export const useService = <T>(serviceName: string): T => {
  */
 export const useOrderService = (): OrderService => useService<OrderService>('OrderService')
 export const useCartService = (): CartService => useService<CartService>('CartService')
+export const useProductService = (): ProductService => useService<ProductService>('ProductService')
 export const useOrderRepository = (): OrderRepository => useService<OrderRepository>('OrderRepository')
 export const useCartRepository = (): CartRepository => useService<CartRepository>('CartRepository')
 export const useProductRepository = (): ProductRepository =>
