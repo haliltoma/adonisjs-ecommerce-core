@@ -9,7 +9,8 @@ import path from 'path'
 import { execSync } from 'child_process'
 import validatePackageName from 'validate-npm-package-name'
 
-const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core/templates/default#main'
+const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core#main'
+const TEMPLATE_PATH = 'templates/default'
 const VERSION = '2.0.0'
 
 interface ProjectOptions {
@@ -197,13 +198,25 @@ async function createProject(config: ProjectOptions) {
 
     // Use degit to download template
     const degit = (await import('degit')).default
+
+    // Create temporary directory for cloning
+    const tempDir = path.join(process.cwd(), '.temp-template')
+    await fs.remove(tempDir)
+
     const emitter = degit(TEMPLATE_REPO, {
       cache: false,
       force: true,
       verbose: false,
     })
 
-    await emitter.clone(targetDir)
+    await emitter.clone(tempDir)
+
+    // Copy template/default contents to target directory
+    const templateSource = path.join(tempDir, TEMPLATE_PATH)
+    await fs.copy(templateSource, targetDir)
+
+    // Clean up temporary directory
+    await fs.remove(tempDir)
 
     // Update package.json
     spinner.text = chalk.hex('#B388FF')('Configuring project...')
