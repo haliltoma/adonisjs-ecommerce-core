@@ -3,6 +3,7 @@
  *
  * Simple IoC container for managing service dependencies.
  * This enables proper dependency injection following SOLID principles.
+ * Updated with Factories for OCP
  */
 
 import OrderRepository from '#repositories/implementations/order_repository'
@@ -27,14 +28,8 @@ import ProductVariantManager from '#services/product/product_variant_manager'
 import ProductImageManager from '#services/product/product_image_manager'
 import ProductCategoryManager from '#services/product/product_category_manager'
 import ProductInventoryManager from '#services/product/product_inventory_manager'
-import OrderItemFactory from '#services/order/order_item_factory'
-import OrderStatusManager from '#services/order/order_status_manager'
-import OrderNumberGenerator from '#services/order/order_number_generator'
-import CartTotalsCalculator from '#services/cart/cart_totals_calculator'
-import CartDiscountApplicator from '#services/cart/cart_discount_applicator'
-import CartTaxCalculator from '#services/cart/cart_tax_calculator'
-import CartItemManager from '#services/cart/cart_item_manager'
-import CartValidator from '#services/cart/cart_validator'
+import PaymentProviderFactory from '#factories/payment_provider_factory'
+import SearchProviderFactory from '#factories/search_provider_factory'
 
 /**
  * Service Container Singleton
@@ -214,3 +209,7 @@ export const useCustomerRepository = (): CustomerRepository =>
   useService<CustomerRepository>('CustomerRepository')
 export const useInventoryRepository = (): InventoryRepository =>
   useService<InventoryRepository>('InventoryRepository')
+export const usePaymentProvider = (): PaymentProviderFactory =>
+  useService<PaymentProviderFactory>('PaymentProviderFactory')
+export const useSearchProvider = (): SearchProviderFactory =>
+  useService<SearchProviderFactory>('SearchProviderFactory')
