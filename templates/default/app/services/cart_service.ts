@@ -1,12 +1,19 @@
+/**
+ * Cart Service (Refactored)
+ *
+ * Orchestrates cart-related operations following SOLID principles.
+ * Depends on abstractions (repositories) and delegates specific tasks to specialized classes.
+ */
+
 import Cart from '#models/cart'
-import CartItem from '#models/cart_item'
-import ProductVariant from '#models/product_variant'
-import Product from '#models/product'
-import CustomerAddress from '#models/customer_address'
-import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
-import { taxCalculator } from '#helpers/tax_calculator'
-import DiscountService from '#services/discount_service'
+import type ICartRepository from '#repositories/interfaces/i_cart_repository'
+import type IProductRepository from '#repositories/interfaces/i_product_repository'
+import CartTotalsCalculator from '#services/cart/cart_totals_calculator'
+import CartDiscountApplicator from '#services/cart/cart_discount_applicator'
+import CartTaxCalculator from '#services/cart/cart_tax_calculator'
+import CartItemManager from '#services/cart/cart_item_manager'
+import CartValidator from '#services/cart/cart_validator'
 
 interface AddToCartDTO {
   productId: string
@@ -21,38 +28,35 @@ interface UpdateCartItemDTO {
 }
 
 export default class CartService {
-  private discountService: DiscountService
+  constructor(
+    private cartRepository: ICartRepository,
+    private productRepository: IProductRepository,
+    private totalsCalculator: CartTotalsCalculator,
+    private discountApplicator: CartDiscountApplicator,
+    private taxCalculator: CartTaxCalculator,
+    private itemManager: CartItemManager,
+    private validator: CartValidator,
+    private discountService: any // Will be injected via container
+  ) {}
 
-  constructor() {
-    this.discountService = new DiscountService()
-  }
-
-  async getOrCreateCart(storeId: string, customerId?: string, sessionId?: string): Promise<Cart> {
+  /**
+   * Get or create cart for customer or session (SRP: Orchestrate)
+   */
+  async getOrCreateCart(
+    storeId: string,
+    customerId?: string,
+    sessionId?: string
+  ): Promise<Cart> {
     let cart: Cart | null = null
 
     if (customerId) {
-      cart = await Cart.query()
-        .where('storeId', storeId)
-        .where('customerId', customerId)
-        .whereNull('completedAt')
-        .preload('items', (query) => {
-          query.preload('product').preload('variant')
-        })
-        .first()
+      cart = await this.cartRepository.findByCustomer(storeId, customerId)
     } else if (sessionId) {
-      cart = await Cart.query()
-        .where('storeId', storeId)
-        .where('sessionId', sessionId)
-        .whereNull('customerId')
-        .whereNull('completedAt')
-        .preload('items', (query) => {
-          query.preload('product').preload('variant')
-        })
-        .first()
+      cart = await this.cartRepository.findBySession(storeId, sessionId)
     }
 
     if (!cart) {
-      cart = await Cart.create({
+      cart = await this.cartRepository.create({
         storeId,
         customerId,
         sessionId,
@@ -60,6 +64,7 @@ export default class CartService {
         subtotal: 0,
         discountTotal: 0,
         taxTotal: 0,
+        shippingTotal: 0,
         grandTotal: 0,
         totalItems: 0,
         metadata: {},
@@ -69,338 +74,317 @@ export default class CartService {
     return cart
   }
 
+  /**
+   * Add item to cart
+   */
   async addItem(cartId: string, data: AddToCartDTO): Promise<Cart> {
-    return await db.transaction(async (trx) => {
-      const cart = await Cart.query({ client: trx }).where('id', cartId).firstOrFail()
+    return await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
 
-      const product = await Product.query({ client: trx })
-        .where('id', data.productId)
-        .where('status', 'active')
-        .whereNull('deletedAt')
-        .firstOrFail()
-
-      let variant: ProductVariant | null = null
-      let price: number
-      let sku: string | null = null
-
-      if (data.variantId) {
-        variant = await ProductVariant.query({ client: trx })
-          .where('id', data.variantId)
-          .where('productId', data.productId)
-          .firstOrFail()
-        price = variant.price
-        sku = variant.sku
-      } else {
-        price = product.price || 0
-        sku = product.sku
+      if (!cart) {
+        throw new Error('Cart not found')
       }
 
-      // Check if item already exists in cart
-      const existingItem = await CartItem.query({ client: trx })
-        .where('cartId', cartId)
-        .where('productId', data.productId)
-        .where((query) => {
-          if (data.variantId) {
-            query.where('variantId', data.variantId)
-          } else {
-            query.whereNull('variantId')
-          }
-        })
-        .first()
+      // Add item using item manager
+      await this.itemManager.addItem(cart, data, this.productRepository, trx)
 
-      if (existingItem) {
-        existingItem.quantity = Number(existingItem.quantity) + data.quantity
-        existingItem.totalPrice = existingItem.quantity * Number(existingItem.unitPrice)
-        await existingItem.useTransaction(trx).save()
-      } else {
-        await CartItem.create(
-          {
-            cartId,
-            productId: data.productId,
-            variantId: data.variantId,
-            quantity: data.quantity,
-            unitPrice: price,
-            totalPrice: price * data.quantity,
-            sku: sku || product.id,
-            title: product.title,
-            metadata: data.metadata || {},
-          },
-          { client: trx }
-        )
-      }
-
+      // Recalculate cart totals
       await this.recalculateCart(cart, trx)
 
       return cart
     })
-  }
-
-  async updateItem(cartId: string, itemId: string, data: UpdateCartItemDTO): Promise<Cart> {
-    return await db.transaction(async (trx) => {
-      const cart = await Cart.query({ client: trx }).where('id', cartId).firstOrFail()
-
-      const item = await CartItem.query({ client: trx })
-        .where('id', itemId)
-        .where('cartId', cartId)
-        .firstOrFail()
-
-      if (data.quantity <= 0) {
-        await item.useTransaction(trx).delete()
-      } else {
-        item.quantity = data.quantity
-        item.totalPrice = data.quantity * Number(item.unitPrice)
-        if (data.metadata) {
-          item.metadata = data.metadata
-        }
-        await item.useTransaction(trx).save()
-      }
-
-      await this.recalculateCart(cart, trx)
-
-      return cart
-    })
-  }
-
-  async removeItem(cartId: string, itemId: string): Promise<Cart> {
-    return await db.transaction(async (trx) => {
-      const cart = await Cart.query({ client: trx }).where('id', cartId).firstOrFail()
-
-      await CartItem.query({ client: trx }).where('id', itemId).where('cartId', cartId).delete()
-
-      await this.recalculateCart(cart, trx)
-
-      return cart
-    })
-  }
-
-  async clearCart(cartId: string): Promise<Cart> {
-    return await db.transaction(async (trx) => {
-      const cart = await Cart.query({ client: trx }).where('id', cartId).firstOrFail()
-
-      await CartItem.query({ client: trx }).where('cartId', cartId).delete()
-
-      cart.subtotal = 0
-      cart.discountTotal = 0
-      cart.taxTotal = 0
-      cart.grandTotal = 0
-      cart.totalItems = 0
-      cart.couponCode = null
-      cart.discountId = null
-      await cart.useTransaction(trx).save()
-
-      return cart
-    })
-  }
-
-  async applyDiscount(cartId: string, discountCode: string, customerId?: string): Promise<Cart> {
-    const cart = await Cart.findOrFail(cartId)
-    await cart.load('items', (q) => {
-      q.preload('product', (pq) => pq.preload('categories'))
-    })
-
-    // Validate the code first
-    const result = await this.discountService.validateAndApply(
-      cart.storeId,
-      discountCode,
-      cart,
-      customerId
-    )
-
-    if (!result.valid) {
-      throw new Error(result.error || 'Invalid discount code')
-    }
-
-    // Store the coupon code and discount id on the cart
-    cart.couponCode = discountCode.toUpperCase()
-    cart.discountId = result.discount?.id || null
-
-    // Recalculate with discount engine (handles auto + coupon + per-item)
-    await this.recalculateCart(cart)
-
-    return cart
-  }
-
-  async removeDiscount(cartId: string): Promise<Cart> {
-    const cart = await Cart.findOrFail(cartId)
-    cart.couponCode = null
-    cart.discountId = null
-    cart.discountTotal = 0
-
-    // Reset per-item discount amounts
-    const items = await CartItem.query().where('cartId', cartId)
-    for (const item of items) {
-      item.discountAmount = 0
-      await item.save()
-    }
-
-    await this.recalculateCart(cart)
-    return cart
-  }
-
-  async mergeGuestCart(guestSessionId: string, customerId: string, storeId: string): Promise<Cart> {
-    return await db.transaction(async (trx) => {
-      const guestCart = await Cart.query({ client: trx })
-        .where('storeId', storeId)
-        .where('sessionId', guestSessionId)
-        .whereNull('customerId')
-        .whereNull('completedAt')
-        .preload('items')
-        .first()
-
-      const customerCart = await Cart.query({ client: trx })
-        .where('storeId', storeId)
-        .where('customerId', customerId)
-        .whereNull('completedAt')
-        .preload('items')
-        .first()
-
-      if (!guestCart) {
-        return customerCart || (await this.getOrCreateCart(storeId, customerId))
-      }
-
-      if (!customerCart) {
-        guestCart.customerId = customerId
-        guestCart.sessionId = null
-        await guestCart.useTransaction(trx).save()
-        return guestCart
-      }
-
-      // Merge items from guest cart to customer cart
-      for (const guestItem of guestCart.items) {
-        const existingItem = customerCart.items.find(
-          (item) => item.productId === guestItem.productId && item.variantId === guestItem.variantId
-        )
-
-        if (existingItem) {
-          existingItem.quantity = Number(existingItem.quantity) + Number(guestItem.quantity)
-          existingItem.totalPrice = existingItem.quantity * Number(existingItem.unitPrice)
-          await existingItem.useTransaction(trx).save()
-        } else {
-          await CartItem.create(
-            {
-              cartId: customerCart.id,
-              productId: guestItem.productId,
-              variantId: guestItem.variantId,
-              quantity: guestItem.quantity,
-              unitPrice: guestItem.unitPrice,
-              totalPrice: guestItem.totalPrice,
-              sku: guestItem.sku,
-              title: guestItem.title,
-              metadata: guestItem.metadata,
-            },
-            { client: trx }
-          )
-        }
-      }
-
-      // Delete guest cart
-      await CartItem.query({ client: trx }).where('cartId', guestCart.id).delete()
-      await guestCart.useTransaction(trx).delete()
-
-      await this.recalculateCart(customerCart, trx)
-
-      return customerCart
-    })
-  }
-
-  async markAsConverted(cartId: string, _orderId: string): Promise<void> {
-    const cart = await Cart.findOrFail(cartId)
-    cart.completedAt = DateTime.now()
-    await cart.save()
   }
 
   /**
-   * Recalculate cart totals: Subtotal → Discount → Tax → GrandTotal
+   * Update cart item
    */
-  private async recalculateCart(cart: Cart, trx?: any): Promise<void> {
-    const queryOpts = trx ? { client: trx } : {}
+  async updateItem(
+    cartId: string,
+    itemId: string,
+    data: UpdateCartItemDTO
+  ): Promise<Cart> {
+    return await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
 
-    const items = await CartItem.query(queryOpts).where('cartId', cart.id)
-
-    // 1. Subtotal
-    let subtotal = 0
-    let totalItems = 0
-
-    for (const item of items) {
-      subtotal += Number(item.totalPrice) || 0
-      totalItems += Number(item.quantity) || 0
-    }
-
-    cart.subtotal = subtotal
-    cart.totalItems = totalItems
-
-    // 2. Discount — run the engine (auto discounts + coupon)
-    let discountTotal = 0
-
-    if (items.length > 0) {
-      try {
-        // Temporarily save items on cart for the discount service context builder
-        cart.$setRelated('items', items)
-        const discountResult = await this.discountService.applyAllDiscounts(
-          cart,
-          cart.storeId,
-          cart.customerId || undefined
-        )
-
-        discountTotal = discountResult.totalDiscount
-
-        // Cap discount at subtotal (can't go negative)
-        if (discountTotal > subtotal) {
-          discountTotal = subtotal
-        }
-
-        // If free shipping, zero out shipping
-        if (discountResult.freeShipping) {
-          cart.shippingTotal = 0
-        }
-
-        // Write per-item discount amounts
-        for (const item of items) {
-          const itemDiscount = discountResult.itemDiscounts[item.id] || 0
-          if (Number(item.discountAmount) !== itemDiscount) {
-            item.discountAmount = itemDiscount
-            if (trx) {
-              await item.useTransaction(trx).save()
-            } else {
-              await item.save()
-            }
-          }
-        }
-      } catch {
-        // Discount engine errors should not prevent cart updates
-        discountTotal = 0
+      if (!cart) {
+        throw new Error('Cart not found')
       }
-    }
 
-    cart.discountTotal = discountTotal
+      const item = cart.items.find((i) => i.id === itemId)
 
-    // 3. Tax
+      if (!item) {
+        throw new Error('Cart item not found')
+      }
+
+      // Update quantity
+      await this.itemManager.updateItemQuantity(cart, item, data.quantity, trx)
+
+      // Update metadata if provided
+      if (data.metadata) {
+        item.metadata = { ...item.metadata, ...data.metadata }
+        await item.save(trx ? { client: trx } : undefined)
+      }
+
+      // Recalculate cart totals
+      await this.recalculateCart(cart, trx)
+
+      return cart
+    })
+  }
+
+  /**
+   * Remove item from cart
+   */
+  async removeItem(cartId: string, itemId: string): Promise<Cart> {
+    return await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
+
+      if (!cart) {
+        throw new Error('Cart not found')
+      }
+
+      const item = cart.items.find((i) => i.id === itemId)
+
+      if (!item) {
+        throw new Error('Cart item not found')
+      }
+
+      // Remove item
+      await this.itemManager.removeItem(cart, item, trx)
+
+      // Recalculate cart totals
+      await this.recalculateCart(cart, trx)
+
+      return cart
+    })
+  }
+
+  /**
+   * Apply discount code to cart
+   */
+  async applyDiscount(cartId: string, couponCode: string): Promise<Cart> {
+    return await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
+
+      if (!cart) {
+        throw new Error('Cart not found')
+      }
+
+      // Validate coupon code format
+      const validationResult = this.validator.validateCouponCode(couponCode)
+
+      if (!validationResult.valid) {
+        throw new Error(validationResult.errors.join(', '))
+      }
+
+      // Apply discount
+      const result = await this.discountApplicator.applyDiscount(
+        cart,
+        couponCode,
+        this.discountService
+      )
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to apply discount')
+      }
+
+      // Update cart with discount
+      await this.cartRepository.update(
+        cart.id,
+        {
+          couponCode: result.couponCode,
+          discountId: result.discountId,
+          discountTotal: result.discountTotal,
+        },
+        trx
+      )
+
+      // Recalculate cart totals
+      await this.recalculateCart(cart, trx)
+
+      return await this.cartRepository.findById(cartId, trx)
+    })
+  }
+
+  /**
+   * Remove discount from cart
+   */
+  async removeDiscount(cartId: string): Promise<Cart> {
+    return await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
+
+      if (!cart) {
+        throw new Error('Cart not found')
+      }
+
+      // Remove discount
+      this.discountApplicator.removeDiscount(cart)
+
+      await this.cartRepository.update(
+        cart.id,
+        {
+          couponCode: null,
+          discountId: null,
+          discountTotal: 0,
+        },
+        trx
+      )
+
+      // Recalculate cart totals
+      await this.recalculateCart(cart, trx)
+
+      return await this.cartRepository.findById(cartId, trx)
+    })
+  }
+
+  /**
+   * Recalculate cart totals (SRP: Orchestrate calculation)
+   */
+  async recalculateCart(cart: Cart, trx?: any): Promise<void> {
+    // Reload cart items to get latest data
+    await cart.load('items')
+
+    // Calculate subtotal
+    const subtotal = this.totalsCalculator.calculateSubtotal(cart.items)
+
+    // Calculate tax (if tax service available)
     let taxTotal = 0
-    if (cart.shippingAddressId) {
-      try {
-        const address = await CustomerAddress.find(cart.shippingAddressId)
-        if (address?.countryCode) {
-          const taxResult = await taxCalculator.calculateTax(
-            subtotal - discountTotal,
-            { country: address.countryCode, state: address.state || undefined },
-            cart.storeId
-          )
-          taxTotal = taxResult.taxAmount
-        }
-      } catch {
-        taxTotal = 0
+
+    try {
+      const taxResult = await this.taxCalculator.calculateTax(
+        cart,
+        subtotal,
+        cart.discountTotal || 0,
+        {} // Pass tax service if available
+      )
+
+      taxTotal = taxResult.taxTotal
+    } catch (error) {
+      // If tax calculation fails, use zero tax
+      taxTotal = 0
+    }
+
+    // Calculate grand total
+    const grandTotal = this.totalsCalculator.calculateGrandTotal({
+      subtotal,
+      discountTotal: cart.discountTotal || 0,
+      taxTotal,
+      shippingTotal: cart.shippingTotal || 0,
+    })
+
+    // Update cart
+    await this.cartRepository.update(
+      cart.id,
+      {
+        subtotal,
+        taxTotal,
+        grandTotal,
+        totalItems: cart.items.reduce((sum, item) => sum + item.quantity, 0),
+      },
+      trx
+    )
+  }
+
+  /**
+   * Clear cart (remove all items)
+   */
+  async clearCart(cartId: string): Promise<void> {
+    await this.cartRepository.transaction(async (trx) => {
+      const cart = await this.cartRepository.findById(cartId, trx)
+
+      if (!cart) {
+        throw new Error('Cart not found')
+      }
+
+      // Clear all items
+      await this.cartRepository.clearItems(cartId, trx)
+
+      // Reset totals
+      await this.cartRepository.update(
+        cart.id,
+        {
+          subtotal: 0,
+          discountTotal: 0,
+          taxTotal: 0,
+          shippingTotal: 0,
+          grandTotal: 0,
+          totalItems: 0,
+          couponCode: null,
+          discountId: null,
+        },
+        trx
+      )
+    })
+  }
+
+  /**
+   * Validate cart for checkout
+   */
+  async validateForCheckout(cartId: string): Promise<{
+    valid: boolean
+    errors: string[]
+  }> {
+    const cart = await this.cartRepository.findById(cartId)
+
+    if (!cart) {
+      return {
+        valid: false,
+        errors: ['Cart not found'],
       }
     }
 
-    cart.taxTotal = taxTotal
+    // Reload items
+    await cart.load('items')
 
-    // 4. Grand total
-    cart.grandTotal = subtotal - discountTotal + taxTotal + (Number(cart.shippingTotal) || 0)
+    return await this.validator.validateForCheckout(cart)
+  }
 
-    if (trx) {
-      await cart.useTransaction(trx).save()
-    } else {
-      await cart.save()
-    }
+  /**
+   * Merge guest cart into customer cart
+   */
+  async mergeCarts(
+    sourceCartId: string,
+    targetCartId: string
+  ): Promise<Cart> {
+    return await this.cartRepository.transaction(async (trx) => {
+      const sourceCart = await this.cartRepository.findById(sourceCartId, trx)
+      const targetCart = await this.cartRepository.findById(targetCartId, trx)
+
+      if (!sourceCart || !targetCart) {
+        throw new Error('One or both carts not found')
+      }
+
+      // Merge items
+      await this.itemManager.mergeItems(sourceCart, targetCart, trx)
+
+      // Recalculate target cart
+      await this.recalculateCart(targetCart, trx)
+
+      // Delete source cart
+      await this.cartRepository.delete(sourceCartId, trx)
+
+      return await this.cartRepository.findById(targetCartId, trx)
+    })
+  }
+
+  /**
+   * Get cart by ID
+   */
+  async findById(cartId: string): Promise<Cart | null> {
+    return await this.cartRepository.findById(cartId)
+  }
+
+  /**
+   * Get active carts for store
+   */
+  async getActiveCarts(storeId: string, page: number = 1, limit: number = 20) {
+    return await this.cartRepository.getActiveCarts(storeId, page, limit)
+  }
+
+  /**
+   * Get abandoned carts
+   */
+  async getAbandonedCarts(storeId: string, hoursOld: number = 24) {
+    return await this.cartRepository.getAbandonedCarts(storeId, hoursOld)
   }
 }
