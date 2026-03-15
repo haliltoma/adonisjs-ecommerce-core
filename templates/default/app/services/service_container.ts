@@ -10,6 +10,7 @@ import CartRepository from '#repositories/implementations/cart_repository'
 import ProductRepository from '#repositories/implementations/product_repository'
 import CustomerRepository from '#repositories/implementations/customer_repository'
 import InventoryRepository from '#repositories/implementations/inventory_repository'
+import CheckoutService from '#services/checkout_service'
 import OrderService from '#services/order_service'
 import CartService from '#services/cart_service'
 import ProductService from '#services/product_service'
@@ -83,6 +84,16 @@ class ServiceContainer {
     this.services.set('ProductImageManager', new ProductImageManager())
     this.services.set('ProductCategoryManager', new ProductCategoryManager())
     this.services.set('ProductInventoryManager', new ProductInventoryManager())
+
+    // Checkout Service (with dependencies)
+    this.services.set(
+      'CheckoutService',
+      new CheckoutService(
+        this.services.get('CartRepository'),
+        this.services.get('OrderRepository'),
+        this.services.get('InventoryRepository')
+      )
+    )
 
     // Order Service (with dependencies)
     const orderRepository = this.services.get('OrderRepository')
@@ -194,6 +205,7 @@ export const useService = <T>(serviceName: string): T => {
 export const useOrderService = (): OrderService => useService<OrderService>('OrderService')
 export const useCartService = (): CartService => useService<CartService>('CartService')
 export const useProductService = (): ProductService => useService<ProductService>('ProductService')
+export const useCheckoutService = (): CheckoutService => useService<CheckoutService>('CheckoutService')
 export const useOrderRepository = (): OrderRepository => useService<OrderRepository>('OrderRepository')
 export const useCartRepository = (): CartRepository => useService<CartRepository>('CartRepository')
 export const useProductRepository = (): ProductRepository =>
