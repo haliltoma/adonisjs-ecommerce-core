@@ -1,9 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { useOrderService } from '#services/service_container'
-import FulfillmentService from '#services/fulfillment_service'
-import RefundService from '#services/refund_service'
-import ReturnService from '#services/return_service'
-import InvoiceService from '#services/invoice_service'
+import { useFulfillmentService } from '#services/service_container'
+import { useRefundService } from '#services/service_container'
+import { useReturnService } from '#services/service_container'
+import { useInvoiceService } from '#services/service_container'
 import Order from '#models/order'
 import Claim from '#models/claim'
 import ClaimItem from '#models/claim_item'
@@ -14,10 +14,10 @@ import { DateTime } from 'luxon'
 
 export default class OrdersController {
   private orderService = useOrderService()
-  private fulfillmentService = new FulfillmentService()
-  private refundService = new RefundService()
-  private returnService = new ReturnService()
-  private invoiceService = new InvoiceService()
+  private fulfillmentService = useFulfillmentService()
+  private refundService = useRefundService()
+  private returnService = useReturnService()
+  private invoiceService = useInvoiceService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

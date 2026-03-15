@@ -1,12 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import { useStoreService } from '#services/service_container'
-import RegionService from '#services/region_service'
-import SalesChannelService from '#services/sales_channel_service'
-import CustomerGroupService from '#services/customer_group_service'
-import ReturnService from '#services/return_service'
-import ApiKeyService from '#services/api_key_service'
-import ShippingProfileService from '#services/shipping_profile_service'
+import { useRegionService } from '#services/service_container'
+import { useSalesChannelService } from '#services/service_container'
+import { useCustomerGroupService } from '#services/service_container'
+import { useReturnService } from '#services/service_container'
+import { useApiKeyService } from '#services/service_container'
+import { useShippingProfileService } from '#services/service_container'
 import TaxClass from '#models/tax_class'
 import TaxRate from '#models/tax_rate'
 import Currency from '#models/currency'
@@ -24,12 +24,12 @@ import { randomBytes } from 'node:crypto'
 
 export default class SettingsController {
   private storeService = useStoreService()
-  private regionService = new RegionService()
-  private salesChannelService = new SalesChannelService()
-  private customerGroupService = new CustomerGroupService()
-  private returnService = new ReturnService()
-  private apiKeyService = new ApiKeyService()
-  private shippingProfileService = new ShippingProfileService()
+  private regionService = useRegionService()
+  private salesChannelService = useSalesChannelService()
+  private customerGroupService = useCustomerGroupService()
+  private returnService = useReturnService()
+  private apiKeyService = useApiKeyService()
+  private shippingProfileService = useShippingProfileService()
 
   async index({ inertia, store }: HttpContext) {
     const allSettings = await this.storeService.getAllSettings(store.id)

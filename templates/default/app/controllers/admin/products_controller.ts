@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { createReadStream } from 'node:fs'
 import { useProductService } from '#services/service_container'
 import { useCategoryService } from '#services/service_container'
-import ImportExportService from '#services/import_export_service'
+import { useImportExportService } from '#services/service_container'
 import { LocalMediaProvider } from '#services/media/local_media_provider'
 import Product from '#models/product'
 import TaxClass from '#models/tax_class'
@@ -11,7 +11,7 @@ import Tag from '#models/tag'
 export default class ProductsController {
   private productService = useProductService()
   private categoryService = useCategoryService()
-  private importExportService = new ImportExportService()
+  private importExportService = useImportExportService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

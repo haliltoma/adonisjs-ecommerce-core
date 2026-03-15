@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import AuthService from '#services/auth_service'
+import { useAuthService } from '#services/service_container'
 import { useCustomerService } from '#services/service_container'
 import { useOrderService } from '#services/service_container'
 import { useCartService } from '#services/service_container'
@@ -8,7 +8,7 @@ import Wishlist from '#models/wishlist'
 import WishlistItem from '#models/wishlist_item'
 
 export default class AccountController {
-  private authService = new AuthService()
+  private authService = useAuthService()
   private customerService = useCustomerService()
   private orderService = useOrderService()
   private cartService = useCartService()

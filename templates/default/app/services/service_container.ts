@@ -29,6 +29,16 @@ import SubscriptionService from '#services/subscription_service'
 import BundleService from '#services/bundle_service'
 import DigitalProductService from '#services/digital_product_service'
 import ImageService from '#services/image_service'
+import RegionService from '#services/region_service'
+import SalesChannelService from '#services/sales_channel_service'
+import CustomerGroupService from '#services/customer_group_service'
+import ReturnService from '#services/return_service'
+import ApiKeyService from '#services/api_key_service'
+import ShippingProfileService from '#services/shipping_profile_service'
+import FulfillmentService from '#services/fulfillment_service'
+import RefundService from '#services/refund_service'
+import InvoiceService from '#services/invoice_service'
+import ImportExportService from '#services/import_export_service'
 import OrderItemFactory from '#services/order/order_item_factory'
 import OrderStatusManager from '#services/order/order_status_manager'
 import OrderNumberGenerator from '#services/order/order_number_generator'
@@ -191,6 +201,16 @@ class ServiceContainer {
     this.services.set('BundleService', new BundleService())
     this.services.set('DigitalProductService', new DigitalProductService())
     this.services.set('ImageService', new ImageService())
+    this.services.set('RegionService', new RegionService())
+    this.services.set('SalesChannelService', new SalesChannelService())
+    this.services.set('CustomerGroupService', new CustomerGroupService())
+    this.services.set('ReturnService', new ReturnService())
+    this.services.set('ApiKeyService', new ApiKeyService())
+    this.services.set('ShippingProfileService', new ShippingProfileService())
+    this.services.set('FulfillmentService', new FulfillmentService())
+    this.services.set('RefundService', new RefundService())
+    this.services.set('InvoiceService', new InvoiceService())
+    this.services.set('ImportExportService', new ImportExportService())
 
     this.initialized = true
   }
@@ -288,3 +308,18 @@ export const useBundleService = (): BundleService => useService<BundleService>('
 export const useDigitalProductService = (): DigitalProductService =>
   useService<DigitalProductService>('DigitalProductService')
 export const useImageService = (): ImageService => useService<ImageService>('ImageService')
+export const useRegionService = (): RegionService => useService<RegionService>('RegionService')
+export const useSalesChannelService = (): SalesChannelService =>
+  useService<SalesChannelService>('SalesChannelService')
+export const useCustomerGroupService = (): CustomerGroupService =>
+  useService<CustomerGroupService>('CustomerGroupService')
+export const useReturnService = (): ReturnService => useService<ReturnService>('ReturnService')
+export const useApiKeyService = (): ApiKeyService => useService<ApiKeyService>('ApiKeyService')
+export const useShippingProfileService = (): ShippingProfileService =>
+  useService<ShippingProfileService>('ShippingProfileService')
+export const useFulfillmentService = (): FulfillmentService =>
+  useService<FulfillmentService>('FulfillmentService')
+export const useRefundService = (): RefundService => useService<RefundService>('RefundService')
+export const useInvoiceService = (): InvoiceService => useService<InvoiceService>('InvoiceService')
+export const useImportExportService = (): ImportExportService =>
+  useService<ImportExportService>('ImportExportService')

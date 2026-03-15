@@ -2,9 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { useCartService } from '#services/service_container'
 import { useOrderService } from '#services/service_container'
 import { useCheckoutService } from '#services/service_container'
-import CustomerService from '#services/customer_service'
-import DiscountService from '#services/discount_service'
-import StoreService from '#services/store_service'
+import { useCustomerService } from '#services/service_container'
+import { useDiscountService } from '#services/service_container'
+import { useStoreService } from '#services/service_container'
 import { PaymentProvider } from '#contracts/payment_provider'
 import Customer from '#models/customer'
 import app from '@adonisjs/core/services/app'
@@ -15,9 +15,9 @@ export default class CheckoutController {
   private cartService = useCartService()
   private orderService = useOrderService()
   private checkoutService = useCheckoutService()
-  private customerService = new CustomerService()
-  private discountService = new DiscountService()
-  private storeService = new StoreService()
+  private customerService = useCustomerService()
+  private discountService = useDiscountService()
+  private storeService = useStoreService()
 
   private async getShippingMethods(storeId: string) {
     const settings = await this.storeService.getSettingsByGroup(storeId, 'shipping')

@@ -1,12 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { useInventoryService } from '#services/service_container'
-import ImportExportService from '#services/import_export_service'
+import { useImportExportService } from '#services/service_container'
 import ProductVariant from '#models/product_variant'
 import type InventoryMovement from '#models/inventory_movement'
 
 export default class InventoryController {
   private inventoryService = useInventoryService()
-  private importExportService = new ImportExportService()
+  private importExportService = useImportExportService()
 
   async exportInventory({ inertia, store }: HttpContext) {
     const stats = await this.importExportService.getExportStats(store.id)
