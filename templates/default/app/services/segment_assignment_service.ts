@@ -42,24 +42,30 @@ export default class SegmentAssignmentService {
     const trx = await db.transaction()
 
     try {
+      // Fetch all existing assignments in one query (avoid N+1)
+      const existingAssignments = await trx
+        .from('customer_segment_assignments')
+        .where('customerId', customerId)
+        .whereIn('segmentId', segments.map((s) => s.id))
+
+      const assignmentMap = new Map(existingAssignments.map((a) => [a.segmentId, a]))
+
       for (const segment of segments) {
         const matches = segment.matchesCustomer(customer)
 
-        // Check if already assigned
-        const existingAssignment = await trx
-          .from('customer_segment_assignments')
-          .where('customerId', customerId)
-          .where('segmentId', segment.id)
-          .first()
+        // Check map instead of querying database
+        const existingAssignment = assignmentMap.get(segment.id)
 
         if (matches && !existingAssignment) {
           // Assign to segment
-          await trx.insert({
-            customerId,
-            segmentId: segment.id,
-            assignedAt: DateTime.now().toSQL(),
-            metadata: null,
-          }).into('customer_segment_assignments')
+          await trx
+            .insert({
+              customerId,
+              segmentId: segment.id,
+              assignedAt: DateTime.now().toSQL(),
+              metadata: null,
+            })
+            .into('customer_segment_assignments')
 
           assigned.push(segment.name)
         } else if (!matches && existingAssignment && segment.isDynamic) {
@@ -109,15 +115,18 @@ export default class SegmentAssignmentService {
     const trx = await db.transaction()
 
     try {
+      // Fetch all existing assignments for this segment in one query (avoid N+1)
+      const existingAssignments = await trx
+        .from('customer_segment_assignments')
+        .where('segmentId', segmentId)
+
+      const assignmentMap = new Map(existingAssignments.map((a) => [a.customerId, a]))
+
       for (const customer of customers) {
         const matches = segment.matchesCustomer(customer)
 
-        // Check existing assignment
-        const existingAssignment = await trx
-          .from('customer_segment_assignments')
-          .where('customerId', customer.id)
-          .where('segmentId', segmentId)
-          .first()
+        // Check map instead of querying database
+        const existingAssignment = assignmentMap.get(customer.id)
 
         if (matches && !existingAssignment) {
           // Add to segment
@@ -135,7 +144,7 @@ export default class SegmentAssignmentService {
             .from('customer_segment_assignments')
             .where('customerId', customer.id)
             .where('segmentId', segmentId)
-          .delete()
+            .delete()
 
           removed++
         }

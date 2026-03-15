@@ -264,22 +264,42 @@ export default class ReturnsService {
   }> {
     const sinceDate = DateTime.now().minus({ days }).toSQL()
 
-    // Total returns
-    const totalResult = await db
-      .from('returns')
-      .count('* as count')
-      .where('createdAt', '>=', sinceDate)
-      .first()
+    // Run independent queries in parallel
+    const [totalResult, statusResults, refundResult, reasonResults] = await Promise.all([
+      // Total returns
+      db
+        .from('returns')
+        .count('* as count')
+        .where('createdAt', '>=', sinceDate)
+        .first(),
+
+      // By status
+      db
+        .from('returns')
+        .select('status')
+        .count('* as count')
+        .where('createdAt', '>=', sinceDate)
+        .groupBy('status'),
+
+      // Refund amounts
+      db
+        .from('returns')
+        .where('createdAt', '>=', sinceDate)
+        .whereNotNull('refundAmount')
+        .sum('refundAmount as total'),
+
+      // Top reasons
+      db
+        .from('returns')
+        .select('reason')
+        .count('* as count')
+        .where('createdAt', '>=', sinceDate)
+        .groupBy('reason')
+        .orderBy('count', 'desc')
+        .limit(5),
+    ])
 
     const totalReturns = Number(totalResult?.count || 0)
-
-    // By status
-    const statusResults = await db
-      .from('returns')
-      .select('status')
-      .count('* as count')
-      .where('createdAt', '>=', sinceDate)
-      .groupBy('status')
 
     const pendingReturns = Number(statusResults.find((r) => r.status === 'requested')?.count || 0) +
                            Number(statusResults.find((r) => r.status === 'received')?.count || 0) +
@@ -289,25 +309,8 @@ export default class ReturnsService {
     const rejectedReturns = Number(statusResults.find((r) => r.status === 'rejected')?.count || 0)
     const completedReturns = Number(statusResults.find((r) => r.status === 'completed')?.count || 0)
 
-    // Refund amounts
-    const refundResult = await db
-      .from('returns')
-      .where('createdAt', '>=', sinceDate)
-      .whereNotNull('refundAmount')
-      .sum('refundAmount as total')
-
     const totalRefundAmount = Number(refundResult[0]?.total || 0)
     const averageRefundAmount = completedReturns > 0 ? totalRefundAmount / completedReturns : 0
-
-    // Top reasons
-    const reasonResults = await db
-      .from('returns')
-      .select('reason')
-      .count('* as count')
-      .where('createdAt', '>=', sinceDate)
-      .groupBy('reason')
-      .orderBy('count', 'desc')
-      .limit(5)
 
     const topReasons = reasonResults.map((r) => ({
       reason: r.reason,

@@ -381,58 +381,58 @@ export default class AdvancedInventoryService {
     activeReservations: number
     backorderCount: number
   }> {
-    // Total products
-    const totalResult = await db
-      .from('products')
-      .count('* as count')
-      .where('storeId', storeId)
-      .where('status', 'active')
-      .first()
+    // Run all queries in parallel for better performance
+    const [totalResult, lowStockResult, outOfStockResult, reservationsResult, backorderResult] =
+      await Promise.all([
+        // Total products
+        db
+          .from('products')
+          .count('* as count')
+          .where('storeId', storeId)
+          .where('status', 'active')
+          .first(),
+
+        // Low stock products
+        db
+          .from('inventory_alerts')
+          .countDistinct('productId as count')
+          .where('storeId', storeId)
+          .where('type', 'low_stock')
+          .where('status', 'active')
+          .first(),
+
+        // Out of stock products
+        db
+          .from('inventory_alerts')
+          .countDistinct('productId as count')
+          .where('storeId', storeId)
+          .where('type', 'out_of_stock')
+          .where('status', 'active')
+          .first(),
+
+        // Active reservations
+        db
+          .from('inventory_reservations')
+          .count('* as count')
+          .where('storeId', storeId)
+          .where('status', 'active')
+          .where('expiresAt', '>', DateTime.now().toSQL())
+          .first(),
+
+        // Backorders
+        db
+          .from('inventory_reservations')
+          .count('* as count')
+          .where('storeId', storeId)
+          .where('reservationType', 'backorder')
+          .where('status', 'active')
+          .first(),
+      ])
 
     const totalProducts = Number(totalResult?.count || 0)
-
-    // Low stock products
-    const lowStockResult = await db
-      .from('inventory_alerts')
-      .countDistinct('productId as count')
-      .where('storeId', storeId)
-      .where('type', 'low_stock')
-      .where('status', 'active')
-      .first()
-
     const lowStockCount = Number(lowStockResult?.count || 0)
-
-    // Out of stock products
-    const outOfStockResult = await db
-      .from('inventory_alerts')
-      .countDistinct('productId as count')
-      .where('storeId', storeId)
-      .where('type', 'out_of_stock')
-      .where('status', 'active')
-      .first()
-
     const outOfStockCount = Number(outOfStockResult?.count || 0)
-
-    // Active reservations
-    const reservationsResult = await db
-      .from('inventory_reservations')
-      .count('* as count')
-      .where('storeId', storeId)
-      .where('status', 'active')
-      .where('expiresAt', '>', DateTime.now().toSQL())
-      .first()
-
     const activeReservations = Number(reservationsResult?.count || 0)
-
-    // Backorders
-    const backorderResult = await db
-      .from('inventory_reservations')
-      .count('* as count')
-      .where('storeId', storeId)
-      .where('reservationType', 'backorder')
-      .where('status', 'active')
-      .first()
-
     const backorderCount = Number(backorderResult?.count || 0)
 
     return {

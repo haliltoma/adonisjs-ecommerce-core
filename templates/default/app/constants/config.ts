@@ -1,0 +1,63 @@
+/**
+ * Application Configuration Constants
+ *
+ * Centralized configuration values to avoid magic numbers
+ */
+
+export const RETURN_CONFIG = {
+  WINDOW_DAYS: 30,
+  DEFAULT_APPROVAL_PERIOD_DAYS: 14,
+} as const
+
+export const RESERVATION_CONFIG = {
+  DEFAULT_EXPIRE_MINUTES: 30,
+  CART_EXPIRE_MINUTES: 30,
+  ORDER_EXPIRE_MINUTES: 60,
+  BACKORDER_EXPIRE_MINUTES: 1440, // 24 hours
+} as const
+
+export const ANALYTICS_CONFIG = {
+  DEFAULT_DAYS: 30,
+  DEFAULT_LIMIT: 20,
+  MINIMUM_THRESHOLD: 5,
+  TRENDING_DAYS: 7,
+  ZERO_RESULT_DAYS: 7,
+  DATA_RETENTION_DAYS: 90,
+} as const
+
+export const INVENTORY_CONFIG = {
+  DEFAULT_LOW_STOCK_THRESHOLD: 10,
+  DEFAULT_BACKORDER_THRESHOLD: 0,
+  ALERT_COOLDOWN_MINUTES: 60,
+} as const
+
+export const SEARCH_CONFIG = {
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+  SUGGESTION_LIMIT: 10,
+} as const
+
+export const MEILISEARCH_CONFIG = {
+  INDEX_NAME: 'products',
+  BATCH_SIZE: 100,
+  TIMEOUT_MS: 5000,
+  RETRY_ATTEMPTS: 3,
+} as const
+
+export const CURRENCY_CONFIG = {
+  DEFAULT_CURRENCY: 'USD',
+  CACHE_TTL_HOURS: 1,
+  UPDATE_INTERVAL_HOURS: 24,
+} as const
+
+export const SEGMENT_CONFIG = {
+  PRIORITY_DEFAULT: 0,
+  PRIORITY_HIGH: 100,
+  PRIORITY_LOW: -100,
+} as const
+
+export const DISCOUNT_CONFIG = {
+  MAX_PERCENTAGE: 100,
+  MIN_PERCENTAGE: 0,
+  MAX_AMOUNT: 1000000, // $10,000
+} as const

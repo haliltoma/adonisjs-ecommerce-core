@@ -82,48 +82,40 @@ export default class SearchAnalyticsService {
   async getPopularSearchTerms(days: number = 30, limit: number = 20): Promise<SearchStats[]> {
     const sinceDate = DateTime.now().minus({ days }).toSQL()
 
+    // Use single query with LEFT JOIN to avoid N+1
     const results = await db
       .from('search_events')
-      .select('query')
-      .count('* as searches')
-      .avg('results_count as avgResults')
-      .where('created_at', '>=', sinceDate)
-      .groupBy('query')
+      .leftJoin('search_clicks', function () {
+        this.on('search_clicks.search_query', '=', 'search_events.query').on(
+          'search_clicks.created_at',
+          '>=',
+          db.raw('?', [sinceDate])
+        )
+      })
+      .select('search_events.query')
+      .countDistinct('search_events.id as searches')
+      .countDistinct('search_clicks.id as clicks')
+      .avg('search_events.results_count as avgResults')
+      .max('search_events.created_at as lastSearchedAt')
+      .where('search_events.created_at', '>=', sinceDate)
+      .groupBy('search_events.query')
       .orderBy('searches', 'desc')
       .limit(limit)
 
     const stats: SearchStats[] = []
 
     for (const result of results) {
-      const query = result.query
-
-      // Get click count
-      const clicksResult = await db
-        .from('search_clicks')
-        .count('* as clicks')
-        .where('search_query', query)
-        .where('created_at', '>=', sinceDate)
-        .first()
-
-      const clicks = Number(clicksResult?.clicks || 0)
-      const searches = Number(result.searches)
+      const searches = Number(result.searches || 0)
+      const clicks = Number(result.clicks || 0)
       const clickThroughRate = searches > 0 ? (clicks / searches) * 100 : 0
 
-      // Get last searched timestamp
-      const lastResult = await db
-        .from('search_events')
-        .select('created_at')
-        .where('query', query)
-        .orderBy('created_at', 'desc')
-        .first()
-
       stats.push({
-        term: query,
+        term: result.query,
         searches,
         clicks,
         clickThroughRate,
         avgResults: Number(result.avgResults) || 0,
-        lastSearchedAt: DateTime.fromSQL(lastResult?.created_at || DateTime.now().toSQL()),
+        lastSearchedAt: DateTime.fromSQL(result.lastSearchedAt || DateTime.now().toSQL()),
       })
     }
 
