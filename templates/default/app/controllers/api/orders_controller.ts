@@ -4,14 +4,18 @@ import Order from '#models/order'
 import { createOrderValidator } from '#validators/order_validator'
 import emitter from '@adonisjs/core/services/emitter'
 import { OrderCreated } from '#events/order_events'
+import { useOrderService } from '#services/service_container'
 
 /**
  * OrdersController
  *
  * REST API controller for order operations.
  * Handles order creation, retrieval, and status management.
+ *
+ * SOLID: Controller only handles HTTP concerns, business logic is in OrderService.
  */
 export default class OrdersController {
+  private orderService = useOrderService()
   /**
    * GET /api/orders
    * List customer's orders

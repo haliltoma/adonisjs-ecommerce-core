@@ -1,12 +1,20 @@
+/**
+ * Order Service (Refactored)
+ *
+ * Orchestrates order-related operations following SOLID principles.
+ * Depends on abstractions (repositories) and delegates specific tasks to specialized classes.
+ */
+
 import Order from '#models/order'
-import OrderItem from '#models/order_item'
 import OrderTransaction from '#models/order_transaction'
-import OrderStatusHistory from '#models/order_status_history'
 import Cart from '#models/cart'
-import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
-import string from '@adonisjs/core/helpers/string'
+import type IOrderRepository from '#repositories/interfaces/i_order_repository'
+import type ICartRepository from '#repositories/interfaces/i_cart_repository'
+import OrderItemFactory from '#services/order/order_item_factory'
+import OrderStatusManager from '#services/order/order_status_manager'
+import OrderNumberGenerator from '#services/order/order_number_generator'
 
 interface CreateOrderDTO {
   cartId: string
@@ -60,17 +68,27 @@ type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'partially_refunded' | 
 type FulfillmentStatus = 'unfulfilled' | 'partially_fulfilled' | 'fulfilled'
 
 export default class OrderService {
-  async createFromCart(data: CreateOrderDTO, userId?: number): Promise<Order> {
-    return await db.transaction(async (trx) => {
-      const cart = await Cart.query({ client: trx })
-        .where('id', data.cartId)
-        .whereNull('completedAt')
-        .preload('items', (query) => {
-          query.preload('product').preload('variant')
-        })
-        .firstOrFail()
+  constructor(
+    private orderRepository: IOrderRepository,
+    private cartRepository: ICartRepository,
+    private orderItemFactory: OrderItemFactory,
+    private statusManager: OrderStatusManager,
+    private numberGenerator: OrderNumberGenerator
+  ) {}
 
-      if (cart.items.length === 0) {
+  /**
+   * Create order from cart (SRP: Orchestrate the workflow)
+   */
+  async createFromCart(data: CreateOrderDTO, userId?: number): Promise<Order> {
+    return await this.orderRepository.transaction(async (trx) => {
+      // 1. Get and validate cart
+      const cart = await this.cartRepository.findById(data.cartId, trx)
+
+      if (!cart) {
+        throw new Error('Cart not found')
+      }
+
+      if (!cart || cart.items.length === 0) {
         throw new Error('Cart is empty')
       }
 
@@ -78,9 +96,11 @@ export default class OrderService {
         throw new Error('Cart email is required')
       }
 
-      const orderNumber = await this.generateOrderNumber(cart.storeId)
+      // 2. Generate order number
+      const orderNumber = await this.numberGenerator.generate(cart.storeId)
 
-      const order = await Order.create(
+      // 3. Create order
+      const order = await this.orderRepository.create(
         {
           storeId: cart.storeId,
           customerId: data.customerId,
@@ -90,117 +110,106 @@ export default class OrderService {
           status: 'pending',
           paymentStatus: 'pending',
           fulfillmentStatus: 'unfulfilled',
-          currencyCode: cart.currencyCode,
-          subtotal: cart.subtotal,
-          discountTotal: cart.discountTotal,
+          currencyCode: cart.currencyCode || 'USD',
+          subtotal: cart.subtotal || 0,
+          discountTotal: cart.discountTotal || 0,
           couponCode: cart.couponCode,
           discountId: cart.discountId,
           shippingTotal: data.shippingCost || 0,
-          taxTotal: cart.taxTotal,
-          grandTotal: Number(cart.grandTotal) + (data.shippingCost || 0),
+          taxTotal: cart.taxTotal || 0,
+          grandTotal: Number(cart.grandTotal || 0) + (data.shippingCost || 0),
           billingAddress: data.billingAddress,
           shippingAddress: data.shippingAddress || data.billingAddress,
           shippingMethod: data.shippingMethod,
           notes: data.notes,
-          placedAt: DateTime.now(),
-          metadata: {},
-        },
-        { client: trx }
-      )
-
-      // Create order items from cart items
-      for (const cartItem of cart.items) {
-        await OrderItem.create(
-          {
-            orderId: order.id,
-            productId: cartItem.productId,
-            variantId: cartItem.variantId || undefined,
-            sku: cartItem.sku,
-            title: cartItem.title,
-            variantTitle: cartItem.variant?.title || undefined,
-            quantity: cartItem.quantity,
-            unitPrice: cartItem.unitPrice,
-            discountAmount: Number(cartItem.discountAmount) || 0,
-            taxAmount: 0,
-            totalPrice: cartItem.totalPrice,
-            weight: cartItem.product?.weight,
-            thumbnailUrl: cartItem.product?.images?.[0]?.url,
-            properties: cartItem.metadata || {},
-            fulfilledQuantity: 0,
-            returnedQuantity: 0,
-          },
-          { client: trx }
-        )
-      }
-
-      // Create initial status history
-      await OrderStatusHistory.create(
-        {
-          orderId: order.id,
-          status: 'pending',
-          type: 'status_change',
-          title: 'Order created',
-          description: 'Order was placed',
           userId,
         },
-        { client: trx }
+        trx
       )
 
-      // Mark cart as converted
-      cart.completedAt = DateTime.now()
-      await cart.useTransaction(trx).save()
+      // 4. Create order items from cart items
+      await this.orderItemFactory.createFromCartItems(order.id, cart.items, trx)
+
+      // 5. Record initial status
+      await this.statusManager.recordInitialStatus(order.id, userId, trx)
+
+      // 6. Mark cart as completed
+      await this.cartRepository.markCompleted(data.cartId, trx)
 
       return order
     })
   }
 
+  /**
+   * Update order status
+   */
   async updateStatus(
     orderId: string,
     status: OrderStatus,
     note?: string,
     userId?: number
   ): Promise<Order> {
-    return await db.transaction(async (trx) => {
-      const order = await Order.query({ client: trx }).where('id', orderId).firstOrFail()
+    return await this.orderRepository.transaction(async (trx) => {
+      const order = await this.orderRepository.findById(orderId, trx)
+
+      if (!order) {
+        throw new Error(`Order not found: ${orderId}`)
+      }
 
       const previousStatus = order.status
-      order.status = status
-      await order.useTransaction(trx).save()
 
-      await OrderStatusHistory.create(
-        {
-          orderId: order.id,
-          previousStatus,
-          status,
-          type: 'status_change',
-          title: `Status changed to ${status}`,
-          description: note,
-          userId,
-        },
-        { client: trx }
+      const updatedOrder = await this.orderRepository.update(
+        orderId,
+        { status },
+        trx
       )
 
-      return order
+      // Record status change in history
+      await this.statusManager.recordStatusChange(
+        orderId,
+        previousStatus as OrderStatus,
+        status,
+        userId,
+        note,
+        trx
+      )
+
+      return updatedOrder
     })
   }
 
+  /**
+   * Update payment status
+   */
   async updatePaymentStatus(orderId: string, paymentStatus: PaymentStatus): Promise<Order> {
-    const order = await Order.findOrFail(orderId)
-    order.paymentStatus = paymentStatus
-    await order.save()
-    return order
+    const order = await this.orderRepository.findById(orderId)
+
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`)
+    }
+
+    return await this.orderRepository.update(orderId, { paymentStatus })
   }
 
+  /**
+   * Update fulfillment status
+   */
   async updateFulfillmentStatus(
     orderId: string,
     fulfillmentStatus: FulfillmentStatus
   ): Promise<Order> {
-    const order = await Order.findOrFail(orderId)
-    order.fulfillmentStatus = fulfillmentStatus
-    await order.save()
-    return order
+    const order = await this.orderRepository.findById(orderId)
+
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`)
+    }
+
+    return await this.orderRepository.update(orderId, { fulfillmentStatus })
   }
 
+  /**
+   * Add payment transaction to order
+   */
   async addTransaction(
     orderId: string,
     data: {
@@ -213,6 +222,13 @@ export default class OrderService {
       gatewayResponse?: Record<string, unknown>
     }
   ): Promise<OrderTransaction> {
+    // Verify order exists
+    const order = await this.orderRepository.findById(orderId)
+
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`)
+    }
+
     return await OrderTransaction.create({
       orderId,
       type: data.type,
@@ -226,121 +242,93 @@ export default class OrderService {
     })
   }
 
+  /**
+   * Find order by ID with relationships
+   */
   async findById(orderId: string): Promise<Order | null> {
-    return await Order.query()
-      .where('id', orderId)
-      .preload('items', (query) => {
-        query.preload('product')
-      })
-      .preload('transactions')
-      .preload('statusHistory')
-      .preload('fulfillments', (query) => {
-        query.preload('items')
-      })
-      .preload('refunds', (query) => {
-        query.preload('items')
-      })
-      .first()
+    const order = await this.orderRepository.findById(orderId)
+
+    if (!order) {
+      return null
+    }
+
+    // Load relationships
+    await order.load('items', (query) => {
+      query.preload('product')
+    })
+
+    await order.load('transactions')
+    await order.load('statusHistory')
+    await order.load('fulfillments', (query) => {
+      query.preload('items')
+    })
+    await order.load('refunds', (query) => {
+      query.preload('items')
+    })
+
+    return order
   }
 
+  /**
+   * Find order by order number
+   */
   async findByOrderNumber(storeId: string, orderNumber: string): Promise<Order | null> {
-    return await Order.query()
-      .where('storeId', storeId)
-      .where('orderNumber', orderNumber)
-      .preload('items')
-      .preload('transactions')
-      .first()
+    const order = await this.orderRepository.findByOrderNumber(orderNumber, storeId)
+
+    if (!order) {
+      return null
+    }
+
+    // Load relationships
+    await order.load('items')
+    await order.load('transactions')
+
+    return order
   }
 
+  /**
+   * List orders with filters
+   */
   async list(filters: OrderFilters): Promise<ModelPaginatorContract<Order>> {
-    const query = Order.query()
-      .where('storeId', filters.storeId)
-      .whereNull('deletedAt')
-      .preload('items')
-      .preload('customer')
-
-    if (filters.customerId) {
-      query.where('customerId', filters.customerId)
-    }
-
-    if (filters.status) {
-      query.where('status', filters.status)
-    }
-
-    if (filters.paymentStatus) {
-      query.where('paymentStatus', filters.paymentStatus)
-    }
-
-    if (filters.fulfillmentStatus) {
-      query.where('fulfillmentStatus', filters.fulfillmentStatus)
-    }
-
-    if (filters.search) {
-      query.where((builder) => {
-        builder
-          .whereILike('orderNumber', `%${filters.search}%`)
-          .orWhereILike('email', `%${filters.search}%`)
-      })
-    }
-
-    if (filters.dateFrom) {
-      query.where('createdAt', '>=', filters.dateFrom.toISO()!)
-    }
-
-    if (filters.dateTo) {
-      query.where('createdAt', '<=', filters.dateTo.toISO()!)
-    }
-
-    const sortBy = filters.sortBy || 'createdAt'
-    const sortDir = filters.sortDir || 'desc'
-    query.orderBy(sortBy, sortDir)
-
-    return await query.paginate(filters.page || 1, filters.limit || 20)
+    return await this.orderRepository.list({
+      storeId: filters.storeId,
+      customerId: filters.customerId,
+      status: filters.status,
+      paymentStatus: filters.paymentStatus,
+      fulfillmentStatus: filters.fulfillmentStatus,
+      search: filters.search,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      sortBy: filters.sortBy,
+      sortDir: filters.sortDir,
+      page: filters.page,
+      limit: filters.limit,
+    })
   }
 
-  async getCustomerOrders(customerId: string, page: number = 1, limit: number = 10) {
-    return await Order.query()
-      .where('customerId', customerId)
-      .whereNull('deletedAt')
-      .preload('items')
-      .orderBy('createdAt', 'desc')
-      .paginate(page, limit)
+  /**
+   * Get customer orders
+   */
+  async getCustomerOrders(
+    customerId: string,
+    storeId: string,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    return await this.orderRepository.findByCustomerId(customerId, storeId, page, limit)
   }
 
+  /**
+   * Cancel order
+   */
   async cancel(orderId: string, reason?: string, userId?: number): Promise<Order> {
     return await this.updateStatus(orderId, 'cancelled', reason, userId)
   }
 
+  /**
+   * Get order statistics
+   */
   async getOrderStats(storeId: string, dateFrom?: DateTime, dateTo?: DateTime) {
-    const query = Order.query().where('storeId', storeId).whereNull('deletedAt')
-
-    if (dateFrom) {
-      query.where('createdAt', '>=', dateFrom.toISO()!)
-    }
-    if (dateTo) {
-      query.where('createdAt', '<=', dateTo.toISO()!)
-    }
-
-    const stats = await query
-      .select(
-        db.raw('COUNT(*) as total_orders'),
-        db.raw('SUM(grand_total) as total_revenue'),
-        db.raw('AVG(grand_total) as average_order_value'),
-        db.raw("COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_orders"),
-        db.raw("COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing_orders"),
-        db.raw("COUNT(CASE WHEN status = 'shipped' THEN 1 END) as shipped_orders"),
-        db.raw("COUNT(CASE WHEN status = 'delivered' THEN 1 END) as delivered_orders"),
-        db.raw("COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_orders")
-      )
-      .first()
-
-    return stats?.$extras || {}
-  }
-
-  private async generateOrderNumber(_storeId: string): Promise<string> {
-    const prefix = 'ORD'
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = string.random(4).toUpperCase()
-    return `${prefix}-${timestamp}-${random}`
+    return await this.orderRepository.getStatistics(storeId, dateFrom, dateTo)
   }
 }
