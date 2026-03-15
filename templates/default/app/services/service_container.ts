@@ -28,6 +28,8 @@ import ProductVariantManager from '#services/product/product_variant_manager'
 import ProductImageManager from '#services/product/product_image_manager'
 import ProductCategoryManager from '#services/product/product_category_manager'
 import ProductInventoryManager from '#services/product/product_inventory_manager'
+import ProductOptionManager from '#services/product/product_option_manager'
+import ProductTagManager from '#services/product/product_tag_manager'
 import PaymentProviderFactory from '#factories/payment_provider_factory'
 import SearchProviderFactory from '#factories/search_provider_factory'
 
@@ -79,6 +81,8 @@ class ServiceContainer {
     this.services.set('ProductImageManager', new ProductImageManager())
     this.services.set('ProductCategoryManager', new ProductCategoryManager())
     this.services.set('ProductInventoryManager', new ProductInventoryManager())
+    this.services.set('ProductOptionManager', new ProductOptionManager())
+    this.services.set('ProductTagManager', new ProductTagManager())
 
     // Checkout Service (with dependencies)
     this.services.set(
@@ -121,6 +125,8 @@ class ServiceContainer {
     const imageManager = this.services.get('ProductImageManager')
     const categoryManager = this.services.get('ProductCategoryManager')
     const inventoryManager = this.services.get('ProductInventoryManager')
+    const optionManager = this.services.get('ProductOptionManager')
+    const tagManager = this.services.get('ProductTagManager')
 
     // Note: DiscountService will be set later if needed
     this.services.set(
@@ -137,8 +143,24 @@ class ServiceContainer {
       )
     )
 
-    // Product Service (will be initialized when needed)
-    // ProductService is complex, will be refactored separately
+    // Product Service (with dependencies)
+    this.services.set(
+      'ProductService',
+      new ProductService(
+        this.services.get('ProductRepository'),
+        slugGenerator,
+        variantManager,
+        imageManager,
+        categoryManager,
+        inventoryManager,
+        optionManager,
+        tagManager
+      )
+    )
+
+    // Factories (for OCP - Open/Closed Principle)
+    this.services.set('PaymentProviderFactory', PaymentProviderFactory)
+    this.services.set('SearchProviderFactory', SearchProviderFactory)
 
     this.initialized = true
   }

@@ -6,6 +6,7 @@
  */
 
 import type IProductRepository from '#repositories/interfaces/i_product_repository'
+import ProductVariant from '#models/product_variant'
 
 export default class ProductInventoryManager {
   /**
@@ -81,5 +82,34 @@ export default class ProductInventoryManager {
     trx?: any
   ): Promise<void> {
     await this.adjustStock(productId, quantity, productRepository, trx)
+  }
+
+  /**
+   * Update variant inventory quantity
+   * Works with product variants (not base products)
+   */
+  async updateVariantInventory(
+    variantId: string,
+    quantity: number,
+    trx?: any
+  ): Promise<void> {
+    const variant = await ProductVariant.findOrFail(variantId)
+    variant.inventoryQuantity = quantity
+    await variant.save(trx ? { client: trx } : undefined)
+  }
+
+  /**
+   * Adjust variant inventory quantity
+   * Works with product variants (not base products)
+   */
+  async adjustVariantInventory(
+    variantId: string,
+    adjustment: number,
+    trx?: any
+  ): Promise<void> {
+    const variant = await ProductVariant.findOrFail(variantId)
+    const currentQuantity = variant.inventoryQuantity || 0
+    variant.inventoryQuantity = Math.max(0, currentQuantity + adjustment)
+    await variant.save(trx ? { client: trx } : undefined)
   }
 }

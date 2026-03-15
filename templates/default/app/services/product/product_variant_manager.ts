@@ -100,4 +100,22 @@ export default class ProductVariantManager {
     variant.quantityAvailable = quantity
     await variant.save(trx ? { client: trx } : undefined)
   }
+
+  /**
+   * Sync variants - replace all variants for a product
+   * Used in product update operations
+   */
+  async syncVariants(
+    productId: string,
+    variants: CreateVariantData[],
+    trx?: any
+  ): Promise<void> {
+    // Delete all existing variants
+    await ProductVariant.query({ client: trx })
+      .where('productId', productId)
+      .delete()
+
+    // Create new variants
+    await this.createVariants(productId, variants, trx)
+  }
 }

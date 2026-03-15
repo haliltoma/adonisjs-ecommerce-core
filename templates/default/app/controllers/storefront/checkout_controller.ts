@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import CartService from '#services/cart_service'
-import OrderService from '#services/order_service'
+import { useCartService } from '#services/service_container'
+import { useOrderService } from '#services/service_container'
+import { useCheckoutService } from '#services/service_container'
 import CustomerService from '#services/customer_service'
 import DiscountService from '#services/discount_service'
 import StoreService from '#services/store_service'
@@ -11,19 +12,12 @@ import emitter from '@adonisjs/core/services/emitter'
 import { PaymentCaptured, PaymentFailed } from '#events/payment_events'
 
 export default class CheckoutController {
-  private cartService: CartService
-  private orderService: OrderService
-  private customerService: CustomerService
-  private discountService: DiscountService
-  private storeService: StoreService
-
-  constructor() {
-    this.cartService = new CartService()
-    this.orderService = new OrderService()
-    this.customerService = new CustomerService()
-    this.discountService = new DiscountService()
-    this.storeService = new StoreService()
-  }
+  private cartService = useCartService()
+  private orderService = useOrderService()
+  private checkoutService = useCheckoutService()
+  private customerService = new CustomerService()
+  private discountService = new DiscountService()
+  private storeService = new StoreService()
 
   private async getShippingMethods(storeId: string) {
     const settings = await this.storeService.getSettingsByGroup(storeId, 'shipping')

@@ -91,4 +91,22 @@ export default class ProductImageManager {
         .update({ position: i })
     }
   }
+
+  /**
+   * Sync images - replace all images for a product
+   * Used in product update operations
+   */
+  async syncImages(
+    productId: string,
+    images: CreateImageData[],
+    trx?: any
+  ): Promise<void> {
+    // Delete all existing images
+    await ProductImage.query({ client: trx })
+      .where('productId', productId)
+      .delete()
+
+    // Create new images
+    await this.createImages(productId, images, trx)
+  }
 }
