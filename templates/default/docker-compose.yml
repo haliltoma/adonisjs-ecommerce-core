@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: adoniscommerce-postgres
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -26,7 +26,7 @@ services:
   # Redis Cache & Session Store
   redis:
     image: redis:7-alpine
-    container_name: adoniscommerce-redis
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
@@ -46,7 +46,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: adoniscommerce-app
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-app
     restart: unless-stopped
     environment:
       - NODE_ENV=development
@@ -86,7 +86,7 @@ services:
   # Adminer - Database Management UI (optional)
   adminer:
     image: adminer:latest
-    container_name: adoniscommerce-adminer
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-adminer
     restart: unless-stopped
     ports:
       - "${ADMINER_PORT:-8080}:8080"
@@ -103,7 +103,7 @@ services:
   # Redis Commander - Redis Management UI (optional)
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: adoniscommerce-redis-commander
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-redis-commander
     restart: unless-stopped
     environment:
       REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-redis123}
@@ -119,7 +119,7 @@ services:
   # MailHog - Email Testing (optional)
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: adoniscommerce-mailhog
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-mailhog
     restart: unless-stopped
     ports:
       - "${MAILHOG_SMTP_PORT:-1025}:1025"

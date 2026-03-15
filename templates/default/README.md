@@ -647,6 +647,87 @@ POST /admin/inventory/reserve
 }
 ```
 
+## 🐳 Multiple Projects with Docker
+
+If you're running multiple AdonisCommerce projects simultaneously, container name conflicts can occur. This has been fixed with dynamic naming.
+
+### How It Works
+
+Container names are automatically based on the project folder name:
+
+```bash
+# Example with multiple projects
+cd my-store-1
+pnpm docker:dev
+# Containers: my-store-1-postgres, my-store-1-redis, my-store-1-app
+
+cd ../my-store-2
+pnpm docker:dev
+# Containers: my-store-2-postgres, my-store-2-redis, my-store-2-app
+# ✅ No conflicts!
+```
+
+### Custom Project Name
+
+You can override the automatic naming:
+
+1. **Edit .env:**
+```bash
+PROJECT_NAME=my-custom-name
+```
+
+2. **Start services:**
+```bash
+pnpm docker:dev
+# Containers: my-custom-name-postgres, my-custom-name-redis, my-custom-name-app
+```
+
+### Container Names Reference
+
+| Service | Default Name Pattern | Example (my-store) |
+|---------|---------------------|---------------------|
+| PostgreSQL | `${PROJECT_NAME}-postgres` | `my-store-postgres` |
+| Redis | `${PROJECT_NAME}-redis` | `my-store-redis` |
+| AdonisJS App | `${PROJECT_NAME}-app` | `my-store-app` |
+| Adminer | `${PROJECT_NAME}-adminer` | `my-store-adminer` |
+| Redis Commander | `${PROJECT_NAME}-redis-commander` | `my-store-redis-commander` |
+| MailHog | `${PROJECT_NAME}-mailhog` | `my-store-mailhog` |
+
+### View Running Containers
+
+```bash
+# List all AdonisCommerce containers
+docker ps | grep adoniscommerce
+
+# View specific project containers
+docker ps | grep my-store
+```
+
+### Troubleshooting Multiple Projects
+
+**Port conflicts?** Change ports in `.env`:
+```bash
+# Project 1 (.env)
+APP_PORT=3333
+DB_PORT=5432
+REDIS_PORT=6379
+
+# Project 2 (.env)
+APP_PORT=3334
+DB_PORT=5433
+REDIS_PORT=6380
+```
+
+**Still getting conflicts?** Stop other projects:
+```bash
+# Stop specific project
+cd ../my-store-1
+docker compose down
+
+# Stop all AdonisCommerce projects
+docker ps -q | grep adoniscommerce | xargs docker stop
+```
+
 ## 🐛 Troubleshooting
 
 ### Server won't start

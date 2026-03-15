@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: adoniscommerce-postgres
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-postgres
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -28,7 +28,7 @@ services:
   # Redis Cache & Session Store
   redis:
     image: redis:7-alpine
-    container_name: adoniscommerce-redis
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-redis
     restart: always
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
@@ -51,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: adoniscommerce-app
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-app
     restart: always
     environment:
       - NODE_ENV=production
@@ -93,7 +93,7 @@ services:
   # Nginx Reverse Proxy (optional, for production)
   nginx:
     image: nginx:alpine
-    container_name: adoniscommerce-nginx
+    container_name: ${COMPOSE_PROJECT_NAME:-adoniscommerce}-nginx
     restart: always
     ports:
       - "80:80"
