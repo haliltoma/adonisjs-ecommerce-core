@@ -1,7 +1,7 @@
 {
   "name": "@adonisjs-ecommerce-core/create",
-  "version": "2.0.0",
-  "description": "Create a new AdonisCommerce e-commerce application (AdonisJS 7 + React)",
+  "version": "2.1.0",
+  "description": "Create a new AdonisCommerce e-commerce application (AdonisJS 7 + React) with SOLID principles",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -22,7 +22,10 @@
     "scaffold",
     "react",
     "inertia",
-    "typescript"
+    "typescript",
+    "solid",
+    "solid-principles",
+    "architecture"
   ],
   "author": "",
   "license": "MIT",

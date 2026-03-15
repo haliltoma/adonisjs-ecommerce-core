@@ -11,7 +11,7 @@ import validatePackageName from 'validate-npm-package-name'
 
 const TEMPLATE_REPO = 'github:haliltoma/adonisjs-ecommerce-core#main'
 const TEMPLATE_PATH = 'templates/default'
-const VERSION = '2.0.0'
+const VERSION = '2.1.0'
 
 interface ProjectOptions {
   projectName: string
