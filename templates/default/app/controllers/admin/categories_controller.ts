@@ -1,14 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import CategoryService from '#services/category_service'
+import { useCategoryService } from '#services/service_container'
 import Category from '#models/category'
 import Collection from '#models/collection'
 
 export default class CategoriesController {
-  private categoryService: CategoryService
-
-  constructor() {
-    this.categoryService = new CategoryService()
-  }
+  private categoryService = useCategoryService()
 
   async collections({ inertia, store }: HttpContext) {
     const collections = await Collection.query()

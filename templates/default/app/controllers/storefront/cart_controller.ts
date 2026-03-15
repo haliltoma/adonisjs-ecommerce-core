@@ -1,12 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import CartService from '#services/cart_service'
+import { useCartService } from '#services/service_container'
 
 export default class CartController {
-  private cartService: CartService
-
-  constructor() {
-    this.cartService = new CartService()
-  }
+  private cartService = useCartService()
 
   async index({ inertia, session, store }: HttpContext) {
     const storeId = store.id

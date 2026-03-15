@@ -1,17 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import CustomerService from '#services/customer_service'
-import OrderService from '#services/order_service'
+import { useCustomerService } from '#services/service_container'
+import { useOrderService } from '#services/service_container'
 import Customer from '#models/customer'
 import CustomerGroup from '#models/customer_group'
 
 export default class CustomersController {
-  private customerService: CustomerService
-  private orderService: OrderService
-
-  constructor() {
-    this.customerService = new CustomerService()
-    this.orderService = new OrderService()
-  }
+  private customerService = useCustomerService()
+  private orderService = useOrderService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

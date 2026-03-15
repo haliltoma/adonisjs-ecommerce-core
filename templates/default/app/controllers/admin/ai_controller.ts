@@ -1,15 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import AiService from '#services/ai_service'
-import StoreService from '#services/store_service'
+import { useAiService } from '#services/service_container'
+import { useStoreService } from '#services/service_container'
 
 export default class AiController {
-  private aiService: AiService
-  private storeService: StoreService
-
-  constructor() {
-    this.aiService = new AiService()
-    this.storeService = new StoreService()
-  }
+  private aiService = useAiService()
+  private storeService = useStoreService()
 
   private async getAiConfig(storeId: string) {
     const enabled = await this.storeService.getSetting(storeId, 'ai', 'enabled')

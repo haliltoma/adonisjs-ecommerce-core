@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { PaymentProvider } from '#contracts/payment_provider'
-import OrderService from '#services/order_service'
-import CustomerService from '#services/customer_service'
+import { useOrderService } from '#services/service_container'
 import emitter from '@adonisjs/core/services/emitter'
 import {
   PaymentCaptured,
@@ -19,11 +18,7 @@ import logger from '@adonisjs/core/services/logger'
  * This endpoint should be excluded from CSRF protection.
  */
 export default class PaymentWebhookController {
-  private orderService: OrderService
-
-  constructor() {
-    this.orderService = new OrderService()
-  }
+  private orderService = useOrderService()
 
   /**
    * POST /webhooks/stripe

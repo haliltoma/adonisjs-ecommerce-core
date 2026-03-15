@@ -1,15 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import PriceListService from '#services/price_list_service'
+import { usePriceListService } from '#services/service_container'
 import Product from '#models/product'
 import CustomerGroup from '#models/customer_group'
 import Region from '#models/region'
 
 export default class PriceListsController {
-  private priceListService: PriceListService
-
-  constructor() {
-    this.priceListService = new PriceListService()
-  }
+  private priceListService = usePriceListService()
 
   async index({ inertia, request, store }: HttpContext) {
     const page = request.input('page', 1)

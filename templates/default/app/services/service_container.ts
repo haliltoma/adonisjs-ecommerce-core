@@ -15,6 +15,20 @@ import CheckoutService from '#services/checkout_service'
 import OrderService from '#services/order_service'
 import CartService from '#services/cart_service'
 import ProductService from '#services/product_service'
+import CategoryService from '#services/category_service'
+import DiscountService from '#services/discount_service'
+import CustomerService from '#services/customer_service'
+import StoreService from '#services/store_service'
+import InventoryService from '#services/inventory_service'
+import GiftCardService from '#services/gift_card_service'
+import DraftOrderService from '#services/draft_order_service'
+import PriceListService from '#services/price_list_service'
+import AiService from '#services/ai_service'
+import AuthService from '#services/auth_service'
+import SubscriptionService from '#services/subscription_service'
+import BundleService from '#services/bundle_service'
+import DigitalProductService from '#services/digital_product_service'
+import ImageService from '#services/image_service'
 import OrderItemFactory from '#services/order/order_item_factory'
 import OrderStatusManager from '#services/order/order_status_manager'
 import OrderNumberGenerator from '#services/order/order_number_generator'
@@ -162,6 +176,22 @@ class ServiceContainer {
     this.services.set('PaymentProviderFactory', PaymentProviderFactory)
     this.services.set('SearchProviderFactory', SearchProviderFactory)
 
+    // Additional Services (without complex dependencies)
+    this.services.set('CategoryService', new CategoryService())
+    this.services.set('DiscountService', new DiscountService())
+    this.services.set('CustomerService', new CustomerService())
+    this.services.set('StoreService', new StoreService())
+    this.services.set('InventoryService', new InventoryService())
+    this.services.set('GiftCardService', new GiftCardService())
+    this.services.set('DraftOrderService', new DraftOrderService())
+    this.services.set('PriceListService', new PriceListService())
+    this.services.set('AiService', new AiService())
+    this.services.set('AuthService', new AuthService())
+    this.services.set('SubscriptionService', new SubscriptionService())
+    this.services.set('BundleService', new BundleService())
+    this.services.set('DigitalProductService', new DigitalProductService())
+    this.services.set('ImageService', new ImageService())
+
     this.initialized = true
   }
 
@@ -235,3 +265,26 @@ export const usePaymentProvider = (): PaymentProviderFactory =>
   useService<PaymentProviderFactory>('PaymentProviderFactory')
 export const useSearchProvider = (): SearchProviderFactory =>
   useService<SearchProviderFactory>('SearchProviderFactory')
+export const useCategoryService = (): CategoryService =>
+  useService<CategoryService>('CategoryService')
+export const useDiscountService = (): DiscountService =>
+  useService<DiscountService>('DiscountService')
+export const useCustomerService = (): CustomerService =>
+  useService<CustomerService>('CustomerService')
+export const useStoreService = (): StoreService => useService<StoreService>('StoreService')
+export const useInventoryService = (): InventoryService =>
+  useService<InventoryService>('InventoryService')
+export const useGiftCardService = (): GiftCardService =>
+  useService<GiftCardService>('GiftCardService')
+export const useDraftOrderService = (): DraftOrderService =>
+  useService<DraftOrderService>('DraftOrderService')
+export const usePriceListService = (): PriceListService =>
+  useService<PriceListService>('PriceListService')
+export const useAiService = (): AiService => useService<AiService>('AiService')
+export const useAuthService = (): AuthService => useService<AuthService>('AuthService')
+export const useSubscriptionService = (): SubscriptionService =>
+  useService<SubscriptionService>('SubscriptionService')
+export const useBundleService = (): BundleService => useService<BundleService>('BundleService')
+export const useDigitalProductService = (): DigitalProductService =>
+  useService<DigitalProductService>('DigitalProductService')
+export const useImageService = (): ImageService => useService<ImageService>('ImageService')

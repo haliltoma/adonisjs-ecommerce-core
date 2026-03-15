@@ -1,20 +1,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import vine from '@vinejs/vine'
-import ProductService from '#services/product_service'
-import CategoryService from '#services/category_service'
+import { useProductService } from '#services/service_container'
+import { useCategoryService } from '#services/service_container'
 import Product from '#models/product'
 import Collection from '#models/collection'
 import Review from '#models/review'
 
 export default class ProductsController {
-  private productService: ProductService
-  private categoryService: CategoryService
-
-  constructor() {
-    this.productService = new ProductService()
-    this.categoryService = new CategoryService()
-  }
+  private productService = useProductService()
+  private categoryService = useCategoryService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

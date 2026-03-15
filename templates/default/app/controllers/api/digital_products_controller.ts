@@ -1,13 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import DigitalProductService from '#services/digital_product_service'
+import { useDigitalProductService } from '#services/service_container'
 import { validator } from '#services/validation_service'
 
 export default class DigitalProductsController {
-  protected digitalProductService: DigitalProductService
-
-  constructor() {
-    this.digitalProductService = new DigitalProductService()
-  }
+  protected digitalProductService = useDigitalProductService()
 
   /**
    * Upload digital product file

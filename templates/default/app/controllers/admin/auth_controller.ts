@@ -1,13 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import AuthService from '#services/auth_service'
+import { useAuthService } from '#services/service_container'
 import User from '#models/user'
 
 export default class AuthController {
-  private authService: AuthService
-
-  constructor() {
-    this.authService = new AuthService()
-  }
+  private authService = useAuthService()
 
   async showLogin({ inertia }: HttpContext) {
     return inertia.render('admin/auth/Login', {})

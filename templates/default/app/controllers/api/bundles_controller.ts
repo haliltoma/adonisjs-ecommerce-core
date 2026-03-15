@@ -1,12 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import BundleService from '#services/bundle_service'
+import { useBundleService } from '#services/service_container'
 
 export default class BundlesController {
-  protected bundleService: BundleService
-
-  constructor() {
-    this.bundleService = new BundleService()
-  }
+  protected bundleService = useBundleService()
 
   /**
    * Create bundle

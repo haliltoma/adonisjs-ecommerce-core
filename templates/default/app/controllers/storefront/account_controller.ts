@@ -1,24 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
-import CustomerService from '#services/customer_service'
-import OrderService from '#services/order_service'
-import CartService from '#services/cart_service'
+import { useCustomerService } from '#services/service_container'
+import { useOrderService } from '#services/service_container'
+import { useCartService } from '#services/service_container'
 import Review from '#models/review'
 import Wishlist from '#models/wishlist'
 import WishlistItem from '#models/wishlist_item'
 
 export default class AccountController {
-  private authService: AuthService
-  private customerService: CustomerService
-  private orderService: OrderService
-  private cartService: CartService
-
-  constructor() {
-    this.authService = new AuthService()
-    this.customerService = new CustomerService()
-    this.orderService = new OrderService()
-    this.cartService = new CartService()
-  }
+  private authService = new AuthService()
+  private customerService = useCustomerService()
+  private orderService = useOrderService()
+  private cartService = useCartService()
 
   async wishlist({ inertia, session }: HttpContext) {
     const customerId = session.get('customer_id')

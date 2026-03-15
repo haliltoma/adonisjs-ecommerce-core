@@ -1,15 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import DraftOrderService from '#services/draft_order_service'
+import { useDraftOrderService } from '#services/service_container'
 import Customer from '#models/customer'
 import Product from '#models/product'
 import Region from '#models/region'
 
 export default class DraftOrdersController {
-  private draftOrderService: DraftOrderService
-
-  constructor() {
-    this.draftOrderService = new DraftOrderService()
-  }
+  private draftOrderService = useDraftOrderService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

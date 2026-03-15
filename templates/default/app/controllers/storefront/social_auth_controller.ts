@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Customer from '#models/customer'
-import CartService from '#services/cart_service'
+import { useCartService } from '#services/service_container'
 import type Store from '#models/store'
 
 type SocialProvider = 'google' | 'facebook'
@@ -12,11 +12,7 @@ interface StorefrontContext extends HttpContext {
 }
 
 export default class SocialAuthController {
-  private cartService: CartService
-
-  constructor() {
-    this.cartService = new CartService()
-  }
+  private cartService = useCartService()
 
   async redirect(ctx: HttpContext) {
     const { ally } = ctx as unknown as StorefrontContext

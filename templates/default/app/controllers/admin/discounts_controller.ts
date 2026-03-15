@@ -1,13 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import DiscountService from '#services/discount_service'
+import { useDiscountService } from '#services/service_container'
 import { DateTime } from 'luxon'
 
 export default class DiscountsController {
-  private discountService: DiscountService
-
-  constructor() {
-    this.discountService = new DiscountService()
-  }
+  private discountService = useDiscountService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

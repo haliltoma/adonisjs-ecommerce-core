@@ -1,12 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import SubscriptionService from '#services/subscription_service'
+import { useSubscriptionService } from '#services/service_container'
 
 export default class SubscriptionsController {
-  protected subscriptionService: SubscriptionService
-
-  constructor() {
-    this.subscriptionService = new SubscriptionService()
-  }
+  protected subscriptionService = useSubscriptionService()
 
   /**
    * Create subscription

@@ -1,13 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import GiftCardService from '#services/gift_card_service'
+import { useGiftCardService } from '#services/service_container'
 import Region from '#models/region'
 
 export default class GiftCardsController {
-  private giftCardService: GiftCardService
-
-  constructor() {
-    this.giftCardService = new GiftCardService()
-  }
+  private giftCardService = useGiftCardService()
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id

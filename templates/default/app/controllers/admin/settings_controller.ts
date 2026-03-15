@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
-import StoreService from '#services/store_service'
+import { useStoreService } from '#services/service_container'
 import RegionService from '#services/region_service'
 import SalesChannelService from '#services/sales_channel_service'
 import CustomerGroupService from '#services/customer_group_service'
@@ -23,23 +23,13 @@ import WebhookLog from '#models/webhook_log'
 import { randomBytes } from 'node:crypto'
 
 export default class SettingsController {
-  private storeService: StoreService
-  private regionService: RegionService
-  private salesChannelService: SalesChannelService
-  private customerGroupService: CustomerGroupService
-  private returnService: ReturnService
-  private apiKeyService: ApiKeyService
-  private shippingProfileService: ShippingProfileService
-
-  constructor() {
-    this.storeService = new StoreService()
-    this.regionService = new RegionService()
-    this.salesChannelService = new SalesChannelService()
-    this.customerGroupService = new CustomerGroupService()
-    this.returnService = new ReturnService()
-    this.apiKeyService = new ApiKeyService()
-    this.shippingProfileService = new ShippingProfileService()
-  }
+  private storeService = useStoreService()
+  private regionService = new RegionService()
+  private salesChannelService = new SalesChannelService()
+  private customerGroupService = new CustomerGroupService()
+  private returnService = new ReturnService()
+  private apiKeyService = new ApiKeyService()
+  private shippingProfileService = new ShippingProfileService()
 
   async index({ inertia, store }: HttpContext) {
     const allSettings = await this.storeService.getAllSettings(store.id)

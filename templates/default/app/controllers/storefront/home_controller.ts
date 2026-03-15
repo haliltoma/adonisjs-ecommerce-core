@@ -1,8 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
-import ProductService from '#services/product_service'
-import CategoryService from '#services/category_service'
-import CustomerService from '#services/customer_service'
+import { useProductService } from '#services/service_container'
+import { useCategoryService } from '#services/service_container'
+import { useCustomerService } from '#services/service_container'
 import { SearchProvider } from '#contracts/search_provider'
 import { meilisearchService } from '#services/meilisearch_service'
 import { searchAnalyticsService } from '#services/search_analytics_service'
@@ -12,15 +12,9 @@ import Page from '#models/page'
 import { DateTime } from 'luxon'
 
 export default class HomeController {
-  private productService: ProductService
-  private categoryService: CategoryService
-  private customerService: CustomerService
-
-  constructor() {
-    this.productService = new ProductService()
-    this.categoryService = new CategoryService()
-    this.customerService = new CustomerService()
-  }
+  private productService = useProductService()
+  private categoryService = useCategoryService()
+  private customerService = useCustomerService()
 
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id
