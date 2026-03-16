@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { useImageService } from '#services/service_container'
-import { MultipartFile } from '@adonisjs/core/body_parser'
 
 export default class ImagesController {
   protected imageService = useImageService()

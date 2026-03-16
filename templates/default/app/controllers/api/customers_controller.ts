@@ -117,15 +117,15 @@ export default class CustomersController {
    * Get current customer profile
    */
   async me({ response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
-    // Find customer by user email or ID
+    // Find customer by auth?.user email or ID
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .preload('addresses')
       .first()
 
@@ -143,14 +143,14 @@ export default class CustomersController {
    * Update customer profile
    */
   async update({ request, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -189,14 +189,14 @@ export default class CustomersController {
    * Get customer addresses
    */
   async addresses({ response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -218,14 +218,14 @@ export default class CustomersController {
    * Add a new address
    */
   async addAddress({ request, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -269,14 +269,14 @@ export default class CustomersController {
    * Update an address
    */
   async updateAddress({ params, request, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -335,14 +335,14 @@ export default class CustomersController {
    * Delete an address
    */
   async deleteAddress({ params, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -370,14 +370,14 @@ export default class CustomersController {
    * Get customer wishlist
    */
   async wishlist({ response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -437,14 +437,14 @@ export default class CustomersController {
    * Add product to wishlist
    */
   async addToWishlist({ request, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {
@@ -496,14 +496,14 @@ export default class CustomersController {
    * Remove product from wishlist
    */
   async removeFromWishlist({ params, response, auth }: HttpContext) {
-    const user = auth.user
+    const auth?.user = auth.auth?.user
 
-    if (!user) {
+    if (!auth?.user) {
       return response.unauthorized({ error: 'Not authenticated' })
     }
 
     const customer = await Customer.query()
-      .where('email', user.email)
+      .where('email', auth?.user.email)
       .first()
 
     if (!customer) {

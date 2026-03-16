@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { column, BaseModel , belongsTo, hasMany, manyToMany} from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import hash from '@adonisjs/core/services/hash'
 import Store from './store.js'
@@ -14,122 +14,121 @@ import Currency from './currency.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class Customer extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string
+ @column({ isPrimary: true })
+ declare id: string
 
-  @column()
-  declare storeId: string
+ @column()
+ declare storeId: string
 
-  @column()
-  declare email: string
+ @column()
+ declare email: string
 
-  @column({ serializeAs: null })
-  declare passwordHash: string | null
+ @column({ serializeAs: null })
+ declare passwordHash: string | null
 
-  @column()
-  declare firstName: string
+ @column()
+ declare firstName: string
 
-  @column()
-  declare lastName: string
+ @column()
+ declare lastName: string
 
-  @column()
-  declare phone: string | null
+ @column()
+ declare phone: string | null
 
-  @column()
-  declare avatarUrl: string | null
+ @column()
+ declare avatarUrl: string | null
 
-  @column()
-  declare status: 'active' | 'disabled' | 'banned'
+ @column()
+ declare status: 'active' | 'disabled' | 'banned'
 
-  @column()
-  declare acceptsMarketing: boolean
+ @column()
+ declare acceptsMarketing: boolean
 
-  @column()
-  declare totalOrders: number
+ @column()
+ declare totalOrders: number
 
-  @column()
-  declare totalSpent: number
+ @column()
+ declare totalSpent: number
 
-  @column.dateTime()
-  declare lastOrderAt: DateTime | null
+ @column.dateTime()
+ declare lastOrderAt: DateTime | null
 
-  @column(jsonColumn())
-  declare tags: string[]
+ @column(jsonColumn())
+ declare tags: string[]
 
-  @column()
-  declare notes: string | null
+ @column()
+ declare notes: string | null
 
-  @column()
-  declare groupId: string | null
+ @column()
+ declare groupId: string | null
 
-  @column()
-  declare preferredCurrencyCode: string | null
+ @column()
+ declare preferredCurrencyCode: string | null
 
-  @column(jsonColumn())
-  declare metadata: Record<string, unknown>
+ @column(jsonColumn())
+ declare metadata: Record<string, unknown>
 
-  @column()
-  declare oauthProvider: string | null
+ @column()
+ declare oauthProvider: string | null
 
-  @column()
-  declare oauthProviderId: string | null
+ @column()
+ declare oauthProviderId: string | null
 
-  @column()
-  declare oauthAvatarUrl: string | null
+ @column()
+ declare oauthAvatarUrl: string | null
 
-  @column.dateTime()
-  declare emailVerifiedAt: DateTime | null
+ @column.dateTime()
+ declare emailVerifiedAt: DateTime | null
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
+ @column.dateTime({ autoCreate: true })
+ declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
+ @column.dateTime({ autoCreate: true, autoUpdate: true })
+ declare updatedAt: DateTime
 
-  @column.dateTime()
-  declare deletedAt: DateTime | null
+ @column.dateTime()
+ declare deletedAt: DateTime | null
 
-  @belongsTo(() => Store)
-  declare store: BelongsTo<typeof Store>
+ @belongsTo(() => Store)
+ declare store: BelongsTo<typeof Store>
 
-  @hasMany(() => CustomerAddress)
-  declare addresses: HasMany<typeof CustomerAddress>
+ @hasMany(() => CustomerAddress)
+ declare addresses: HasMany<typeof CustomerAddress>
 
-  @hasMany(() => Order)
-  declare orders: HasMany<typeof Order>
+ @hasMany(() => Order)
+ declare orders: HasMany<typeof Order>
 
-  @hasMany(() => Cart)
-  declare carts: HasMany<typeof Cart>
+ @hasMany(() => Cart)
+ declare carts: HasMany<typeof Cart>
 
-  @hasMany(() => Wishlist)
-  declare wishlists: HasMany<typeof Wishlist>
+ @hasMany(() => Wishlist)
+ declare wishlists: HasMany<typeof Wishlist>
 
-  @hasMany(() => Review)
-  declare reviews: HasMany<typeof Review>
+ @hasMany(() => Review)
+ declare reviews: HasMany<typeof Review>
 
-  @belongsTo(() => CustomerGroup, { foreignKey: 'groupId' })
-  declare group: BelongsTo<typeof CustomerGroup>
+ @belongsTo(() => CustomerGroup, { foreignKey: 'groupId' })
+ declare group: BelongsTo<typeof CustomerGroup>
 
-  @belongsTo(() => Currency, { foreignKey: 'preferredCurrencyCode' })
-  declare preferredCurrency: BelongsTo<typeof Currency>
+ @belongsTo(() => Currency, { foreignKey: 'preferredCurrencyCode' })
+ declare preferredCurrency: BelongsTo<typeof Currency>
 
-  @manyToMany(() => CustomerSegment, {
-    pivotTable: 'customer_segment_assignments',
-    pivotTimestamps: true,
-    pivotColumns: ['metadata', 'assignedAt'],
-  })
-  declare segments: ManyToMany<typeof CustomerSegment>
+ @manyToMany(() => CustomerSegment, {
+ pivotTable: 'customer_segment_assignments',
+ pivotTimestamps: true,
+ pivotColumns: ['metadata', 'assignedAt'] })
+ declare segments: ManyToMany<typeof CustomerSegment>
 
-  get fullName() {
-    return `${this.firstName} ${this.lastName}`
-  }
+ get fullName() {
+ return `${this.firstName} ${this.lastName}`
+ }
 
-  async verifyPassword(plainPassword: string): Promise<boolean> {
-    if (!this.passwordHash) return false
-    return hash.verify(this.passwordHash, plainPassword)
-  }
+ async verifyPassword(plainPassword: string): Promise<boolean> {
+ if (!this.passwordHash) return false
+ return hash.verify(this.passwordHash, plainPassword)
+ }
 
-  static async hashPassword(password: string): Promise<string> {
-    return hash.make(password)
-  }
+ static async hashPassword(password: string): Promise<string> {
+ return hash.make(password)
+ }
 }

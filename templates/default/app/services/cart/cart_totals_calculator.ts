@@ -5,7 +5,7 @@
  * Single Responsibility: Calculate cart totals (subtotal, grand total).
  */
 
-import type { CartItem } from '@adonisjs/lucid/types/model'
+import type { CartItem } from '#models/cart'
 
 export interface CartTotals {
   subtotal: number

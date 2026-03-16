@@ -102,7 +102,7 @@ export default class ProductImageManager {
     trx?: any
   ): Promise<void> {
     // Delete all existing images
-    await ProductImage.query({ client: trx })
+    await ProductImage.query()
       .where('productId', productId)
       .delete()
 

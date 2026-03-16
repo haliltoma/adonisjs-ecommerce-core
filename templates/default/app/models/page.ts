@@ -1,52 +1,52 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { column, BaseModel , belongsTo} from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class Page extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string
+ @column({ isPrimary: true })
+ declare id: string
 
-  @column()
-  declare storeId: string
+ @column()
+ declare storeId: string
 
-  @column()
-  declare title: string
+ @column()
+ declare title: string
 
-  @column()
-  declare slug: string
+ @column()
+ declare slug: string
 
-  @column(jsonColumn())
-  declare content: Record<string, unknown> | null
+ @column(jsonColumn())
+ declare content: Record<string, unknown> | null
 
-  @column()
-  declare template: string
+ @column()
+ declare template: string
 
-  @column()
-  declare pageType: 'custom' | 'home' | 'product' | 'category' | 'collection'
+ @column()
+ declare pageType: 'custom' | 'home' | 'product' | 'category' | 'collection'
 
-  @column()
-  declare status: 'draft' | 'published'
+ @column()
+ declare status: 'draft' | 'published'
 
-  @column()
-  declare isSystem: boolean
+ @column()
+ declare isSystem: boolean
 
-  @column()
-  declare metaTitle: string | null
+ @column()
+ declare metaTitle: string | null
 
-  @column()
-  declare metaDescription: string | null
+ @column()
+ declare metaDescription: string | null
 
-  @column.dateTime()
-  declare publishedAt: DateTime | null
+ @column.dateTime()
+ declare publishedAt: DateTime | null
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
+ @column.dateTime({ autoCreate: true })
+ declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
+ @column.dateTime({ autoCreate: true, autoUpdate: true })
+ declare updatedAt: DateTime
 
-  @belongsTo(() => Store)
-  declare store: BelongsTo<typeof Store>
+ @belongsTo(() => Store)
+ declare store: BelongsTo<typeof Store>
 }

@@ -11,8 +11,8 @@ import env from '#start/env'
 import { SearchProvider } from '#contracts/search_provider'
 
 // Available search providers
-import MeiliSearchProvider from '#providers/search/meilisearch_provider'
-import DatabaseSearchProvider from '#providers/search/database_search_provider'
+import { MeilisearchSearchProvider as MeiliSearchProvider } from '#services/search/meilisearch_search_provider'
+import { DatabaseSearchProvider } from '#services/search/database_search_provider'
 
 /**
  * Search Provider Factory

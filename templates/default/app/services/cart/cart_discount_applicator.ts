@@ -5,7 +5,7 @@
  * Single Responsibility: Apply discount codes to cart.
  */
 
-import type { Cart } from '@adonisjs/lucid/types/model'
+import type { Cart } from '#models/cart'
 
 export interface DiscountResult {
   success: boolean

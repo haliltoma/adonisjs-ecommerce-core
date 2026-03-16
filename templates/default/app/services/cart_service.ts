@@ -61,7 +61,6 @@ export default class CartService {
         customerId,
         sessionId,
         currencyCode: 'USD',
-        subtotal: 0,
         discountTotal: 0,
         taxTotal: 0,
         shippingTotal: 0,
@@ -303,7 +302,6 @@ export default class CartService {
       await this.cartRepository.update(
         cart.id,
         {
-          subtotal: 0,
           discountTotal: 0,
           taxTotal: 0,
           shippingTotal: 0,
@@ -368,9 +366,33 @@ export default class CartService {
   }
 
   /**
+   * Merge guest cart into customer cart after login/register
+   * Convenience method that finds carts by session/customer and merges them
+   */
+  async mergeGuestCart(sessionId: string, customerId: string, storeId: string): Promise<Cart> {
+    // Find guest cart by session
+    const guestCart = await this.cartRepository.findBySession(storeId, sessionId)
+
+    if (!guestCart) {
+      // No guest cart to merge, return customer's active cart
+      const customerCart = await this.cartRepository.findByCustomer(storeId, customerId)
+      return customerCart || await this.getOrCreateCart(storeId, customerId)
+    }
+
+    // Find or create customer cart
+    let customerCart = await this.cartRepository.findByCustomer(storeId, customerId)
+    if (!customerCart) {
+      customerCart = await this.getOrCreateCart(storeId, customerId)
+    }
+
+    // Merge guest cart into customer cart
+    return await this.mergeCarts(guestCart.id, customerCart.id)
+  }
+
+  /**
    * Get cart by ID
    */
-  async findById(cartId: string): Promise<Cart | null> {
+  async findById(cartId: string): Promise<Cart> {
     return await this.cartRepository.findById(cartId)
   }
 

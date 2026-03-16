@@ -12,7 +12,7 @@ import TaxRate from '#models/tax_rate'
 import Currency from '#models/currency'
 import Locale from '#models/locale'
 import Webhook from '#models/webhook'
-import User from '#models/user'
+import User from '#models/auth?.user'
 import Role from '#models/role'
 import Permission from '#models/permission'
 import Attribute from '#models/attribute'
@@ -780,14 +780,14 @@ export default class SettingsController {
     const data = request.only(['fullName', 'email', 'roleId', 'isActive'])
 
     try {
-      const user = await User.findOrFail(params.id)
-      user.merge({
+      const auth?.user = await User.findOrFail(params.id)
+      auth?.user.merge({
         fullName: data.fullName,
         email: data.email,
         roleId: data.roleId,
         isActive: data.isActive,
       })
-      await user.save()
+      await auth?.user.save()
 
       session.flash('success', 'User updated')
       return response.redirect().back()
@@ -799,14 +799,14 @@ export default class SettingsController {
 
   async destroyUser({ params, response, session, admin }: HttpContext) {
     try {
-      const user = await User.findOrFail(params.id)
+      const auth?.user = await User.findOrFail(params.id)
 
-      if (user.id === admin!.id) {
+      if (auth?.user.id === admin!.id) {
         session.flash('error', 'Cannot delete your own account')
         return response.redirect().back()
       }
 
-      await user.delete()
+      await auth?.user.delete()
       session.flash('success', 'User deleted')
       return response.redirect().back()
     } catch (error: unknown) {

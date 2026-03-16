@@ -5,55 +5,73 @@
  */
 
 import { DateTime } from 'luxon'
-import { compose } from '@adonisjs/core/helpers'
-import { BaseModel } from '@adonisjs/lucid/orm'
+import { column, BaseModel } from '@adonisjs/lucid/orm'
 
-export default class Backup extends compose(BaseSchema, SoftDeletes) {
-  static self = this
-
-  /**
-   * The table associated with the model.
-   */
+export default class Backup extends BaseModel {
   static table = 'backups'
 
-  /**
-   * The primary key for the model.
-   */
-  static primaryKey = 'id'
+  @column({ isPrimary: true })
+  declare id: string
 
-  /**
-   * Columns
-   */
-  public declare id: string
+  @column()
+  declare type: 'database' | 'media' | 'full'
 
-  public declare type: 'database' | 'media' | 'full'
-  public declare name: string
-  public declare description: string | null
+  @column()
+  declare name: string
 
-  public declare filePath: string
-  public declare fileName: string
-  public declare fileSize: number
+  @column()
+  declare description: string | null
 
-  public declare status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'restoring'
+  @column()
+  declare filePath: string
 
-  public declare metadata: Record<string, any> | null
-  public declare checksum: string | null
-  public declare verified: boolean
-  public declare verifiedAt: DateTime | null
+  @column()
+  declare fileName: string
 
-  public declare expiresAt: DateTime | null
-  public declare retained: boolean
+  @column()
+  declare fileSize: number
 
-  public declare duration: number | null
-  public declare statistics: Record<string, any> | null
+  @column()
+  declare status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'restoring'
 
-  public declare errorMessage: string | null
-  public declare retryCount: number
+  @column()
+  declare metadata: Record<string, any> | null
 
-  public declare createdAt: DateTime
-  public declare completedAt: DateTime | null
+  @column()
+  declare checksum: string | null
 
-  public declare createdBy: string | null
+  @column()
+  declare verified: boolean
+
+  @column.dateTime()
+  declare verifiedAt: DateTime | null
+
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+
+  @column()
+  declare retained: boolean
+
+  @column()
+  declare duration: number | null
+
+  @column()
+  declare statistics: Record<string, any> | null
+
+  @column()
+  declare errorMessage: string | null
+
+  @column()
+  declare retryCount: number
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime()
+  declare completedAt: DateTime | null
+
+  @column()
+  declare createdBy: string | null
 
   /**
    * Computed Properties

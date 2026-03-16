@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { column, BaseModel , hasMany} from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Product from './product.js'
 import Category from './category.js'
@@ -19,87 +19,87 @@ import PriceList from './price_list.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class Store extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string
+ @column({ isPrimary: true })
+ declare id: string
 
-  @column()
-  declare name: string
+ @column()
+ declare name: string
 
-  @column()
-  declare slug: string
+ @column()
+ declare slug: string
 
-  @column()
-  declare domain: string | null
+ @column()
+ declare domain: string | null
 
-  @column()
-  declare logoUrl: string | null
+ @column()
+ declare logoUrl: string | null
 
-  @column()
-  declare defaultLocale: string
+ @column()
+ declare defaultLocale: string
 
-  @column()
-  declare defaultCurrency: string
+ @column()
+ declare defaultCurrency: string
 
-  @column()
-  declare timezone: string
+ @column()
+ declare timezone: string
 
-  @column()
-  declare isActive: boolean
+ @column()
+ declare isActive: boolean
 
-  @column(jsonColumn({ columnName: 'settings' }))
-  declare config: Record<string, unknown>
+ @column(jsonColumn({ columnName: 'settings' }))
+ declare config: Record<string, unknown>
 
-  @column(jsonColumn())
-  declare meta: Record<string, unknown>
+ @column(jsonColumn())
+ declare meta: Record<string, unknown>
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
+ @column.dateTime({ autoCreate: true })
+ declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
+ @column.dateTime({ autoCreate: true, autoUpdate: true })
+ declare updatedAt: DateTime
 
-  @hasMany(() => Product)
-  declare products: HasMany<typeof Product>
+ @hasMany(() => Product)
+ declare products: HasMany<typeof Product>
 
-  @hasMany(() => Category)
-  declare categories: HasMany<typeof Category>
+ @hasMany(() => Category)
+ declare categories: HasMany<typeof Category>
 
-  @hasMany(() => Customer)
-  declare customers: HasMany<typeof Customer>
+ @hasMany(() => Customer)
+ declare customers: HasMany<typeof Customer>
 
-  @hasMany(() => Order)
-  declare orders: HasMany<typeof Order>
+ @hasMany(() => Order)
+ declare orders: HasMany<typeof Order>
 
-  @hasMany(() => Collection)
-  declare collections: HasMany<typeof Collection>
+ @hasMany(() => Collection)
+ declare collections: HasMany<typeof Collection>
 
-  @hasMany(() => Page)
-  declare pages: HasMany<typeof Page>
+ @hasMany(() => Page)
+ declare pages: HasMany<typeof Page>
 
-  @hasMany(() => Menu)
-  declare menus: HasMany<typeof Menu>
+ @hasMany(() => Menu)
+ declare menus: HasMany<typeof Menu>
 
-  @hasMany(() => Banner)
-  declare banners: HasMany<typeof Banner>
+ @hasMany(() => Banner)
+ declare banners: HasMany<typeof Banner>
 
-  @hasMany(() => Discount)
-  declare discounts: HasMany<typeof Discount>
+ @hasMany(() => Discount)
+ declare discounts: HasMany<typeof Discount>
 
-  @hasMany(() => Webhook)
-  declare webhooks: HasMany<typeof Webhook>
+ @hasMany(() => Webhook)
+ declare webhooks: HasMany<typeof Webhook>
 
-  @hasMany(() => Setting)
-  declare settings: HasMany<typeof Setting>
+ @hasMany(() => Setting)
+ declare settings: HasMany<typeof Setting>
 
-  @hasMany(() => Region)
-  declare regions: HasMany<typeof Region>
+ @hasMany(() => Region)
+ declare regions: HasMany<typeof Region>
 
-  @hasMany(() => SalesChannel)
-  declare salesChannels: HasMany<typeof SalesChannel>
+ @hasMany(() => SalesChannel)
+ declare salesChannels: HasMany<typeof SalesChannel>
 
-  @hasMany(() => CustomerGroup)
-  declare customerGroups: HasMany<typeof CustomerGroup>
+ @hasMany(() => CustomerGroup)
+ declare customerGroups: HasMany<typeof CustomerGroup>
 
-  @hasMany(() => PriceList)
-  declare priceLists: HasMany<typeof PriceList>
+ @hasMany(() => PriceList)
+ declare priceLists: HasMany<typeof PriceList>
 }

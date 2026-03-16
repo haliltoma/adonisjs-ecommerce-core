@@ -5,7 +5,7 @@
  * Single Responsibility: Calculate cart taxes.
  */
 
-import type { Cart } from '@adonisjs/lucid/types/model'
+import type { Cart } from '#models/cart'
 
 export interface TaxCalculationResult {
   taxTotal: number

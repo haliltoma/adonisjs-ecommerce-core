@@ -17,7 +17,7 @@ export default class CartRepository implements ICartRepository {
   /**
    * Find cart by ID
    */
-  async findById(id: string, trx?: any): Promise<Cart | null> {
+  async findById(id: string, trx?: any): Promise<Cart> {
     const query = Cart.query(trx ? { client: trx } : undefined)
       .preload('items', (itemsQuery) => {
         itemsQuery.preload('product').preload('variant')
@@ -29,7 +29,7 @@ export default class CartRepository implements ICartRepository {
   /**
    * Find cart by customer
    */
-  async findByCustomer(storeId: string, customerId: string, trx?: any): Promise<Cart | null> {
+  async findByCustomer(storeId: string, customerId: string, trx?: any): Promise<Cart> {
     const query = Cart.query(trx ? { client: trx } : undefined)
 
     return await query
@@ -45,7 +45,7 @@ export default class CartRepository implements ICartRepository {
   /**
    * Find cart by session
    */
-  async findBySession(storeId: string, sessionId: string, trx?: any): Promise<Cart | null> {
+  async findBySession(storeId: string, sessionId: string, trx?: any): Promise<Cart> {
     const query = Cart.query(trx ? { client: trx } : undefined)
 
     return await query
@@ -170,12 +170,6 @@ export default class CartRepository implements ICartRepository {
    * Clear cart (remove all items)
    */
   async clearItems(cartId: string, trx?: any): Promise<void> {
-    const query = db.from('cart_items').where('cartId', cartId)
-
-    if (trx) {
-      query.transacting(trx)
-    }
-
-    await query.delete()
+    await CartItem.query({ client: trx }).where('cartId', cartId).delete()
   }
 }

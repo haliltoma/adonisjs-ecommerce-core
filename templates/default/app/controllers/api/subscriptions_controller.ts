@@ -233,8 +233,8 @@ export default class SubscriptionsController {
           await this.subscriptionService.updateFromProviderWebhook({
             providerSubscriptionId: subscriptionData.id,
             status: subscriptionData.status,
-            currentPeriodStartsAt: new Date(subscriptionData.current_period_start * 1000),
-            currentPeriodEndsAt: new Date(subscriptionData.current_period_end * 1000),
+            currentPeriodStartsAt: DateTime.fromJSDate(new Date()),
+            currentPeriodEndsAt: DateTime.fromJSDate(new Date()),
             cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
           })
           break

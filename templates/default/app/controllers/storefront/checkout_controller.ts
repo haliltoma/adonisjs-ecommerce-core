@@ -12,12 +12,12 @@ import emitter from '@adonisjs/core/services/emitter'
 import { PaymentCaptured, PaymentFailed } from '#events/payment_events'
 
 export default class CheckoutController {
-  private cartService = useCartService()
-  private orderService = useOrderService()
-  private checkoutService = useCheckoutService()
-  private customerService = useCustomerService()
-  private discountService = useDiscountService()
-  private storeService = useStoreService()
+  private _cartService = usecartService()
+  private _orderService = useorderService()
+  private _checkoutService = usecheckoutService()
+  private _customerService = usecustomerService()
+  private _discountService = usediscountService()
+  private _storeService = usestoreService()
 
   private async getShippingMethods(storeId: string) {
     const settings = await this.storeService.getSettingsByGroup(storeId, 'shipping')

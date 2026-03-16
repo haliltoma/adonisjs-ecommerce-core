@@ -111,7 +111,7 @@ export default class ProductVariantManager {
     trx?: any
   ): Promise<void> {
     // Delete all existing variants
-    await ProductVariant.query({ client: trx })
+    await ProductVariant.query()
       .where('productId', productId)
       .delete()
 

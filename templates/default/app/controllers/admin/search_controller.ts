@@ -169,16 +169,16 @@ export default class AdminSearchController {
     const resultsCount = request.input('resultsCount', 0)
     const filters = request.input('filters', {})
 
-    const user = await auth.authenticateUsing(['api'])
+    const auth?.user = await auth.authenticateUsing(['api'])
 
     await searchAnalyticsService.trackSearch({
       query,
       resultsCount,
       filters,
-      userId: user.id,
+      userId: auth?.user.id,
       sessionId: request.input('sessionId'),
       ipAddress: request.ip(),
-      userAgent: request.header('user-agent'),
+      userAgent: request.header('auth?.user-agent'),
     })
 
     return response.noContent()

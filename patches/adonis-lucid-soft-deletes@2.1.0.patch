@@ -1,0 +1,24 @@
+diff --git a/build/chunk-BHGVL3CI.js b/build/chunk-BHGVL3CI.js
+index abe8206de6e784f6c330ed78ff4bf586d9a64f38..29465eef9dc7b03ee815b2ee7e59814b79bd390c 100644
+--- a/build/chunk-BHGVL3CI.js
++++ b/build/chunk-BHGVL3CI.js
+@@ -1,5 +1,5 @@
+ // src/bindings/model_query_builder.ts
+-import { Exception } from "@poppinss/utils";
++import { Exception } from "@poppinss/utils/exception";
+ function ensureModelWithSoftDeletes(model) {
+   if (!("ignoreDeleted" in model && "ignoreDeletedPaginate" in model)) {
+     throw new Exception(`${model.name} model don't support Soft Deletes`, {
+diff --git a/build/index.js b/build/index.js
+index a1cdfd5f5b539aed1a467ce0fed9ca8ac1d31de5..c3a563afb84654796d5aae18301f10f3e54b4080 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -12,7 +12,7 @@ async function configure(command) {
+ 
+ // src/mixin.ts
+ import { DateTime } from "luxon";
+-import { Exception } from "@poppinss/utils";
++import { Exception } from "@poppinss/utils/exception";
+ import { column, beforeFind, beforeFetch, beforePaginate } from "@adonisjs/lucid/orm";
+ function SoftDeletes(superclass) {
+   class ModelWithSoftDeletes extends superclass {

@@ -10,8 +10,7 @@ import type ICartRepository from '#repositories/interfaces/i_cart_repository'
 import type IOrderRepository from '#repositories/interfaces/i_order_repository'
 import type IInventoryRepository from '#repositories/interfaces/i_inventory_repository'
 import { DateTime } from 'luxon'
-import { useOrderService } from './service_container'
-import { useCartService } from './service_container'
+
 
 export interface CheckoutPayload {
   customerId: string
@@ -94,16 +93,15 @@ export default class CheckoutService {
         notes: payload.notes,
       }
 
-      // Step 4: Create order
-      const orderService = useOrderService()
-      const order = await orderService.createFromCart(orderData, userId)
+      // Step 4: Create order via repository
+      const order = await this.orderRepository.create(orderData as any)
 
       // Step 5: Process order items
       await this.processOrderItems(order.id, cart.items, trx)
 
       // Step 6: Update discount usage if applicable
       if (cart.discountId) {
-        await this.updateDiscountUsage(cart.discountId, cart.customerId, cart.grandTotal)
+        await this.updateDiscountUsage(cart.discountId, cart.customerId ?? undefined, cart.grandTotal)
       }
 
       // Step 7: Mark cart as completed

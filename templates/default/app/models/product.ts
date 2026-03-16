@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { column, BaseModel, belongsTo, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Store from './store.js'
 import ProductVariant from './product_variant.js'
@@ -16,163 +16,185 @@ import ShippingProfile from './shipping_profile.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class Product extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string
+ @column({ isPrimary: true })
+ declare id: string
 
-  @column()
-  declare storeId: string
+ @column()
+ declare storeId: string
 
-  @column()
-  declare title: string
+ @column()
+ declare title: string
 
-  @column()
-  declare slug: string
+ @column()
+ declare slug: string
 
-  @column()
-  declare description: string | null
+ @column()
+ declare description: string | null
 
-  @column()
-  declare shortDescription: string | null
+ @column()
+ declare shortDescription: string | null
 
-  @column()
-  declare status: 'draft' | 'active' | 'archived'
+ @column()
+ declare status: 'draft' | 'active' | 'archived'
 
-  @column()
-  declare type: 'simple' | 'variable' | 'digital' | 'bundle' | 'subscription'
+ @column()
+ declare type: 'simple' | 'variable' | 'digital' | 'bundle' | 'subscription'
 
-  @column()
-  declare vendor: string | null
+ @column()
+ declare vendor: string | null
 
-  @column()
-  declare sku: string | null
+ @column()
+ declare sku: string | null
 
-  @column()
-  declare barcode: string | null
+ @column()
+ declare barcode: string | null
 
-  @column()
-  declare price: number | null
+ @column()
+ declare price: number | null
 
-  @column()
-  declare compareAtPrice: number | null
+ @column()
+ declare compareAtPrice: number | null
 
-  @column()
-  declare costPrice: number | null
+ @column()
+ declare costPrice: number | null
 
-  @column()
-  declare isTaxable: boolean
+ @column()
+ declare isTaxable: boolean
 
-  @column()
-  declare taxClassId: string | null
+ @column()
+ declare taxClassId: string | null
 
-  @column()
-  declare shippingProfileId: string | null
+ @column()
+ declare shippingProfileId: string | null
 
-  @column()
-  declare weight: number | null
+ @column()
+ declare weight: number | null
 
-  @column()
-  declare weightUnit: 'g' | 'kg' | 'lb' | 'oz'
+ @column()
+ declare weightUnit: 'g' | 'kg' | 'lb' | 'oz'
 
-  @column()
-  declare requiresShipping: boolean
+ @column()
+ declare requiresShipping: boolean
 
-  @column()
-  declare trackInventory: boolean
+ @column()
+ declare trackInventory: boolean
 
-  @column()
-  declare stockQuantity: number
+ @column()
+ declare stockQuantity: number
 
-  @column()
-  declare hasVariants: boolean
+ @column()
+ declare quantityAvailable: number
 
-  @column()
-  declare isFeatured: boolean
+ @column()
+ declare allowBackorder: boolean
 
-  @column()
-  declare sortOrder: number
+ @column()
+ declare lowStockThreshold: number
 
-  @column()
-  declare metaTitle: string | null
+ @column()
+ declare backorderThreshold: number
 
-  @column()
-  declare metaDescription: string | null
+ @column()
+ declare hasVariants: boolean
 
-  @column()
-  declare metaKeywords: string | null
+ @column()
+ declare isFeatured: boolean
 
-  @column(jsonColumn())
-  declare customFields: Record<string, unknown>
+ @column()
+ declare sortOrder: number
 
-  @column.dateTime()
-  declare publishedAt: DateTime | null
+ @column()
+ declare metaTitle: string | null
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
+ @column()
+ declare metaDescription: string | null
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
+ @column()
+ declare metaKeywords: string | null
 
-  @column.dateTime()
-  declare deletedAt: DateTime | null
+ @column(jsonColumn())
+ declare customFields: Record<string, unknown>
 
-  @belongsTo(() => Store)
-  declare store: BelongsTo<typeof Store>
+ @column.dateTime()
+ declare publishedAt: DateTime | null
 
-  @belongsTo(() => TaxClass)
-  declare taxClass: BelongsTo<typeof TaxClass>
+ @column.dateTime({ autoCreate: true })
+ declare createdAt: DateTime
 
-  @hasMany(() => ProductVariant)
-  declare variants: HasMany<typeof ProductVariant>
+ @column.dateTime({ autoCreate: true, autoUpdate: true })
+ declare updatedAt: DateTime
 
-  @hasMany(() => ProductOption)
-  declare options: HasMany<typeof ProductOption>
+ @column.dateTime()
+ declare deletedAt: DateTime | null
 
-  @hasMany(() => ProductImage)
-  declare images: HasMany<typeof ProductImage>
+ @belongsTo(() => Store)
+ declare store: BelongsTo<typeof Store>
 
-  @manyToMany(() => Category, {
-    pivotTable: 'product_categories',
-    pivotColumns: ['position'],
-  })
-  declare categories: ManyToMany<typeof Category>
+ @belongsTo(() => TaxClass)
+ declare taxClass: BelongsTo<typeof TaxClass>
 
-  @manyToMany(() => Tag, {
-    pivotTable: 'product_tags',
-  })
-  declare tags: ManyToMany<typeof Tag>
+ @hasMany(() => ProductVariant)
+ declare variants: HasMany<typeof ProductVariant>
 
-  @hasMany(() => Review)
-  declare reviews: HasMany<typeof Review>
+ @hasMany(() => ProductOption)
+ declare options: HasMany<typeof ProductOption>
 
-  @hasMany(() => ProductAttributeValue)
-  declare attributeValues: HasMany<typeof ProductAttributeValue>
+ @hasMany(() => ProductImage)
+ declare images: HasMany<typeof ProductImage>
 
-  @manyToMany(() => Collection, {
-    pivotTable: 'collection_products',
-    pivotColumns: ['sort_order'],
-  })
-  declare collections: ManyToMany<typeof Collection>
+ @manyToMany(() => Category, {
+ pivotTable: 'product_categories',
+ pivotColumns: ['position'] })
+ declare categories: ManyToMany<typeof Category>
 
-  @manyToMany(() => SalesChannel, {
-    pivotTable: 'product_sales_channels',
-    pivotTimestamps: { createdAt: 'created_at', updatedAt: false },
-  })
-  declare salesChannels: ManyToMany<typeof SalesChannel>
+ @manyToMany(() => Tag, {
+ pivotTable: 'product_tags' })
+ declare tags: ManyToMany<typeof Tag>
 
-  @belongsTo(() => ShippingProfile)
-  declare shippingProfile: BelongsTo<typeof ShippingProfile>
+ @hasMany(() => Review)
+ declare reviews: HasMany<typeof Review>
 
-  // Alias for backward compatibility
-  get name(): string {
-    return this.title
-  }
+ @hasMany(() => ProductAttributeValue)
+ declare attributeValues: HasMany<typeof ProductAttributeValue>
 
-  get isOnSale(): boolean {
-    return this.compareAtPrice !== null && this.price !== null && this.compareAtPrice > this.price
-  }
+ @manyToMany(() => Collection, {
+ pivotTable: 'collection_products',
+ pivotColumns: ['sort_order'] })
+ declare collections: ManyToMany<typeof Collection>
 
-  get discountPercentage(): number | null {
-    if (!this.isOnSale || !this.compareAtPrice || !this.price) return null
-    return Math.round(((this.compareAtPrice - this.price) / this.compareAtPrice) * 100)
-  }
+ @manyToMany(() => SalesChannel, {
+ pivotTable: 'product_sales_channels',
+ pivotTimestamps: { createdAt: 'created_at', updatedAt: false } })
+ declare salesChannels: ManyToMany<typeof SalesChannel>
+
+ @belongsTo(() => ShippingProfile)
+ declare shippingProfile: BelongsTo<typeof ShippingProfile>
+
+ // Alias for backward compatibility
+ get name(): string {
+ return this.title
+ }
+
+ get isOnSale(): boolean {
+ return this.compareAtPrice !== null && this.price !== null && this.compareAtPrice > this.price
+ }
+
+ get discountPercentage(): number | null {
+ if (!this.isOnSale || !this.compareAtPrice || !this.price) return null
+ return Math.round(((this.compareAtPrice - this.price) / this.compareAtPrice) * 100)
+ }
+
+ /**
+  * Increment stock quantity
+  */
+ async increment(column: string, amount: number = 1): Promise<void> {
+ await this.query().where('id', this.id).increment(column, amount)
+ }
+
+ /**
+  * Decrement stock quantity
+  */
+ async decrement(column: string, amount: number = 1): Promise<void> {
+ await this.query().where('id', this.id).decrement(column, amount)
+ }
 }

@@ -3,7 +3,7 @@ import CustomerAddress from '#models/customer_address'
 import hash from '@adonisjs/core/services/hash'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
-import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
+import { ModelPaginatorContract } from '#models/cart'
 
 interface CreateCustomerDTO {
   storeId: string

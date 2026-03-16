@@ -11,9 +11,9 @@ import env from '#start/env'
 import { PaymentProvider } from '#contracts/payment_provider'
 
 // Available payment providers
-import StripePaymentProvider from '#providers/payment/stripe_provider'
-import IyzicoPaymentProvider from '#providers/payment/iyzico_provider'
-import ManualPaymentProvider from '#providers/payment/manual_provider'
+import { StripePaymentProvider } from '#services/payment/stripe_payment_provider'
+import { IyzicoPaymentProvider } from '#services/payment/iyzico_payment_provider'
+import { ManualPaymentProvider } from '#services/payment/manual_payment_provider'
 
 /**
  * Payment Provider Factory

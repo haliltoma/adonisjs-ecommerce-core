@@ -15,14 +15,14 @@ import { useOrderService } from '#services/service_container'
  * SOLID: Controller only handles HTTP concerns, business logic is in OrderService.
  */
 export default class OrdersController {
-  private orderService = useOrderService()
+  private _orderService = useorderService()
   /**
    * GET /api/orders
    * List customer's orders
    */
   async index({ request, response, auth, store }: HttpContext) {
     const storeId = store.id
-    const customer = auth.user
+    const customer = auth.auth?.user
 
     if (!customer) {
       return response.unauthorized({ error: 'Authentication required' })
@@ -61,7 +61,7 @@ export default class OrdersController {
    */
   async show({ params, request, response, auth, store }: HttpContext) {
     const storeId = store.id
-    const customer = auth.user
+    const customer = auth.auth?.user
 
     const query = Order.query()
       .where('storeId', storeId)
@@ -252,7 +252,7 @@ export default class OrdersController {
    */
   async cancel({ params, request, response, auth, store }: HttpContext) {
     const storeId = store.id
-    const customer = auth.user
+    const customer = auth.auth?.user
 
     if (!customer) {
       return response.unauthorized({ error: 'Authentication required' })

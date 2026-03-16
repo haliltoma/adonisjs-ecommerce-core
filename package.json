@@ -65,5 +65,10 @@
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "adonis-lucid-soft-deletes@2.1.0": "patches/adonis-lucid-soft-deletes@2.1.0.patch"
+    }
   }
 }

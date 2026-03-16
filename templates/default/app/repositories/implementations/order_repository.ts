@@ -254,10 +254,6 @@ export default class OrderRepository implements IOrderRepository {
         .from('orders')
         .count('* as count')
         .where('storeId', storeId)
-        .modify((qb) => {
-          if (dateFrom) qb.where('createdAt', '>=', dateFrom.toSQL())
-          if (dateTo) qb.where('createdAt', '<=', dateTo.toSQL())
-        })
         .first(),
 
       // Total revenue
@@ -266,10 +262,6 @@ export default class OrderRepository implements IOrderRepository {
         .sum('grandTotal as revenue')
         .where('storeId', storeId)
         .whereIn('status', ['confirmed', 'processing', 'shipped', 'delivered'])
-        .modify((qb) => {
-          if (dateFrom) qb.where('createdAt', '>=', dateFrom.toSQL())
-          if (dateTo) qb.where('createdAt', '<=', dateTo.toSQL())
-        })
         .first(),
 
       // Status counts
@@ -279,10 +271,6 @@ export default class OrderRepository implements IOrderRepository {
         .count('* as count')
         .where('storeId', storeId)
         .whereIn('status', ['pending', 'shipped', 'delivered', 'cancelled'])
-        .modify((qb) => {
-          if (dateFrom) qb.where('createdAt', '>=', dateFrom.toSQL())
-          if (dateTo) qb.where('createdAt', '<=', dateTo.toSQL())
-        })
         .groupBy('status'),
     ])
 

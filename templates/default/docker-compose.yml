@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_DATABASE:-adoniscommerce}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-5433}:${CONTAINER_DB_PORT:-5432}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-6380}:${CONTAINER_REDIS_PORT:-6379}"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -50,6 +50,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=development
+      - CI=true
       - HOST=0.0.0.0
       - PORT=3333
       - APP_KEY=${APP_KEY:-your-app-key-here-min-32-chars-long}
@@ -80,7 +81,7 @@ services:
       sh -c "
         pnpm install &&
         node ace migration:run --force &&
-        pnpm dev --host 0.0.0.0
+        pnpm dev
       "
 
   # Adminer - Database Management UI (optional)

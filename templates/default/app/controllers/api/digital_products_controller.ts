@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { useDigitalProductService } from '#services/service_container'
-import { validator } from '#services/validation_service'
 
 export default class DigitalProductsController {
   protected digitalProductService = useDigitalProductService()
@@ -75,7 +74,7 @@ export default class DigitalProductsController {
   async recordDownload({ params, request, response }: HttpContext) {
     try {
       const ipAddress = request.ip()
-      const userAgent = request.header('user-agent')
+      const userAgent = request.header('auth?.user-agent')
 
       await this.digitalProductService.recordDownload(params.id, ipAddress, userAgent)
 

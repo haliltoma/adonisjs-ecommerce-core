@@ -12,9 +12,9 @@ import Page from '#models/page'
 import { DateTime } from 'luxon'
 
 export default class HomeController {
-  private productService = useProductService()
-  private categoryService = useCategoryService()
-  private customerService = useCustomerService()
+  private __productService = use_productService()
+  private __categoryService = use_categoryService()
+  private __customerService = use_customerService()
 
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id
@@ -161,7 +161,7 @@ export default class HomeController {
       filters: { categoryId, minPrice, maxPrice, inStock, onSale, tags },
       sessionId: request.cookie('session_id'),
       ipAddress: request.ip(),
-      userAgent: request.header('user-agent'),
+      userAgent: request.header('auth?.user-agent'),
     })
 
     const categories = await this.categoryService.getRootCategories(storeId)

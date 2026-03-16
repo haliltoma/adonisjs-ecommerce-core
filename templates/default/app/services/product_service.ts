@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 import Product from '#models/product'
-import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
+import { ModelPaginatorContract } from '#models/cart'
 import type IProductRepository from '#repositories/interfaces/i_product_repository'
 import ProductSlugGenerator from '#services/product/product_slug_generator'
 import ProductVariantManager from '#services/product/product_variant_manager'

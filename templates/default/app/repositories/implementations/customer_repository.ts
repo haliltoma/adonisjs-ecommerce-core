@@ -217,10 +217,6 @@ export default class CustomerRepository implements ICustomerRepository {
         .from('customers')
         .count('* as count')
         .where('storeId', storeId)
-        .modify((qb) => {
-          if (dateFrom) qb.where('createdAt', '>=', dateFrom.toSQL())
-          if (dateTo) qb.where('createdAt', '<=', dateTo.toSQL())
-        })
         .first(),
 
       // Total lifetime value
@@ -229,10 +225,6 @@ export default class CustomerRepository implements ICustomerRepository {
         .sum('grandTotal as total')
         .where('storeId', storeId)
         .whereIn('status', ['confirmed', 'processing', 'shipped', 'delivered'])
-        .modify((qb) => {
-          if (dateFrom) qb.where('createdAt', '>=', dateFrom.toSQL())
-          if (dateTo) qb.where('createdAt', '<=', dateTo.toSQL())
-        })
         .first(),
     ])
 

@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { PaymentProvider } from '#contracts/payment_provider'
 import { useOrderService } from '#services/service_container'
+import { useCustomerService } from '#services/service_container'
 import emitter from '@adonisjs/core/services/emitter'
 import {
   PaymentCaptured,
@@ -122,7 +123,7 @@ export default class PaymentWebhookController {
         await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received via Iyzico')
 
         if (order.customerId) {
-          const customerService = new CustomerService()
+          const customerService = useCustomerService()
           await customerService.incrementOrderStats(order.customerId, order.grandTotal)
         }
 
@@ -157,7 +158,7 @@ export default class PaymentWebhookController {
     }
 
     // Iyzico expects a redirect to the confirmation page
-    // Since this is the webhook (not the user redirect), return 200
+    // Since this is the webhook (not the auth?.user redirect), return 200
     return response.status(200).json({ received: true })
   }
 
@@ -240,7 +241,7 @@ export default class PaymentWebhookController {
 
     // Update customer stats
     if (order.customerId) {
-      const customerService = new CustomerService()
+      const customerService = useCustomerService
       await customerService.incrementOrderStats(order.customerId, order.grandTotal)
     }
 
@@ -303,7 +304,7 @@ export default class PaymentWebhookController {
     await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received via Stripe')
 
     if (order.customerId) {
-      const customerService = new CustomerService()
+      const customerService = useCustomerService
       await customerService.incrementOrderStats(order.customerId, order.grandTotal)
     }
 

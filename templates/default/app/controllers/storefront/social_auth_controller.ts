@@ -41,7 +41,7 @@ export default class SocialAuthController {
       return response.redirect().toRoute('storefront.account.login')
     }
 
-    const socialUser = await social.user()
+    const socialUser = await social.auth?.user()
 
     if (!socialUser.email) {
       session.flash('error', 'Email is required for authentication.')

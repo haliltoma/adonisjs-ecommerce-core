@@ -3,6 +3,7 @@ import { useInventoryService } from '#services/service_container'
 import { useImportExportService } from '#services/service_container'
 import ProductVariant from '#models/product_variant'
 import type InventoryMovement from '#models/inventory_movement'
+import type InventoryService from '#services/inventory_service'
 
 export default class InventoryController {
   private inventoryService = useInventoryService()

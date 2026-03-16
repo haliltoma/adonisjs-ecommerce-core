@@ -1,7 +1,6 @@
 import sharp from 'sharp'
 import { DateTime } from 'luxon'
-import Application from '@adonisjs/core/app'
-import drive from '@adonisjs/drive/services/main'
+import { stat } from 'node:fs/promises'
 
 interface ImageSizes {
   thumbnail?: { width: number; height: number }
@@ -40,7 +39,6 @@ interface ProcessedImage {
 }
 
 export default class ImageService {
-  constructor(protected app: Application) {}
 
   /**
    * Default image sizes configuration
@@ -76,9 +74,8 @@ export default class ImageService {
     }
 
     // Get file size
-    const disk = drive.use()
-    const originalFile = await disk.get(filePath)
-    originalInfo.size = originalFile.size
+    const originalFileStat = await stat(filePath)
+    originalInfo.size = originalFileStat.size
 
     const processedSizes: ProcessedImage['sizes'] = {}
     const webPImages: ProcessedImage['webP'] = {}
@@ -99,11 +96,11 @@ export default class ImageService {
         .toFile(resizedPath)
 
       const resizedStats = await sharp(resizedPath).metadata()
-      const resizedFile = await disk.get(resizedPath)
+      const resizedFileStat = await stat(resizedPath)
 
       processedSizes[sizeName] = {
         path: resizedPath,
-        size: resizedFile.size,
+        size: resizedFileStat.size,
         width: resizedStats.width || 0,
         height: resizedStats.height || 0,
       }
@@ -121,12 +118,11 @@ export default class ImageService {
         .webp({ quality })
         .toFile(webPPath)
 
-      const webPStats = await sharp(webPPath).metadata()
-      const webPFile = await disk.get(webPPath)
+      const webPFileStat = await stat(webPPath)
 
       webPImages[sizeName] = {
         path: webPPath,
-        size: webPFile.size,
+        size: webPFileStat.size,
       }
     }
 
@@ -137,10 +133,10 @@ export default class ImageService {
       .webp({ quality })
       .toFile(originalWebPPath)
 
-    const originalWebPFile = await disk.get(originalWebPPath)
+    const originalWebPFileStat = await stat(originalWebPPath)
     webPImages['original'] = {
       path: originalWebPPath,
-      size: originalWebPFile.size,
+      size: originalWebPFileStat.size,
     }
 
     // Strip metadata from original
@@ -226,9 +222,8 @@ export default class ImageService {
     savingsPercentage: number
   }> {
     const originalStats = await sharp(imagePath).metadata()
-    const disk = drive.use()
-    const originalFile = await disk.get(imagePath)
-    const originalSize = originalFile.size
+    const originalFileStat2 = await stat(imagePath)
+    const originalSize = originalFileStat2.size
 
     // Optimize image
     const optimizedPath = this.getOptimizedPath(imagePath)
@@ -236,8 +231,8 @@ export default class ImageService {
       .jpeg({ quality, progressive: true, mozjpeg: true })
       .toFile(optimizedPath)
 
-    const optimizedFile = await disk.get(optimizedPath)
-    const optimizedSize = optimizedFile.size
+    const optimizedFileStat = await stat(optimizedPath)
+    const optimizedSize = optimizedFileStat.size
     const savings = originalSize - optimizedSize
     const savingsPercentage = ((savings / originalSize) * 100).toFixed(2)
 
@@ -261,19 +256,18 @@ export default class ImageService {
     originalSize: number
   }> {
     const webPPath = this.getWebPPath(imagePath, 'converted')
-    const disk = drive.use()
-    const originalFile = await disk.get(imagePath)
+    const originalFileStat3 = await stat(imagePath)
 
     await sharp(imagePath)
       .webp({ quality })
       .toFile(webPPath)
 
-    const webPFile = await disk.get(webPPath)
+    const webPFileStat2 = await stat(webPPath)
 
     return {
       webPPath,
-      webPSize: webPFile.size,
-      originalSize: originalFile.size,
+      webPSize: webPFileStat2.size,
+      originalSize: originalFileStat3.size,
     }
   }
 
