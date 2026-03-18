@@ -1,0 +1,42 @@
+{
+  "date": "2026-03-18T21:49:55.667Z",
+  "total": 33,
+  "passed": 33,
+  "failed": 0,
+  "successRate": "100.0",
+  "byCategory": {
+    "Health": {
+      "pass": 2,
+      "fail": 0
+    },
+    "Products": {
+      "pass": 6,
+      "fail": 0
+    },
+    "Categories": {
+      "pass": 2,
+      "fail": 0
+    },
+    "Cart": {
+      "pass": 1,
+      "fail": 0
+    },
+    "Store": {
+      "pass": 1,
+      "fail": 0
+    },
+    "Storefront": {
+      "pass": 14,
+      "fail": 0
+    },
+    "SEO": {
+      "pass": 2,
+      "fail": 0
+    },
+    "Pages": {
+      "pass": 5,
+      "fail": 0
+    }
+  },
+  "failedTests": []
+}

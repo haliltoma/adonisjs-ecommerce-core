@@ -15,7 +15,7 @@ import { useOrderService } from '#services/service_container'
  * SOLID: Controller only handles HTTP concerns, business logic is in OrderService.
  */
 export default class OrdersController {
-  private _orderService = useorderService()
+  private orderService = useOrderService()
   /**
    * GET /api/orders
    * List customer's orders

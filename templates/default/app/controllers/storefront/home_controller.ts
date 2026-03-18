@@ -142,7 +142,7 @@ export default class HomeController {
     const offset = (page - 1) * 24
     const searchResults = await meilisearchService.search({
       query,
-      categoryId,
+      category: categoryId,
       priceMin: minPrice ? Number(minPrice) : undefined,
       priceMax: maxPrice ? Number(maxPrice) : undefined,
       inStock,

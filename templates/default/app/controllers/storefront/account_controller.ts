@@ -296,8 +296,9 @@ export default class AccountController {
     return response.redirect().toRoute('storefront.home')
   }
 
-  async dashboard({ inertia, session, response }: HttpContext) {
+  async dashboard({ inertia, session, response, store }: HttpContext) {
     const customerId = session.get('customer_id')
+    const storeId = store.id
 
     if (!customerId) {
       return response.redirect().toRoute('storefront.account.login')
@@ -310,7 +311,7 @@ export default class AccountController {
       return response.redirect().toRoute('storefront.account.login')
     }
 
-    const recentOrders = await this.orderService.getCustomerOrders(customerId, 1, 5)
+    const recentOrders = await this.orderService.getCustomerOrders(String(customerId), storeId, 1, 5)
 
     return inertia.render('storefront/account/Index', {
       customer: {
@@ -336,15 +337,16 @@ export default class AccountController {
     })
   }
 
-  async orders({ inertia, session, response, request }: HttpContext) {
+  async orders({ inertia, session, response, request, store }: HttpContext) {
     const customerId = session.get('customer_id')
+    const storeId = store.id
 
     if (!customerId) {
       return response.redirect().toRoute('storefront.account.login')
     }
 
     const page = request.input('page', 1)
-    const orders = await this.orderService.getCustomerOrders(customerId, page, 10)
+    const orders = await this.orderService.getCustomerOrders(String(customerId), storeId, page, 10)
 
     return inertia.render('storefront/account/Orders', {
       orders: {

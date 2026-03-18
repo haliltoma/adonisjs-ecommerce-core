@@ -167,7 +167,7 @@ export default class CartController {
       const cart = await this.cartService.getOrCreateCart(storeId, customerId, sessionId)
 
       // CartService.applyDiscount validates, sets couponCode, and recalculates everything
-      const updatedCart = await this.cartService.applyDiscount(cart.id, code, customerId)
+      const updatedCart = await this.cartService.applyDiscount(cart.id, code)
 
       session.flash('success', 'Discount applied')
 

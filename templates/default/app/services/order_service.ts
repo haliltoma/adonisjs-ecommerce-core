@@ -91,6 +91,9 @@ export default class OrderService {
         throw new Error('Cart not found')
       }
 
+      // Load cart items
+      await cart.load('items')
+
       if (!cart || cart.items.length === 0) {
         throw new Error('Cart is empty')
       }

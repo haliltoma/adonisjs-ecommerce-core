@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 import FileValidationService from '#services/file_validation_service'
 import UploadSecurityService from '#services/upload_security_service'
 
@@ -7,8 +8,8 @@ export default class FileUploadMiddleware {
   protected uploadSecurity: UploadSecurityService
 
   constructor() {
-    this.fileValidation = new FileValidationService()
-    this.uploadSecurity = new UploadSecurityService()
+    this.fileValidation = new FileValidationService(app)
+    this.uploadSecurity = new UploadSecurityService(app)
   }
 
   /**
