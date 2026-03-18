@@ -17,6 +17,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Get project name from folder name for unique container names
+get_project_name() {
+    basename "$PROJECT_DIR" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g'
+}
+
 # Functions
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -72,6 +77,7 @@ check_docker() {
 }
 
 setup_env() {
+    # Create .env from .env.docker if it doesn't exist
     if [ ! -f ".env" ]; then
         if [ -f ".env.docker" ]; then
             cp .env.docker .env
@@ -83,18 +89,14 @@ setup_env() {
     fi
 }
 
-# Get project name from folder name for unique container names
-get_project_name() {
-    basename "$PROJECT_DIR" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g'
-}
-
 # Main command handler
 case "${1:-help}" in
     dev)
         check_docker
         setup_env
         PROJECT_NAME=$(get_project_name)
-        print_info "Starting development environment..."
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
+        print_info "Starting development environment (project: $PROJECT_NAME)..."
         COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose up -d
         print_success "Development environment started!"
         echo ""
@@ -108,15 +110,16 @@ case "${1:-help}" in
         check_docker
         setup_env
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Starting development environment with tools..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose --profile tools up -d
+        docker compose --profile tools up -d
         print_success "Development environment with tools started!"
         echo ""
         echo "  App:              http://localhost:3333"
         echo "  Adminer (DB):     http://localhost:8080"
         echo "  Redis Commander:  http://localhost:8081"
         echo "  MailHog:          http://localhost:8025"
-        echo "  Project:          $PROJECT_NAME"
+        echo "  Project:          $COMPOSE_PROJECT_NAME"
         echo ""
         ;;
 
@@ -127,78 +130,88 @@ case "${1:-help}" in
             exit 1
         fi
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Starting production environment..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose -f docker-compose.prod.yml up -d --build
+        docker compose -f docker-compose.prod.yml up -d --build
         print_success "Production environment started!"
         ;;
 
     stop)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Stopping containers..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose down
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose -f docker-compose.prod.yml down 2>/dev/null || true
+        docker compose down
+        docker compose -f docker-compose.prod.yml down 2>/dev/null || true
         print_success "Containers stopped"
         ;;
 
     restart)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Restarting containers..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose restart
+        docker compose restart
         print_success "Containers restarted"
         ;;
 
     logs)
         check_docker
         PROJECT_NAME=$(get_project_name)
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose logs -f app
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
+        docker compose logs -f app
         ;;
 
     logs:all)
         check_docker
         PROJECT_NAME=$(get_project_name)
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose logs -f
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
+        docker compose logs -f
         ;;
 
     shell)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Opening shell in app container..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec app sh
+        docker compose exec app sh
         ;;
 
     db:shell)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Opening PostgreSQL shell..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec postgres psql -U postgres -d adoniscommerce
+        docker compose exec postgres psql -U postgres -d adoniscommerce
         ;;
 
     db:migrate)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Running migrations..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec app node ace migration:run
+        docker compose exec app node ace migration:run
         print_success "Migrations completed"
         ;;
 
     db:seed)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Running seeders..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec app node ace db:seed
+        docker compose exec app node ace db:seed
         print_success "Seeding completed"
         ;;
 
     db:reset)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_warning "This will delete all data. Are you sure? (y/N)"
         read -r response
         if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
             print_info "Resetting database..."
-            COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec app node ace migration:fresh --seed
+            docker compose exec app node ace migration:fresh --seed
             print_success "Database reset completed"
         else
             print_info "Cancelled"
@@ -208,19 +221,21 @@ case "${1:-help}" in
     redis:shell)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_info "Opening Redis CLI..."
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose exec redis redis-cli -a redis123
+        docker compose exec redis redis-cli -a redis123
         ;;
 
     clean)
         check_docker
         PROJECT_NAME=$(get_project_name)
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
         print_warning "This will remove all containers, volumes, and data. Are you sure? (y/N)"
         read -r response
         if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
             print_info "Cleaning up..."
-            COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose down -v --remove-orphans
-            COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose -f docker-compose.prod.yml down -v --remove-orphans 2>/dev/null || true
+            docker compose down -v --remove-orphans
+            docker compose -f docker-compose.prod.yml down -v --remove-orphans 2>/dev/null || true
             print_success "Cleanup completed"
         else
             print_info "Cancelled"
@@ -230,7 +245,8 @@ case "${1:-help}" in
     status)
         check_docker
         PROJECT_NAME=$(get_project_name)
-        COMPOSE_PROJECT_NAME=$PROJECT_NAME docker compose ps
+        export COMPOSE_PROJECT_NAME=$PROJECT_NAME
+        docker compose ps
         ;;
 
     help|*)
