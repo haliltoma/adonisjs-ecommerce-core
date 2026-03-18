@@ -1,4 +1,4 @@
-# create-adoniscommerce
+# @adonisjs-ecommerce-core/create
 
 Create a new AdonisCommerce e-commerce application with a single command.
 
@@ -6,22 +6,22 @@ Create a new AdonisCommerce e-commerce application with a single command.
 
 ```bash
 # Using npx (recommended)
-npx create-adoniscommerce my-store
+npx @adonisjs-ecommerce-core/create my-store
 
 # Using pnpm
-pnpm create adoniscommerce my-store
+pnpm create @adonisjs-ecommerce-core/create my-store
 
 # Using yarn
-yarn create adoniscommerce my-store
+yarn create @adonisjs-ecommerce-core/create my-store
 
 # Using npm
-npm create adoniscommerce my-store
+npm create @adonisjs-ecommerce-core/create my-store
 ```
 
 ## Options
 
 ```bash
-npx create-adoniscommerce <project-name> [options]
+npx @adonisjs-ecommerce-core/create <project-name> [options]
 
 Options:
   -t, --template <name>  Template to use (default: "default")
@@ -39,13 +39,13 @@ Options:
 
 ```bash
 # Create with Docker support
-npx create-adoniscommerce my-store --docker
+npx @adonisjs-ecommerce-core/create my-store --docker
 
 # Create without git initialization
-npx create-adoniscommerce my-store --no-git
+npx @adonisjs-ecommerce-core/create my-store --no-git
 
 # Create using npm instead of pnpm
-npx create-adoniscommerce my-store --npm
+npx @adonisjs-ecommerce-core/create my-store --npm
 ```
 
 ## What's Included

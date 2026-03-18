@@ -18,7 +18,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - adoniscommerce-network
+      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
     deploy:
       resources:
         limits:
@@ -39,7 +39,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - adoniscommerce-network
+      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
     deploy:
       resources:
         limits:
@@ -77,7 +77,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - adoniscommerce-network
+      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
     deploy:
       resources:
         limits:
@@ -104,7 +104,7 @@ services:
     depends_on:
       - app
     networks:
-      - adoniscommerce-network
+      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
     profiles:
       - with-nginx
 
@@ -115,5 +115,5 @@ volumes:
     driver: local
 
 networks:
-  adoniscommerce-network:
+  ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network:
     driver: bridge
