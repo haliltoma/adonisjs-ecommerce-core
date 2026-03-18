@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # AdonisCommerce Docker Management Script
-# Multi-project support with isolated environments
+# Supports both Docker services and local development
 
 set -e
 
@@ -18,31 +18,14 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Get project name from folder
 get_project_name() {
     basename "$PROJECT_DIR" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g'
 }
 
-# Generate app key
 generate_app_key() {
     openssl rand -base64 32 2>/dev/null || head -c 32 | base64
 }
 
-# Find available port
-find_available_port() {
-    local start=$1
-    local end=$2
-    for port in $(seq $start $end); do
-        if ! netstat -tuln 2>/dev/null | grep -q ":$port " && \
-           ! ss -tuln 2>/dev/null | grep -q ":$port "; then
-            echo $port
-            return 0
-        fi
-    done
-    echo $start
-}
-
-# Calculate port offset based on project name hash
 get_port_offset() {
     local project=$1
     local hash=0
@@ -53,113 +36,10 @@ get_port_offset() {
     echo $((hash % 50))
 }
 
-# Setup environment
-setup_env() {
-    local project_name=$(get_project_name)
-    local port_offset=$(get_port_offset $project_name)
-
-    # Create .env if not exists
-    if [ ! -f ".env" ]; then
-        if [ -f ".env.docker" ]; then
-            cp .env.docker .env
-        else
-            echo -e "${RED}[ERROR] .env.docker not found${NC}"
-            exit 1
-        fi
-    fi
-
-    # Set COMPOSE_PROJECT_NAME
-    if ! grep -q "^COMPOSE_PROJECT_NAME=" .env 2>/dev/null; then
-        echo "COMPOSE_PROJECT_NAME=$project_name" >> .env
-    else
-        sed -i "s|^COMPOSE_PROJECT_NAME=.*|COMPOSE_PROJECT_NAME=$project_name|" .env
-    fi
-
-    # Set PROJECT_NAME if not set
-    if ! grep -q "^PROJECT_NAME=" .env 2>/dev/null; then
-        echo "PROJECT_NAME=$project_name" >> .env
-    fi
-
-    # Set APP_KEY if not set
-    if grep -q "^APP_KEY=$" .env 2>/dev/null || grep -q "^APP_KEY=$" .env 2>/dev/null; then
-        local app_key=$(generate_app_key)
-        sed -i "s|^APP_KEY=.*|APP_KEY=$app_key|" .env
-    fi
-
-    # Set DB_DATABASE based on project name
-    if ! grep -q "^DB_DATABASE=" .env 2>/dev/null; then
-        echo "DB_DATABASE=${project_name}_db" >> .env
-    else
-        sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${project_name}_db|" .env
-    fi
-
-    # Set REDIS_DB based on project name (use hash to distribute)
-    if ! grep -q "^REDIS_DB=" .env 2>/dev/null; then
-        local redis_db=$((port_offset % 16))
-        echo "REDIS_DB=$redis_db" >> .env
-    fi
-
-    # Auto-assign ports based on project hash
-    local base_app_port=3333
-    local app_port=$((base_app_port + port_offset))
-    local db_port=$((5433 + port_offset))
-    local redis_port=$((6380 + port_offset))
-    local adminer_port=$((8080 + port_offset))
-
-    # Always update ports from default values
-    sed -i "s|^APP_PORT=.*|APP_PORT=$app_port|" .env
-    sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env
-    sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env
-    sed -i "s|^ADMINER_PORT=.*|ADMINER_PORT=$adminer_port|" .env
-
-    echo -e "${CYAN}[ENV] Project: $project_name${NC}"
-    echo -e "${CYAN}[ENV] App Port: $app_port${NC}"
-    echo -e "${CYAN}[ENV] DB Port: $db_port${NC}"
-    echo -e "${CYAN}[ENV] Redis Port: $redis_port${NC}"
-}
-
-# Print info
-print_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-show_help() {
-    echo "AdonisCommerce Docker Management"
-    echo ""
-    echo "Usage: $0 [command]"
-    echo ""
-    echo "Commands:"
-    echo "  dev           Start development environment"
-    echo "  dev:tools     Start with admin tools (Adminer, Redis Commander, MailHog)"
-    echo "  prod          Start production environment"
-    echo "  stop          Stop all containers"
-    echo "  restart       Restart all containers"
-    echo "  logs          View application logs"
-    echo "  logs:all      View all container logs"
-    echo "  shell         Open shell in app container"
-    echo "  db:shell      Open PostgreSQL shell"
-    echo "  db:migrate    Run migrations"
-    echo "  db:seed       Run seeders"
-    echo "  db:reset      Reset database"
-    echo "  redis:shell   Open Redis CLI"
-    echo "  clean         Remove all containers and volumes"
-    echo "  status        Show container status"
-    echo "  list          List all projects"
-    echo "  help          Show this help"
-    echo ""
-}
+print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 check_docker() {
     if ! command -v docker &> /dev/null; then
@@ -172,124 +52,176 @@ check_docker() {
     fi
 }
 
-# Main
+setup_env() {
+    local project_name=$(get_project_name)
+    local port_offset=$(get_port_offset $project_name)
+
+    # Create .env from template if not exists
+    if [ ! -f ".env" ]; then
+        if [ -f ".env.docker" ]; then
+            cp .env.docker .env
+        else
+            print_error ".env.docker not found"
+            exit 1
+        fi
+    fi
+
+    # Get APP_MODE
+    local app_mode=$(grep "^APP_MODE=" .env | cut -d= -f2 | tr -d '"' | tr -d "'")
+    app_mode=${app_mode:-docker}
+
+    # Update COMPOSE_PROJECT_NAME
+    if ! grep -q "^COMPOSE_PROJECT_NAME=" .env 2>/dev/null; then
+        echo "COMPOSE_PROJECT_NAME=$project_name" >> .env
+    else
+        sed -i "s|^COMPOSE_PROJECT_NAME=.*|COMPOSE_PROJECT_NAME=$project_name|" .env
+    fi
+
+    # Update PROJECT_NAME
+    if ! grep -q "^PROJECT_NAME=" .env 2>/dev/null; then
+        echo "PROJECT_NAME=$project_name" >> .env
+    fi
+
+    # Generate APP_KEY if empty
+    if grep -q "^APP_KEY=$" .env 2>/dev/null || ! grep -q "^APP_KEY=" .env 2>/dev/null; then
+        local app_key=$(generate_app_key)
+        sed -i "s|^APP_KEY=.*|APP_KEY=$app_key|" .env 2>/dev/null || echo "APP_KEY=$app_key" >> .env
+    fi
+
+    # Set DB_DATABASE based on project name
+    local current_db=$(grep "^DB_DATABASE=" .env 2>/dev/null | cut -d= -f2)
+    if [ -z "$current_db" ]; then
+        sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${project_name}_db|" .env 2>/dev/null || echo "DB_DATABASE=${project_name}_db" >> .env
+    fi
+
+    # Calculate and set ports
+    local db_port=$((5433 + port_offset))
+    local redis_port=$((6380 + port_offset))
+
+    sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env 2>/dev/null
+    sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env 2>/dev/null
+
+    # Set host configuration based on APP_MODE
+    if [ "$app_mode" = "docker" ]; then
+        sed -i "s|^DB_HOST=.*|DB_HOST=postgres|" .env 2>/dev/null
+        sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" .env 2>/dev/null
+    else
+        sed -i "s|^DB_HOST=.*|DB_HOST=127.0.0.1|" .env 2>/dev/null
+        sed -i "s|^REDIS_HOST=.*|REDIS_HOST=127.0.0.1|" .env 2>/dev/null
+    fi
+
+    echo ""
+    echo -e "${CYAN}=== Project: $project_name ===${NC}"
+    echo -e "  ${CYAN}Mode:${NC} $app_mode"
+    echo -e "  ${CYAN}App Port:${NC} http://localhost:3333"
+    if [ "$app_mode" = "docker" ]; then
+        echo -e "  ${CYAN}DB Port:${NC} $db_port (postgres)"
+        echo -e "  ${CYAN}Redis Port:${NC} $redis_port"
+    else
+        echo -e "  ${CYAN}DB:${NC} 127.0.0.1:5432 (local)"
+        echo -e "  ${CYAN}Redis:${NC} 127.0.0.1:6379 (local)"
+    fi
+    echo ""
+}
+
+show_help() {
+    echo "AdonisCommerce Docker Management"
+    echo ""
+    echo "Usage: $0 [command]"
+    echo ""
+    echo "Commands:"
+    echo "  dev           Start Docker services (postgres + redis)"
+    echo "  dev:local     Start in local mode (no Docker services)"
+    echo "  stop          Stop Docker services"
+    echo "  restart       Restart Docker services"
+    echo "  status        Show service status"
+    echo "  logs          View application logs"
+    echo "  db:shell      Open PostgreSQL shell"
+    echo "  redis:shell   Open Redis CLI"
+    echo "  clean         Remove containers and volumes"
+    echo "  mode          Show current mode (docker/local)"
+    echo "  help          Show this help"
+    echo ""
+}
+
 case "${1:-help}" in
     dev)
         check_docker
         setup_env
         export COMPOSE_PROJECT_NAME=$(get_project_name)
-        print_info "Starting development environment..."
+        print_info "Starting Docker services..."
         docker compose up -d
-        print_success "Development environment started!"
+        print_success "Docker services started!"
         echo ""
-        echo -e "  ${CYAN}App:${NC}      http://localhost:$(grep '^APP_PORT=' .env | cut -d= -f2)"
-        echo -e "  ${CYAN}Project:${NC} $COMPOSE_PROJECT_NAME"
-        echo ""
+        echo "  ${CYAN}Now run:${NC} pnpm dev"
         ;;
-    dev:tools)
-        check_docker
+
+    dev:local)
         setup_env
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        print_info "Starting with tools..."
-        docker compose --profile tools up -d
-        print_success "Started!"
-        APP_PORT=$(grep '^APP_PORT=' .env | cut -d= -f2)
-        ADMINER_PORT=$(grep '^ADMINER_PORT=' .env | cut -d= -f2)
+        print_info "Local mode - using local PostgreSQL and Redis"
+        print_warning "Make sure PostgreSQL and Redis are installed locally"
         echo ""
-        echo -e "  ${CYAN}App:${NC}        http://localhost:$APP_PORT"
-        echo -e "  ${CYAN}Adminer:${NC}    http://localhost:$ADMINER_PORT"
+        echo "  ${CYAN}Start app:${NC} pnpm dev"
         ;;
-    prod)
-        check_docker
-        if [ ! -f ".env" ]; then
-            print_error "Create .env from .env.docker.prod"
-            exit 1
-        fi
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        print_info "Starting production..."
-        docker compose -f docker-compose.prod.yml up -d --build
-        print_success "Production started!"
-        ;;
+
     stop)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
         docker compose down 2>/dev/null || true
-        docker compose -f docker-compose.prod.yml down 2>/dev/null || true
         print_success "Stopped"
         ;;
+
     restart)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
         docker compose restart
         print_success "Restarted"
         ;;
-    logs)
+
+    status)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose logs -f app
+        docker compose ps
         ;;
-    logs:all)
+
+    logs)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
         docker compose logs -f
         ;;
-    shell)
-        check_docker
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose exec app sh
-        ;;
+
     db:shell)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose exec postgres psql -U postgres -d $(grep '^DB_DATABASE=' .env | cut -d= -f2)
+        docker compose exec postgres psql -U postgres -d $(grep "^DB_DATABASE=" .env | cut -d= -f2)
         ;;
-    db:migrate)
-        check_docker
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose exec app node ace migration:run
-        print_success "Migrations done"
-        ;;
-    db:seed)
-        check_docker
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose exec app node ace db:seed
-        print_success "Seeding done"
-        ;;
-    db:reset)
-        check_docker
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        print_warning "Delete all data? (y/N)"
-        read -r response
-        if [[ "$response" =~ ^([yY])$ ]]; then
-            docker compose exec app node ace migration:fresh --seed
-            print_success "Database reset"
-        fi
-        ;;
+
     redis:shell)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
         docker compose exec redis redis-cli -a redis123
         ;;
+
     clean)
         check_docker
         export COMPOSE_PROJECT_NAME=$(get_project_name)
         print_warning "Remove all containers and data? (y/N)"
         read -r response
         if [[ "$response" =~ ^([yY])$ ]]; then
-            docker compose down -v --remove-orphans
+            docker compose down -v
             print_success "Cleaned"
         fi
         ;;
-    status)
-        check_docker
-        export COMPOSE_PROJECT_NAME=$(get_project_name)
-        docker compose ps
+
+    mode)
+        if [ -f ".env" ]; then
+            local mode=$(grep "^APP_MODE=" .env | cut -d= -f2 | tr -d '"' | tr -d "'")
+            echo -e "Current mode: ${CYAN}$mode${NC}"
+        else
+            echo "No .env file found"
+        fi
         ;;
-    list)
-        check_docker
-        echo -e "${CYAN}Running Projects:${NC}"
-        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(app|postgres|redis)" || echo "No projects running"
-        ;;
+
     help|--help|-h)
         show_help
         ;;
