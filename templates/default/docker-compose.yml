@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
 
   # Redis Cache & Session Store
   redis:
@@ -37,7 +37,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
 
   # AdonisJS Application (Development)
   app:
@@ -74,7 +74,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
     command: >
       sh -c "
         pnpm install &&
@@ -95,7 +95,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
     profiles:
       - tools
 
@@ -111,7 +111,7 @@ services:
     depends_on:
       - redis
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
     profiles:
       - tools
 
@@ -124,7 +124,7 @@ services:
       - "${MAILHOG_SMTP_PORT:-1025}:1025"
       - "${MAILHOG_UI_PORT:-8025}:8025"
     networks:
-      - ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network
+      - default_network
     profiles:
       - tools
 
@@ -135,5 +135,5 @@ volumes:
     driver: local
 
 networks:
-  ${COMPOSE_PROJECT_NAME:-adoniscommerce}-network:
+  default_network:
     driver: bridge

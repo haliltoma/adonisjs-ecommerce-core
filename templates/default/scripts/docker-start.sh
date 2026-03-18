@@ -47,7 +47,8 @@ get_port_offset() {
     local project=$1
     local hash=0
     for ((i=0; i<${#project}; i++)); do
-        hash=$((hash + ${project:$i:1}))
+        char=$(printf '%d' "'${project:$i:1}")
+        hash=$((hash + char))
     done
     echo $((hash % 50))
 }
@@ -98,32 +99,18 @@ setup_env() {
         echo "REDIS_DB=$redis_db" >> .env
     fi
 
-    # Auto-assign ports if not set
+    # Auto-assign ports based on project hash
     local base_app_port=3333
     local app_port=$((base_app_port + port_offset))
-
-    # App port
-    if grep -q "^APP_PORT=$" .env 2>/dev/null || ! grep -q "^APP_PORT=" .env 2>/dev/null; then
-        sed -i "s|^APP_PORT=.*|APP_PORT=$app_port|" .env
-    fi
-
-    # DB port (5432 + offset, mapped to host)
     local db_port=$((5433 + port_offset))
-    if grep -q "^DB_PORT=$" .env 2>/dev/null || ! grep -q "^DB_PORT=" .env 2>/dev/null; then
-        sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env
-    fi
-
-    # Redis port
     local redis_port=$((6380 + port_offset))
-    if grep -q "^REDIS_PORT=$" .env 2>/dev/null || ! grep -q "^REDIS_PORT=" .env 2>/dev/null; then
-        sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env
-    fi
-
-    # Tool ports
     local adminer_port=$((8080 + port_offset))
-    if grep -q "^ADMINER_PORT=$" .env 2>/dev/null || ! grep -q "^ADMINER_PORT=" .env 2>/dev/null; then
-        sed -i "s|^ADMINER_PORT=.*|ADMINER_PORT=$adminer_port|" .env
-    fi
+
+    # Always update ports from default values
+    sed -i "s|^APP_PORT=.*|APP_PORT=$app_port|" .env
+    sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env
+    sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env
+    sed -i "s|^ADMINER_PORT=.*|ADMINER_PORT=$adminer_port|" .env
 
     echo -e "${CYAN}[ENV] Project: $project_name${NC}"
     echo -e "${CYAN}[ENV] App Port: $app_port${NC}"
