@@ -1,14 +1,33 @@
 /**
  * Order Status Manager
  *
- * Responsible for managing order status history.
- * Single Responsibility: Track order status changes.
+ * Responsible for managing order status history and state transitions.
+ * Single Responsibility: Track order status changes with valid state machine.
  */
 
 import OrderStatusHistory from '#models/order_status_history'
 import { DateTime } from 'luxon'
 
 export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+
+// Valid state transitions - prevents illegal status changes like delivered -> pending
+const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  delivered: ['refunded'], // Can only refund a delivered order
+  cancelled: [], // Terminal state - no transitions out
+  refunded: [], // Terminal state - no transitions out
+}
+
+/**
+ * Check if a status transition is valid
+ */
+function isValidTransition(from: OrderStatus, to: OrderStatus): boolean {
+  const allowedTransitions = VALID_TRANSITIONS[from]
+  return allowedTransitions?.includes(to) || false
+}
 
 export default class OrderStatusManager {
   /**
@@ -30,7 +49,8 @@ export default class OrderStatusManager {
   }
 
   /**
-   * Record status change
+   * Record status change with validation
+   * HARDENED: iter-4 - Added state machine validation to prevent illegal transitions
    */
   async recordStatusChange(
     orderId: string,
@@ -40,6 +60,14 @@ export default class OrderStatusManager {
     note?: string,
     trx?: any
   ): Promise<OrderStatusHistory> {
+    // CRITICAL: Validate state transition
+    if (!isValidTransition(previousStatus, newStatus)) {
+      throw new Error(
+        `Invalid status transition from '${previousStatus}' to '${newStatus}'. ` +
+        `Allowed transitions from '${previousStatus}': ${VALID_TRANSITIONS[previousStatus]?.join(', ') || 'none'}`
+      )
+    }
+
     return await OrderStatusHistory.create(
       {
         orderId,

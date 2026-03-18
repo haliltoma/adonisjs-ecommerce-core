@@ -7,7 +7,7 @@ import { DateTime } from 'luxon'
 
 export default class DashboardController {
   async index({ inertia, admin, store }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
 
     const storeId = store.id
 
@@ -95,11 +95,11 @@ export default class DashboardController {
       .orderBy('date', 'asc')
 
     return inertia.render('admin/Dashboard', {
-      auth?.user: {
-        id: auth?.user.id,
-        email: auth?.user.email,
-        displayName: auth?.user.displayName,
-        role: auth?.user.role?.name,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role?.name,
       },
       stats: {
         today: todayStats,

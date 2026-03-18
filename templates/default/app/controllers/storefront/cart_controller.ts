@@ -26,19 +26,21 @@ export default class CartController {
 
     const { productId, variantId, quantity } = request.only(['productId', 'variantId', 'quantity'])
 
+    console.log('[Cart] Add to cart:', { productId, variantId, quantity, storeId })
+
     try {
       const cart = await this.cartService.getOrCreateCart(storeId, customerId, sessionId)
+      console.log('[Cart] Cart ID:', cart.id)
 
       await this.cartService.addItem(cart.id, {
         productId,
         variantId,
         quantity: quantity || 1,
       })
+      console.log('[Cart] Item added successfully')
 
       // Reload cart from DB to get fresh recalculated totals
       await cart.refresh()
-
-      session.flash('success', 'Item added to cart')
 
       if (this.isApiRequest(request)) {
         await cart.load('items', (query) => {
@@ -50,8 +52,11 @@ export default class CartController {
         })
       }
 
-      return response.redirect().back()
+      // Redirect to cart page after adding item
+      session.flash('success', 'Item added to cart')
+      return response.redirect().toPath('/cart')
     } catch (error: unknown) {
+      console.error('[Cart] Add to cart error:', error)
       if (this.isApiRequest(request)) {
         return response.status(400).json({ error: (error as Error).message })
       }

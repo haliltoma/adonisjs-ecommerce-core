@@ -26,9 +26,21 @@ export const checkoutValidator = vine.compile(
   })
 )
 
+/**
+ * Payment validator - validates payment requests
+ * Note: Amount should be validated server-side from cart/order, not from client input
+ */
 export const paymentValidator = vine.compile(
   vine.object({
     paymentMethod: vine.enum(['card', 'paypal', 'bank_transfer']),
     cardToken: vine.string().optional(),
   })
 )
+
+/**
+ * Order total validator - validates order total matches expected value
+ * HARDENED: iter-6 - Added server-side price validation
+ */
+export const validateOrderTotal = (expectedTotal: number, receivedTotal: number, tolerance: number = 0.01): boolean => {
+  return Math.abs(expectedTotal - receivedTotal) <= tolerance
+}

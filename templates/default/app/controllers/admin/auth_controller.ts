@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { useAuthService } from '#services/service_container'
-import User from '#models/auth?.user'
+import User from '#models/user'
 
 export default class AuthController {
   private authService = useAuthService()
@@ -13,21 +13,21 @@ export default class AuthController {
     const { email, password, remember: _remember } = request.only(['email', 'password', 'remember'])
 
     try {
-      const auth?.user = await this.authService.authenticateAdmin({ email, password })
+      const authResult = await this.authService.authenticateAdmin({ email, password })
 
-      if (!auth?.user) {
+      if (!authResult) {
         session.flash('error', 'Invalid credentials')
         return response.redirect().back()
       }
 
       // Check if 2FA is enabled
-      if (auth?.user.twoFactorEnabled) {
-        session.put('2fa_user_id', auth?.user.id)
+      if (authResult.twoFactorEnabled) {
+        session.put('2fa_user_id', authResult.id)
         return response.redirect().toRoute('admin.auth.2fa')
       }
 
-      session.put('adminId', auth?.user.id)
-      await auth.use('web').login(auth?.user, true)
+      session.put('adminId', authResult.id)
+      await auth.use('web').login(authResult, true)
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
     } catch (error: unknown) {
@@ -61,10 +61,10 @@ export default class AuthController {
         return response.redirect().back()
       }
 
-      const auth?.user = await User.findOrFail(userId)
+      const user = await User.findOrFail(userId)
       session.forget('2fa_user_id')
-      session.put('adminId', auth?.user.id)
-      await auth.use('web').login(auth?.user, true)
+      session.put('adminId', user.id)
+      await auth.use('web').login(user, true)
 
       session.flash('success', 'Welcome back!')
       return response.redirect().toRoute('admin.dashboard')
@@ -131,43 +131,43 @@ export default class AuthController {
   }
 
   async showProfile({ inertia, admin }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
 
     return inertia.render('admin/auth/Profile', {
-      auth?.user: {
-        id: auth?.user.id,
-        email: auth?.user.email,
-        firstName: auth?.user.firstName,
-        lastName: auth?.user.lastName,
-        displayName: auth?.user.displayName,
-        avatarUrl: auth?.user.avatarUrl,
-        role: auth?.user.role?.name,
-        twoFactorEnabled: auth?.user.twoFactorEnabled,
-        lastLoginAt: auth?.user.lastLoginAt?.toISO(),
-        createdAt: auth?.user.createdAt.toISO(),
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        role: user.role?.name,
+        twoFactorEnabled: user.twoFactorEnabled,
+        lastLoginAt: user.lastLoginAt?.toISO(),
+        createdAt: user.createdAt.toISO(),
       },
     })
   }
 
   async updateProfile({ request, response, admin, session }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
     const { firstName, lastName, email } = request.only(['firstName', 'lastName', 'email'])
 
     try {
-      auth?.user.firstName = firstName
-      auth?.user.lastName = lastName
+      user.firstName = firstName
+      user.lastName = lastName
 
-      if (email !== auth?.user.email) {
+      if (email !== user.email) {
         // Check if email is unique
-        const existing = await User.query().where('email', email).whereNot('id', auth?.user.id).first()
+        const existing = await User.query().where('email', email).whereNot('id', user.id).first()
         if (existing) {
           session.flash('error', 'Email already in use')
           return response.redirect().back()
         }
-        auth?.user.email = email
+        user.email = email
       }
 
-      await auth?.user.save()
+      await user.save()
       session.flash('success', 'Profile updated')
       return response.redirect().back()
     } catch (error: unknown) {
@@ -177,22 +177,22 @@ export default class AuthController {
   }
 
   async updatePassword({ request, response, admin, session }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
     const { currentPassword, newPassword } = request.only(['currentPassword', 'newPassword'])
 
     try {
       // Verify current password
-      const isValid = await this.authService.authenticateAdmin({
-        email: auth?.user.email,
+      const authResult = await this.authService.authenticateAdmin({
+        email: user.email,
         password: currentPassword,
       })
 
-      if (!isValid) {
+      if (!authResult) {
         session.flash('error', 'Current password is incorrect')
         return response.redirect().back()
       }
 
-      await this.authService.updateAdminPassword(auth?.user.id, newPassword)
+      await this.authService.updateAdminPassword(user.id, newPassword)
       session.flash('success', 'Password updated')
       return response.redirect().back()
     } catch (error: unknown) {
@@ -202,10 +202,10 @@ export default class AuthController {
   }
 
   async enable2FA({ response, admin, session }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
 
     try {
-      const { secret, qrCode } = await this.authService.enableTwoFactor(auth?.user.id)
+      const { secret, qrCode } = await this.authService.enableTwoFactor(user.id)
       session.put('2fa_setup_secret', secret)
 
       return response.json({ qrCode, secret })
@@ -215,11 +215,11 @@ export default class AuthController {
   }
 
   async confirm2FA({ request, response, admin, session }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
     const { code } = request.only(['code'])
 
     try {
-      const isValid = await this.authService.confirmTwoFactor(auth?.user.id, code)
+      const isValid = await this.authService.confirmTwoFactor(user.id, code)
 
       if (!isValid) {
         return response.status(400).json({ error: 'Invalid verification code' })
@@ -233,18 +233,18 @@ export default class AuthController {
   }
 
   async disable2FA({ request, response, admin, session }: HttpContext) {
-    const auth?.user = admin!
+    const user = admin!
     const { code } = request.only(['code'])
 
     try {
-      const isValid = await this.authService.verifyTwoFactor(auth?.user.id, code)
+      const isValid = await this.authService.verifyTwoFactor(user.id, code)
 
       if (!isValid) {
         session.flash('error', 'Invalid verification code')
         return response.redirect().back()
       }
 
-      await this.authService.disableTwoFactor(auth?.user.id)
+      await this.authService.disableTwoFactor(user.id)
       session.flash('success', 'Two-factor authentication disabled')
       return response.redirect().back()
     } catch (error: unknown) {

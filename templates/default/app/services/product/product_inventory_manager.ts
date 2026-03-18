@@ -7,6 +7,8 @@
 
 import type IProductRepository from '#repositories/interfaces/i_product_repository'
 import ProductVariant from '#models/product_variant'
+import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 
 export default class ProductInventoryManager {
   /**
@@ -44,6 +46,7 @@ export default class ProductInventoryManager {
 
   /**
    * Reserve stock (for cart/orders)
+   * CRITICAL: Uses database-level atomic update to prevent race conditions
    */
   async reserveStock(
     productId: string,
@@ -51,23 +54,14 @@ export default class ProductInventoryManager {
     productRepository: IProductRepository,
     trx?: any
   ): Promise<boolean> {
-    const product = await productRepository.findById(productId, trx)
+    // Use atomic database update to prevent race conditions
+    // This ensures that stock check and update happen in a single transaction
+    const updated = await productRepository.atomicReserveStock(productId, quantity, trx)
 
-    if (!product) {
-      throw new Error(`Product not found: ${productId}`)
-    }
-
-    if (!product.trackQuantity) {
-      return true // No tracking needed
-    }
-
-    const availableStock = product.quantityAvailable || 0
-
-    if (availableStock < quantity) {
+    if (!updated) {
+      // Stock was insufficient or product not found
       return false
     }
-
-    await productRepository.updateStock(productId, availableStock - quantity, trx)
 
     return true
   }
@@ -88,28 +82,55 @@ export default class ProductInventoryManager {
    * Update variant inventory quantity
    * Works with product variants (not base products)
    */
+  /**
+   * Update variant inventory quantity
+   * HARDENED: iter-2 - Validates quantity is non-negative
+   */
   async updateVariantInventory(
     variantId: string,
     quantity: number,
     trx?: any
   ): Promise<void> {
-    const variant = await ProductVariant.findOrFail(variantId)
-    variant.inventoryQuantity = quantity
-    await variant.save(trx ? { client: trx } : undefined)
+    // HARDENED: iter-2 - Validate quantity is non-negative
+    if (quantity < 0) {
+      throw new Error('Inventory quantity cannot be negative')
+    }
+
+    const result = await db.from('product_variants')
+      .where('id', variantId)
+      .update({
+        inventory_quantity: quantity,
+        updated_at: DateTime.now().toSQL(),
+      })
+
+    if ((result as any).rowCount === 0 || result === 0) {
+      throw new Error(`Variant not found: ${variantId}`)
+    }
   }
 
   /**
    * Adjust variant inventory quantity
    * Works with product variants (not base products)
+   * HARDENED: iter-2 - Uses atomic database update to prevent race conditions
    */
   async adjustVariantInventory(
     variantId: string,
     adjustment: number,
     trx?: any
   ): Promise<void> {
-    const variant = await ProductVariant.findOrFail(variantId)
-    const currentQuantity = variant.inventoryQuantity || 0
-    variant.inventoryQuantity = Math.max(0, currentQuantity + adjustment)
-    await variant.save(trx ? { client: trx } : undefined)
+    // HARDENED: iter-2 - Use atomic update with raw SQL to prevent race conditions
+    const result = await db.from('product_variants')
+      .where('id', variantId)
+      .where('track_inventory', true)
+      .whereRaw('COALESCE(inventory_quantity, 0) + ? >= 0', [adjustment])
+      .update({
+        inventory_quantity: db.rawQuery('COALESCE(inventory_quantity, 0) + ?', [adjustment]),
+        updated_at: DateTime.now().toSQL(),
+      })
+
+    if ((result as any).rowCount === 0 || result === 0) {
+      // Either variant doesn't exist, doesn't track inventory, or would go negative
+      throw new Error(`Failed to adjust inventory for variant: ${variantId}`)
+    }
   }
 }

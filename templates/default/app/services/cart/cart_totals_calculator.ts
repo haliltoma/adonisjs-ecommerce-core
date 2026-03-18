@@ -18,9 +18,16 @@ export interface CartTotals {
 export default class CartTotalsCalculator {
   /**
    * Calculate subtotal from cart items
+   * HARDENED: iter-2 - Always recalculate from unitPrice * quantity to prevent client-side price manipulation
    */
   calculateSubtotal(items: CartItem[]): number {
-    return items.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0)
+    // CRITICAL: Always use unitPrice * quantity, never trust client-provided totalPrice
+    return items.reduce((sum, item) => {
+      const unitPrice = Number(item.unitPrice || 0)
+      const quantity = Number(item.quantity || 0)
+      const discountAmount = Number(item.discountAmount || 0)
+      return sum + (unitPrice * quantity) - discountAmount
+    }, 0)
   }
 
   /**

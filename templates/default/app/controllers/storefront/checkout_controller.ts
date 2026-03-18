@@ -148,6 +148,14 @@ export default class CheckoutController {
       return response.redirect().toRoute('storefront.cart')
     }
 
+    // HARDENED: iter-6 - Validate cart total server-side to prevent price manipulation
+    const expectedTotal = Number(cart.grandTotal || 0)
+    const receivedTotal = Number(request.input('total') || 0)
+    if (receivedTotal > 0 && Math.abs(expectedTotal - receivedTotal) > 0.01) {
+      session.flash('error', 'Cart total mismatch. Please refresh and try again.')
+      return response.redirect().toRoute('storefront.cart')
+    }
+
     const data = request.only([
       'email',
       'firstName',

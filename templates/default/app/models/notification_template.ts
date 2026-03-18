@@ -12,6 +12,9 @@ export default class NotificationTemplate extends BaseModel {
  declare storeId: string | null
 
  @column()
+ declare event: string
+
+ @column()
  declare name: string
 
  @column()

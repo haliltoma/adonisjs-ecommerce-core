@@ -9,6 +9,7 @@ export default class extends BaseSchema {
       table.uuid('store_id').references('id').inTable('stores').onDelete('CASCADE')
       table.string('code').notNullable()
       table.string('name').notNullable()
+      table.string('native_name').nullable()
       table.boolean('is_default').defaultTo(false)
       table.boolean('is_active').defaultTo(true)
       table.enum('direction', ['ltr', 'rtl']).defaultTo('ltr')

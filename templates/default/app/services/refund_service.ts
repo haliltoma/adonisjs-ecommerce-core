@@ -56,6 +56,21 @@ export default class RefundService {
         refundAmount += order.shippingTotal
       }
 
+      // HARDENED: iter-21 - Validate refund amount does not exceed what's been paid
+      const previouslyRefunded = await Refund.query({ client: trx })
+        .where('orderId', data.orderId)
+        .where('status', 'completed')
+        .sum('amount as total')
+
+      const totalAlreadyRefunded = Number(previouslyRefunded[0]?.total || 0)
+      const maxRefundable = order.grandTotal - totalAlreadyRefunded
+
+      if (refundAmount > maxRefundable) {
+        throw new Error(
+          `Refund amount (${refundAmount}) exceeds remaining refundable amount (${maxRefundable}). Total paid: ${order.grandTotal}, already refunded: ${totalAlreadyRefunded}`
+        )
+      }
+
       const refund = await Refund.create(
         {
           orderId: data.orderId,

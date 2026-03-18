@@ -75,6 +75,9 @@ export default class CartItemManager {
     }
 
     // Create new cart item
+    const unitPrice = variant?.price || product.price || 0
+    const totalPrice = unitPrice * data.quantity
+
     return await CartItem.create(
       {
         cartId: cart.id,
@@ -84,8 +87,8 @@ export default class CartItemManager {
         title: product.title,
         variantTitle: variant?.title,
         quantity: data.quantity,
-        unitPrice: variant?.price || product.price || 0,
-        totalPrice: 0, // Will be recalculated
+        unitPrice: unitPrice,
+        totalPrice: totalPrice,
         weight: product.weight,
         metadata: data.metadata || {},
         discountAmount: 0,

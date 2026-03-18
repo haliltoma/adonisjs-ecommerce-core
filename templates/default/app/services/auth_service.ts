@@ -268,8 +268,11 @@ export default class AuthService {
   async verifyTwoFactor(userId: number, code: string): Promise<boolean> {
     const user = await User.findOrFail(userId)
 
+    // HARDENED: iter-1 - If 2FA is not enabled, do NOT automatically return true
+    // This was a security vulnerability - 2FA must be enforced when enabled
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
-      return true // 2FA not enabled, skip verification
+      // Log suspicious activity - attempting 2FA verify when 2FA is not set up
+      return false // HARDENED: iter-1 - Changed from true to false for security
     }
 
     const secret = OTPAuth.Secret.fromBase32(user.twoFactorSecret)

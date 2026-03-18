@@ -174,7 +174,7 @@ router.group(() => {
   router.get('/reset-password/:token', [AdminAuthController, 'showResetPassword']).as('admin.auth.resetPassword')
   router.post('/reset-password', [AdminAuthController, 'resetPassword']).as('admin.auth.resetPassword.post')
 
-  // Protected routes
+  // Protected routes - REQUIRE admin authentication
   router.group(() => {
     router.post('/logout', [AdminAuthController, 'logout']).as('admin.auth.logout')
 

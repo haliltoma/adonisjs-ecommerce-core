@@ -18,7 +18,6 @@ import Locale from '#models/locale'
 import Page from '#models/page'
 import _Menu from '#models/menu'
 import Banner from '#models/banner'
-import Setting from '#models/setting'
 import BlogCategory from '#models/blog_category'
 import BlogPost from '#models/blog_post'
 import Tag from '#models/tag'
@@ -794,20 +793,20 @@ export default class MainSeeder extends BaseSeeder {
     ]
 
     for (const setting of settings) {
-      await Setting.create({
-        storeId,
-        group: setting.group,
-        key: setting.key,
-        value: setting.value,
-        type: setting.type as any,
-        isPublic: setting.group === 'general',
-      })
+      // Use raw query to properly insert JSON values
+      const jsonValue = setting.type === 'string' ? setting.value : JSON.stringify(setting.value)
+      await this.client.raw(
+        `INSERT INTO settings (store_id, "group", key, value, type, is_public, created_at, updated_at)
+         VALUES (?, ?, ?, ?::jsonb, ?, ?, NOW(), NOW())`,
+        [storeId, setting.group, setting.key, jsonValue, setting.type, setting.group === 'general']
+      )
     }
   }
 
   private async createNotificationTemplates(storeId: string) {
     const templates = [
       {
+        event: 'order.confirmed',
         name: 'Order Confirmation',
         slug: 'order-confirmation',
         subject: 'Order Confirmed - #{{orderNumber}}',
@@ -816,6 +815,7 @@ export default class MainSeeder extends BaseSeeder {
         variables: ['orderNumber', 'total', 'customerName', 'items'],
       },
       {
+        event: 'order.shipped',
         name: 'Shipping Notification',
         slug: 'shipping-notification',
         subject: 'Your Order Has Shipped - #{{orderNumber}}',
@@ -824,6 +824,7 @@ export default class MainSeeder extends BaseSeeder {
         variables: ['orderNumber', 'trackingNumber', 'carrier', 'estimatedDelivery'],
       },
       {
+        event: 'password.reset',
         name: 'Password Reset',
         slug: 'password-reset',
         subject: 'Reset Your Password',
@@ -832,6 +833,7 @@ export default class MainSeeder extends BaseSeeder {
         variables: ['resetLink', 'customerName'],
       },
       {
+        event: 'customer.welcome',
         name: 'Welcome Email',
         slug: 'welcome',
         subject: 'Welcome to {{storeName}}!',
@@ -845,6 +847,7 @@ export default class MainSeeder extends BaseSeeder {
       await NotificationTemplate.create({
         id: randomUUID(),
         storeId,
+        event: template.event,
         name: template.name,
         slug: template.slug,
         subject: template.subject,

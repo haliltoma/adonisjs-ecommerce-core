@@ -123,7 +123,7 @@ export default class PaymentWebhookController {
         await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received via Iyzico')
 
         if (order.customerId) {
-          const customerService = useCustomerService()
+          const customerService = useCustomerService()()
           await customerService.incrementOrderStats(order.customerId, order.grandTotal)
         }
 
@@ -241,7 +241,7 @@ export default class PaymentWebhookController {
 
     // Update customer stats
     if (order.customerId) {
-      const customerService = useCustomerService
+      const customerService = useCustomerService()
       await customerService.incrementOrderStats(order.customerId, order.grandTotal)
     }
 
@@ -304,7 +304,7 @@ export default class PaymentWebhookController {
     await this.orderService.updateStatus(order.id, 'confirmed', 'Payment received via Stripe')
 
     if (order.customerId) {
-      const customerService = useCustomerService
+      const customerService = useCustomerService()
       await customerService.incrementOrderStats(order.customerId, order.grandTotal)
     }
 

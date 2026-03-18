@@ -272,6 +272,25 @@ export default class ProductRepository implements IProductRepository {
   }
 
   /**
+   * Atomic stock reservation - prevents race conditions
+   * Uses database-level atomic update with condition to prevent overselling
+   */
+  async atomicReserveStock(productId: string, quantity: number, trx?: any): Promise<boolean> {
+    // Atomic update: only update if quantityAvailable >= requested quantity
+    const result = await db.from('products')
+      .where('id', productId)
+      .where('trackQuantity', true)
+      .where('quantityAvailable', '>=', quantity)
+      .update({
+        quantityAvailable: db.rawQuery('quantityAvailable - ?', [quantity]),
+        updatedAt: DateTime.now().toSQL(),
+      })
+
+    // If no rows were updated, either product doesn't exist or insufficient stock
+    return (result as any).rowCount > 0 || result > 0
+  }
+
+  /**
    * Check if slug is unique
    */
   async isSlugUnique(slug: string, storeId: string, excludeId?: string): Promise<boolean> {

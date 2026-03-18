@@ -16,7 +16,7 @@ export default class Setting extends BaseModel {
  @column()
  declare key: string
 
- @column()
+ @column({ serializeAs: null })
  declare value: unknown
 
  @column()

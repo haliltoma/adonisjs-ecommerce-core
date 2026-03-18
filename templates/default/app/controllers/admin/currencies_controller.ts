@@ -56,24 +56,25 @@ export default class CurrenciesController {
    * POST /admin/currencies
    */
   async store({ request, response }: HttpContext) {
-    const payload = request.body()
-        symbol: null,
-        symbolPosition: null,
-        decimalPlaces: null,
-        decimalSeparator: null,
-        thousandsSeparator: null,
-        exchangeRate: null,
-        isActive: schema.boolean.optional(),
-        isDefault: schema.boolean.optional(),
-      }),
-    })
+    const data = request.only([
+      'code',
+      'name',
+      'symbol',
+      'symbolPosition',
+      'decimalPlaces',
+      'decimalSeparator',
+      'thousandsSeparator',
+      'exchangeRate',
+      'isActive',
+      'isDefault',
+    ])
 
     // If this is default, unset existing default
-    if (payload.isDefault) {
+    if (data.isDefault) {
       await Currency.query().where('isDefault', true).update({ isDefault: false })
     }
 
-    const currency = await Currency.create(payload)
+    const currency = await Currency.create(data)
 
     return response.created({
       data: currency.serialize(),
@@ -94,23 +95,25 @@ export default class CurrenciesController {
       })
     }
 
-    const payload = request.body()
-        symbolPosition: null.optional(),
-        decimalPlaces: schema.number.optional(),
-        decimalSeparator: schema.string.optional(),
-        thousandsSeparator: schema.string.optional(),
-        exchangeRate: schema.number.optional(),
-        isActive: schema.boolean.optional(),
-        isDefault: schema.boolean.optional(),
-      }),
-    })
+    const data = request.only([
+      'code',
+      'name',
+      'symbol',
+      'symbolPosition',
+      'decimalPlaces',
+      'decimalSeparator',
+      'thousandsSeparator',
+      'exchangeRate',
+      'isActive',
+      'isDefault',
+    ])
 
     // If setting as default, unset existing default
-    if (payload.isDefault && !currency.isDefault) {
+    if (data.isDefault && !currency.isDefault) {
       await Currency.query().where('isDefault', true).update({ isDefault: false })
     }
 
-    await currency.merge(payload).save()
+    await currency.merge(data).save()
 
     return response.ok({
       data: currency.serialize(),
@@ -157,4 +160,15 @@ export default class CurrenciesController {
       })
     }
 
-    const payload = request.body()
+    const { exchangeRate } = request.only(['exchangeRate'])
+
+    currency.exchangeRate = exchangeRate
+    currency.rateUpdatedAt = DateTime.now()
+    await currency.save()
+
+    return response.ok({
+      data: currency.serialize(),
+      message: 'Exchange rate updated successfully',
+    })
+  }
+}

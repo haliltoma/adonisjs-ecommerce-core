@@ -12,9 +12,9 @@ import Page from '#models/page'
 import { DateTime } from 'luxon'
 
 export default class HomeController {
-  private __productService = use_productService()
-  private __categoryService = use_categoryService()
-  private __customerService = use_customerService()
+  private productService = useProductService()
+  private categoryService = useCategoryService()
+  private customerService = useCustomerService()
 
   async index({ inertia, store }: HttpContext) {
     const storeId = store.id

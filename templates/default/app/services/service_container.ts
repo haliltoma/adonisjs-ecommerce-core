@@ -124,6 +124,7 @@ class ServiceContainer {
     const orderItemFactory = this.services.get('OrderItemFactory')
     const statusManager = this.services.get('OrderStatusManager')
     const numberGenerator = this.services.get('OrderNumberGenerator')
+    const productRepository = this.services.get('ProductRepository')
 
     this.services.set(
       'OrderService',
@@ -132,7 +133,8 @@ class ServiceContainer {
         cartRepository,
         orderItemFactory,
         statusManager,
-        numberGenerator
+        numberGenerator,
+        productRepository
       )
     )
 

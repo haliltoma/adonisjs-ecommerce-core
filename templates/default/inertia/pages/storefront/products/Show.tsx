@@ -306,6 +306,10 @@ export default function ProductShow({
       {
         preserveScroll: true,
         onFinish: () => setAddingToCart(false),
+        onError: (errors: Record<string, string>) => {
+          console.error('Add to cart error:', errors)
+          alert(errors.error || 'Failed to add item to cart')
+        },
       }
     )
   }

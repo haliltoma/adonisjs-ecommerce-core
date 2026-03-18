@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.uuid('variant_id').nullable().references('id').inTable('product_variants').onDelete('CASCADE')
       table.string('sku').notNullable()
       table.string('title').notNullable()
+      table.string('variant_title').nullable()
       table.integer('quantity').notNullable()
       table.decimal('unit_price', 12, 2).notNullable()
       table.decimal('total_price', 12, 2).notNullable()

@@ -161,6 +161,17 @@ export default interface IProductRepository {
   ): Promise<void>
 
   /**
+   * Atomic stock reservation - prevents race conditions
+   * Uses database-level atomic update to reserve stock in a single operation
+   * Returns true if reservation succeeded, false if insufficient stock
+   */
+  atomicReserveStock(
+    productId: string,
+    quantity: number,
+    trx?: any
+  ): Promise<boolean>
+
+  /**
    * Check if slug is unique
    */
   isSlugUnique(slug: string, storeId: string, excludeId?: string): Promise<boolean>

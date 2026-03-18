@@ -15,6 +15,8 @@ import type ICartRepository from '#repositories/interfaces/i_cart_repository'
 import OrderItemFactory from '#services/order/order_item_factory'
 import OrderStatusManager from '#services/order/order_status_manager'
 import OrderNumberGenerator from '#services/order/order_number_generator'
+import type IProductRepository from '#repositories/interfaces/i_product_repository'
+import ProductInventoryManager from '#services/product/product_inventory_manager'
 
 interface CreateOrderDTO {
   cartId: string
@@ -73,7 +75,8 @@ export default class OrderService {
     private cartRepository: ICartRepository,
     private orderItemFactory: OrderItemFactory,
     private statusManager: OrderStatusManager,
-    private numberGenerator: OrderNumberGenerator
+    private numberGenerator: OrderNumberGenerator,
+    private productRepository: IProductRepository
   ) {}
 
   /**
@@ -100,6 +103,15 @@ export default class OrderService {
       const orderNumber = await this.numberGenerator.generate(cart.storeId)
 
       // 3. Create order
+      // HARDENED: iter-4 - Calculate grandTotal properly: subtotal + tax + shipping - discount
+      // Note: cart.grandTotal should already include shipping if it was calculated correctly
+      // But we add shippingCost separately to ensure it's included
+      const shippingCost = data.shippingCost || 0
+      const subtotal = cart.subtotal || 0
+      const discountTotal = cart.discountTotal || 0
+      const taxTotal = cart.taxTotal || 0
+      const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal + shippingCost)
+
       const order = await this.orderRepository.create(
         {
           storeId: cart.storeId,
@@ -111,13 +123,13 @@ export default class OrderService {
           paymentStatus: 'pending',
           fulfillmentStatus: 'unfulfilled',
           currencyCode: cart.currencyCode || 'USD',
-          subtotal: cart.subtotal || 0,
-          discountTotal: cart.discountTotal || 0,
+          subtotal,
+          discountTotal,
           couponCode: cart.couponCode,
           discountId: cart.discountId,
-          shippingTotal: data.shippingCost || 0,
-          taxTotal: cart.taxTotal || 0,
-          grandTotal: Number(cart.grandTotal || 0) + (data.shippingCost || 0),
+          shippingTotal: shippingCost,
+          taxTotal,
+          grandTotal,
           billingAddress: data.billingAddress,
           shippingAddress: data.shippingAddress || data.billingAddress,
           shippingMethod: data.shippingMethod,
@@ -129,6 +141,24 @@ export default class OrderService {
 
       // 4. Create order items from cart items
       await this.orderItemFactory.createFromCartItems(order.id, cart.items, trx)
+
+      // HARDENED: iter-26 - Decrement inventory for each order item
+      // This prevents overselling by atomically decreasing stock when order is placed
+      const inventoryManager = new ProductInventoryManager()
+      for (const item of cart.items) {
+        try {
+          if (item.variantId) {
+            // Decrement variant inventory
+            await inventoryManager.adjustVariantInventory(item.variantId, -item.quantity, trx)
+          } else if (item.productId) {
+            // Decrement product inventory
+            await inventoryManager.adjustStock(item.productId, -item.quantity, this.productRepository, trx)
+          }
+        } catch (error) {
+          // If inventory decrement fails, throw error to rollback transaction
+          throw new Error(`Failed to decrement inventory for "${item.title}": ${(error as Error).message}`)
+        }
+      }
 
       // 5. Record initial status
       await this.statusManager.recordInitialStatus(order.id, userId, trx)

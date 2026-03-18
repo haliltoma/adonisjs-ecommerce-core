@@ -42,6 +42,16 @@ export default class CartDiscountApplicator {
         }
       }
 
+      // HARDENED: iter-3 - Check if coupon is already applied to prevent double discount
+      if (cart.couponCode && cart.couponCode.toLowerCase() === couponCode.toLowerCase()) {
+        return {
+          success: false,
+          discountTotal: cart.discountTotal || 0,
+          couponCode: cart.couponCode,
+          message: 'This coupon is already applied to your cart',
+        }
+      }
+
       // Get discount from discount service
       const discount = await discountService.findByCode(couponCode, cart.storeId)
 
