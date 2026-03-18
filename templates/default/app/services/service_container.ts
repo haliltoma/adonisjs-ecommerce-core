@@ -154,7 +154,9 @@ class ServiceContainer {
     const optionManager = this.services.get('ProductOptionManager')
     const tagManager = this.services.get('ProductTagManager')
 
-    // Note: DiscountService will be set later if needed
+    // Get DiscountService instance
+    const discountService = this.services.get('DiscountService')
+
     this.services.set(
       'CartService',
       new CartService(
@@ -165,7 +167,7 @@ class ServiceContainer {
         taxCalculator,
         itemManager,
         validator,
-        null // DiscountService (optional)
+        discountService
       )
     )
 

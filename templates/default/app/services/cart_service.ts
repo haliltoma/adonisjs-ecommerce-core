@@ -84,13 +84,16 @@ export default class CartService {
         throw new Error('Cart not found')
       }
 
+      // Load cart items for existing item check
+      await cart.load('items')
+
       // Add item using item manager
       await this.itemManager.addItem(cart, data, this.productRepository, trx)
 
       // Recalculate cart totals
       await this.recalculateCart(cart, trx)
 
-      return cart
+      return await this.cartRepository.findById(cartId, trx)
     })
   }
 
@@ -108,6 +111,9 @@ export default class CartService {
       if (!cart) {
         throw new Error('Cart not found')
       }
+
+      // Load cart items
+      await cart.load('items')
 
       const item = cart.items.find((i) => i.id === itemId)
 
@@ -127,7 +133,7 @@ export default class CartService {
       // Recalculate cart totals
       await this.recalculateCart(cart, trx)
 
-      return cart
+      return await this.cartRepository.findById(cartId, trx)
     })
   }
 
@@ -141,6 +147,9 @@ export default class CartService {
       if (!cart) {
         throw new Error('Cart not found')
       }
+
+      // Load cart items
+      await cart.load('items')
 
       const item = cart.items.find((i) => i.id === itemId)
 
@@ -168,6 +177,9 @@ export default class CartService {
       if (!cart) {
         throw new Error('Cart not found')
       }
+
+      // Load cart items for discount calculation
+      await cart.load('items')
 
       // Validate coupon code format
       const validationResult = this.validator.validateCouponCode(couponCode)
@@ -215,6 +227,9 @@ export default class CartService {
       if (!cart) {
         throw new Error('Cart not found')
       }
+
+      // Load cart items
+      await cart.load('items')
 
       // Remove discount
       this.discountApplicator.removeDiscount(cart)
@@ -356,6 +371,10 @@ export default class CartService {
       if (!sourceCart || !targetCart) {
         throw new Error('One or both carts not found')
       }
+
+      // Load cart items for merging
+      await sourceCart.load('items')
+      await targetCart.load('items')
 
       // Merge items
       await this.itemManager.mergeItems(sourceCart, targetCart, trx)

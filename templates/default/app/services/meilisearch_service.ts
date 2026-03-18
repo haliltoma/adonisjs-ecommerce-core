@@ -349,7 +349,7 @@ export default class MeiliSearchService {
     if (filters.query) {
       query.where((subQuery) => {
         subQuery
-          .where('name', 'ILIKE', `%${filters.query}%`)
+          .where('title', 'ILIKE', `%${filters.query}%`)
           .orWhere('description', 'ILIKE', `%${filters.query}%`)
           .orWhere('slug', 'ILIKE', `%${filters.query}%`)
       })
@@ -357,8 +357,8 @@ export default class MeiliSearchService {
 
     // Category filter
     if (filters.category) {
-      query.whereHas('category', (categoryQuery) => {
-        categoryQuery.where('name', filters.category)
+      query.whereHas('categories', (categoryQuery) => {
+        categoryQuery.where('title', filters.category)
       })
     }
 
@@ -372,7 +372,7 @@ export default class MeiliSearchService {
 
     // Sale filter
     if (filters.onSale) {
-      query.whereNotNull('compareAtPrice').where('compareAtPrice', '>', 'price')
+      query.whereNotNull('compareAtPrice').whereRaw('"compareAtPrice" > "price"')
     }
 
     // Stock filter
