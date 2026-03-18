@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs-ecommerce-core/create",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Create a new AdonisCommerce e-commerce application (AdonisJS 7 + React) with SOLID principles",
   "type": "module",
   "main": "dist/index.js",
