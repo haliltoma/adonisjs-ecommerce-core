@@ -263,19 +263,24 @@ export default class CartService {
       taxTotal = 0
     }
 
-    // Calculate grand total
+    // Calculate grand total - ensure discountTotal is not negative to prevent calculation errors
+    const discountTotal = Math.max(0, Number(cart.discountTotal) || 0)
+    const shippingTotal = Math.max(0, Number(cart.shippingTotal) || 0)
+
     const grandTotal = this.totalsCalculator.calculateGrandTotal({
       subtotal,
-      discountTotal: cart.discountTotal || 0,
+      discountTotal,
       taxTotal,
-      shippingTotal: cart.shippingTotal || 0,
+      shippingTotal,
     })
 
-    // Update cart
+    // Update cart - also reset discountTotal and shippingTotal if they're negative
     await this.cartRepository.update(
       cart.id,
       {
         subtotal,
+        discountTotal: discountTotal,
+        shippingTotal: shippingTotal,
         taxTotal,
         grandTotal,
         totalItems: cart.items.reduce((sum, item) => sum + item.quantity, 0),

@@ -22,16 +22,19 @@ export default class CartTotalsCalculator {
    */
   calculateSubtotal(items: CartItem[]): number {
     // CRITICAL: Always use unitPrice * quantity, never trust client-provided totalPrice
+    // Use Math.round to avoid floating point precision issues
     return items.reduce((sum, item) => {
-      const unitPrice = Number(item.unitPrice || 0)
+      const unitPrice = Math.round(Number(item.unitPrice || 0) * 100) / 100
       const quantity = Number(item.quantity || 0)
-      const discountAmount = Number(item.discountAmount || 0)
-      return sum + (unitPrice * quantity) - discountAmount
+      const discountAmount = Math.round(Number(item.discountAmount || 0) * 100) / 100
+      const itemTotal = Math.round((unitPrice * quantity - discountAmount) * 100) / 100
+      return sum + itemTotal
     }, 0)
   }
 
   /**
    * Calculate grand total
+   * Use Math.round to prevent floating point precision issues
    */
   calculateGrandTotal(totals: {
     subtotal: number
@@ -41,7 +44,12 @@ export default class CartTotalsCalculator {
   }): number {
     const { subtotal, discountTotal, taxTotal, shippingTotal } = totals
 
-    return Math.max(0, subtotal - discountTotal + taxTotal + shippingTotal)
+    // Calculate with proper rounding at each step
+    const afterDiscount = Math.round((subtotal - discountTotal) * 100) / 100
+    const afterTax = Math.round((afterDiscount + taxTotal) * 100) / 100
+    const final = Math.round((afterTax + shippingTotal) * 100) / 100
+
+    return Math.max(0, final)
   }
 
   /**
