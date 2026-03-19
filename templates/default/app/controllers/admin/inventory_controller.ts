@@ -137,7 +137,7 @@ export default class InventoryController {
         })
         .preload('product')
         .where('trackInventory', true)
-        .orderBy('inventoryQuantity', 'asc')
+        .orderBy('stockQuantity', 'asc')
 
       if (search) {
         query.where((builder) => {
@@ -186,7 +186,7 @@ export default class InventoryController {
           variantTitle: v.title,
           sku: v.sku,
           thumbnail: null,
-          quantity: v.inventoryQuantity || 0,
+          quantity: v.stockQuantity || 0,
           trackInventory: v.trackInventory,
           allowBackorder: v.allowBackorder,
         })),
@@ -299,7 +299,7 @@ export default class InventoryController {
         productTitle: variant.product.title,
         title: variant.title,
         sku: variant.sku,
-        inventoryQuantity: variant.inventoryQuantity,
+        inventoryQuantity: variant.stockQuantity,
         trackInventory: variant.trackInventory,
         allowBackorder: variant.allowBackorder,
       },
@@ -339,7 +339,7 @@ export default class InventoryController {
       // Pre-check: prevent negative stock at the variant level
       if (adjustQuantity < 0) {
         const variant = await ProductVariant.find(params.id)
-        const currentStock = variant?.inventoryQuantity || 0
+        const currentStock = variant?.stockQuantity || 0
         if (currentStock + adjustQuantity < 0) {
           session.flash('error', `Insufficient stock. Current: ${currentStock}, trying to remove: ${Math.abs(adjustQuantity)}`)
           return response.redirect().back()

@@ -39,7 +39,7 @@ export default class DashboardController {
     const lowStockProducts = await Product.query()
       .where('storeId', storeId)
       .whereHas('variants', (query) => {
-        query.where('trackInventory', true).where('inventoryQuantity', '<=', 10)
+        query.where('trackInventory', true).where('stockQuantity', '<=', 10)
       })
       .preload('variants')
       .limit(10)
@@ -120,12 +120,12 @@ export default class DashboardController {
         id: product.id,
         title: product.title,
         variants: product.variants
-          .filter((v) => v.trackInventory && v.inventoryQuantity <= 10)
+          .filter((v) => v.trackInventory && v.stockQuantity <= 10)
           .map((v) => ({
             id: v.id,
             title: v.title,
             sku: v.sku,
-            quantity: v.inventoryQuantity,
+            quantity: v.stockQuantity,
           })),
       })),
       topProducts,

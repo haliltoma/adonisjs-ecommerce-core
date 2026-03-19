@@ -136,7 +136,7 @@ export default class ProductsController {
         weight: v.weight !== '' && v.weight != null ? Number(v.weight) : undefined,
         position: v.position ?? idx,
         isActive: v.isActive ?? true,
-        inventoryQuantity: v.inventoryQuantity != null ? Number(v.inventoryQuantity) : 0,
+        inventoryQuantity: v.stockQuantity != null ? Number(v.stockQuantity) : 0,
       })),
     }
 
@@ -247,7 +247,7 @@ export default class ProductsController {
         weight: v.weight !== '' && v.weight != null ? Number(v.weight) : undefined,
         position: v.position ?? idx,
         isActive: v.isActive ?? true,
-        inventoryQuantity: v.inventoryQuantity != null ? Number(v.inventoryQuantity) : 0,
+        inventoryQuantity: v.stockQuantity != null ? Number(v.stockQuantity) : 0,
       })),
     }
 
@@ -505,7 +505,7 @@ export default class ProductsController {
         option2: v.option2,
         option3: v.option3,
         weight: v.weight,
-        inventoryQuantity: v.inventoryQuantity,
+        inventoryQuantity: v.stockQuantity,
         trackInventory: v.trackInventory,
         allowBackorder: v.allowBackorder,
         position: v.position,
