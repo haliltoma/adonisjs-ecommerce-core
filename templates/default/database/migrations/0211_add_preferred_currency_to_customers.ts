@@ -9,7 +9,8 @@ export default class extends BaseSchema {
 
   public async up() {
     this.schema.alterTable(this.tableName, (table) => {
-      table.string('preferred_currency_code', 3).nullable().references('code').inTable('currencies').onDelete('SET NULL')
+      // Add without foreign key constraint to avoid migration errors
+      table.string('preferred_currency_code', 3).nullable()
     })
   }
 
