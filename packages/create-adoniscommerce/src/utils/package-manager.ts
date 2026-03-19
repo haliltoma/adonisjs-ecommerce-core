@@ -17,7 +17,7 @@ export function getInstallCommand(pm: PackageManager): string {
     case 'bun':
       return 'bun install'
     case 'npm':
-      return 'npm install'
+      return 'npm install --legacy-peer-deps'
     case 'pnpm':
     default:
       return 'pnpm install'
