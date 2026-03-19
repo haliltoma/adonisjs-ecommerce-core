@@ -1,13 +1,22 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
+import { Knex } from 'knex'
 
 export default class extends BaseSchema {
   protected tableName = 'products'
 
   public async up() {
-    this.schema.alterTable(this.tableName, (table) => {
-      // Add product_type enum if not exists
-      table.enum('type', ['simple', 'variable', 'digital', 'bundle', 'subscription']).defaultTo('simple').alter()
+    // Check if type column already exists
+    const hasTypeColumn = await this.schema.hasColumn(this.tableName, 'type')
 
+    if (!hasTypeColumn) {
+      // Add type column as enum if it doesn't exist
+      this.schema.alterTable(this.tableName, (table) => {
+        table.enum('type', ['simple', 'variable', 'digital', 'bundle', 'subscription']).defaultTo('simple')
+      })
+    }
+
+    // Always add these columns
+    this.schema.alterTable(this.tableName, (table) => {
       // Digital product fields
       table.string('fileUrl').nullable().after('metaTitle')
       table.integer('downloadLimit').nullable().defaultTo(null).after('fileUrl')
