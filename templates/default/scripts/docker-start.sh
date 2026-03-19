@@ -27,13 +27,9 @@ generate_app_key() {
 }
 
 get_port_offset() {
-    local project=$1
-    local hash=0
-    for ((i=0; i<${#project}; i++)); do
-        char=$(printf '%d' "'${project:$i:1}")
-        hash=$((hash + char))
-    done
-    echo $((hash % 50))
+    # Fixed port offset - use same ports for all projects to avoid confusion
+    # For multiple projects, use docker:dev command with custom ports or edit .env
+    echo 0
 }
 
 print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }

@@ -12,6 +12,9 @@ export async function setupDatabase(targetDir: string, config: ProjectConfig): P
 
   // Update package.json dependencies for the selected database
   await updateDatabaseDependencies(targetDir, config.database)
+
+  // Update .env file with correct database configuration
+  await updateEnvDatabaseConfig(targetDir, config.database, config.docker)
 }
 
 async function updateDockerCompose(targetDir: string, database: DatabaseType): Promise<void> {
@@ -22,23 +25,112 @@ async function updateDockerCompose(targetDir: string, database: DatabaseType): P
     return
   }
 
-  let content = await fs.readFile(dockerComposePath, 'utf-8')
   const dbConfig = DATABASE_CONFIGS[database]
 
-  // For SQLite, we might want to remove database service
-  if (database === 'sqlite') {
-    // SQLite doesn't need a database container
-    logger.debug('SQLite selected, database container may not be needed')
-    return
-  }
+  // Generate new docker-compose content based on database type
+  const newContent = generateDockerComposeContent(database, dbConfig)
 
-  // Update the database service image if needed
-  if (database === 'mysql' && dbConfig.dockerImage) {
-    content = content.replace(/postgres:\d+/g, dbConfig.dockerImage)
-    content = content.replace(/POSTGRES_/g, 'MYSQL_')
-  }
+  await fs.writeFile(dockerComposePath, newContent, 'utf-8')
+  logger.debug(`Docker compose updated for ${database}`)
+}
 
-  await fs.writeFile(dockerComposePath, content, 'utf-8')
+function generateDockerComposeContent(database: DatabaseType, dbConfig: typeof DATABASE_CONFIGS['postgres']): string {
+  const dbService = generateDatabaseService(database, dbConfig)
+
+  return `# AdonisCommerce Docker Services
+# Database: ${database.toUpperCase()}
+
+services:
+${dbService}
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-adoniscommerce}-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass \${REDIS_PASSWORD:-redis123}
+    ports:
+      - "\${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "\${REDIS_PASSWORD:-redis123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default_network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default_network:
+    driver: bridge
+`
+}
+
+function generateDatabaseService(database: DatabaseType, dbConfig: typeof DATABASE_CONFIGS['postgres']): string {
+  switch (database) {
+    case 'postgres':
+      return `  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-adoniscommerce}-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: \${DB_USER:-postgres}
+      POSTGRES_PASSWORD: \${DB_PASSWORD:-postgres}
+      POSTGRES_DB: \${DB_DATABASE:-adoniscommerce}
+    ports:
+      - "\${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default_network
+
+volumes:
+  postgres_data:
+    driver: local
+`
+
+    case 'mysql':
+      return `  # MySQL Database
+  mysql:
+    image: mysql:8-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-adoniscommerce}-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: \${DB_PASSWORD:-root}
+      MYSQL_DATABASE: \${DB_DATABASE:-adoniscommerce}
+      MYSQL_USER: \${DB_USER:-root}
+      MYSQL_PASSWORD: \${DB_PASSWORD:-root}
+    ports:
+      - "\${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p\${DB_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default_network
+
+volumes:
+  mysql_data:
+    driver: local
+`
+
+    case 'sqlite':
+      // SQLite doesn't need a database container - file-based
+      return ''
+  }
 }
 
 async function updateDatabaseDependencies(targetDir: string, database: DatabaseType): Promise<void> {
@@ -67,6 +159,61 @@ async function updateDatabaseDependencies(targetDir: string, database: DatabaseT
   }
 
   await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 })
+  logger.debug(`Database dependencies updated: ${dbConfig.package}`)
+}
+
+async function updateEnvDatabaseConfig(targetDir: string, database: DatabaseType, docker: boolean): Promise<void> {
+  const envPath = path.join(targetDir, '.env')
+  const envDockerPath = path.join(targetDir, '.env.docker')
+
+  const targetEnvPath = docker ? envDockerPath : envPath
+
+  if (!(await fs.pathExists(targetEnvPath))) {
+    logger.debug('.env file not found, skipping database config update')
+    return
+  }
+
+  const content = await fs.readFile(targetEnvPath, 'utf-8')
+  const dbConfig = DATABASE_CONFIGS[database]
+
+  let updatedContent = content
+
+  // Update DB_CONNECTION
+  updatedContent = updatedContent.replace(
+    /^DB_CONNECTION=.*$/m,
+    `DB_CONNECTION=${dbConfig.client}`
+  )
+
+  // Update DB_HOST based on docker mode
+  const dbHost = docker ? (database === 'sqlite' ? '' : database) : '127.0.0.1'
+  updatedContent = updatedContent.replace(
+    /^DB_HOST=.*$/m,
+    `DB_HOST=${dbHost}`
+  )
+
+  // Update DB_PORT
+  const dbPort = dbConfig.port || ''
+  updatedContent = updatedContent.replace(
+    /^DB_PORT=.*$/m,
+    `DB_PORT=${dbPort}`
+  )
+
+  // Update DB_DATABASE for SQLite
+  if (database === 'sqlite') {
+    updatedContent = updatedContent.replace(
+      /^DB_DATABASE=.*$/m,
+      `DB_DATABASE=./database.sqlite`
+    )
+  }
+
+  // Remove DB_USER and DB_PASSWORD for SQLite
+  if (database === 'sqlite') {
+    updatedContent = updatedContent.replace(/^DB_USER=.*$/m, '# DB_USER=')
+    updatedContent = updatedContent.replace(/^DB_PASSWORD=.*$/m, '# DB_PASSWORD=')
+  }
+
+  await fs.writeFile(targetEnvPath, updatedContent, 'utf-8')
+  logger.debug(`.env updated for ${database} (docker: ${docker})`)
 }
 
 function getDriverVersion(driver: string): string {
