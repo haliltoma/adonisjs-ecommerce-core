@@ -166,7 +166,9 @@ async function updateEnvDatabaseConfig(targetDir: string, database: DatabaseType
   const envPath = path.join(targetDir, '.env')
   const envDockerPath = path.join(targetDir, '.env.docker')
 
-  const targetEnvPath = docker ? envDockerPath : envPath
+  // Always update .env as it's the actual file used by the app
+  // .env.docker is just a template
+  const targetEnvPath = envPath
 
   if (!(await fs.pathExists(targetEnvPath))) {
     logger.debug('.env file not found, skipping database config update')
@@ -185,17 +187,31 @@ async function updateEnvDatabaseConfig(targetDir: string, database: DatabaseType
   )
 
   // Update DB_HOST based on docker mode
-  const dbHost = docker ? (database === 'sqlite' ? '' : database) : '127.0.0.1'
+  // For docker: use container name (postgres/mysql) or empty for sqlite
+  // For local: use localhost
+  let dbHost: string
+  if (database === 'sqlite') {
+    dbHost = ''
+  } else if (docker) {
+    dbHost = database // postgres or mysql
+  } else {
+    dbHost = '127.0.0.1'
+  }
   updatedContent = updatedContent.replace(
     /^DB_HOST=.*$/m,
-    `DB_HOST=${dbHost}`
+    dbHost ? `DB_HOST=${dbHost}` : 'DB_HOST='
   )
 
-  // Update DB_PORT
-  const dbPort = dbConfig.port || ''
+  // Update DB_PORT - use correct default ports
+  let dbPort = ''
+  if (database === 'postgres') {
+    dbPort = docker ? '' : '5432' // Docker uses internal container port, local uses standard
+  } else if (database === 'mysql') {
+    dbPort = docker ? '' : '3306'
+  }
   updatedContent = updatedContent.replace(
     /^DB_PORT=.*$/m,
-    `DB_PORT=${dbPort}`
+    dbPort ? `DB_PORT=${dbPort}` : 'DB_PORT='
   )
 
   // Update DB_DATABASE for SQLite
@@ -206,7 +222,7 @@ async function updateEnvDatabaseConfig(targetDir: string, database: DatabaseType
     )
   }
 
-  // Remove DB_USER and DB_PASSWORD for SQLite
+  // Handle SQLite specific settings
   if (database === 'sqlite') {
     updatedContent = updatedContent.replace(/^DB_USER=.*$/m, '# DB_USER=')
     updatedContent = updatedContent.replace(/^DB_PASSWORD=.*$/m, '# DB_PASSWORD=')
