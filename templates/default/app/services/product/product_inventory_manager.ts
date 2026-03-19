@@ -38,7 +38,7 @@ export default class ProductInventoryManager {
       throw new Error(`Product not found: ${productId}`)
     }
 
-    const currentStock = product.quantityAvailable || 0
+    const currentStock = product.stockQuantity || 0
     const newStock = Math.max(0, currentStock + adjustment)
 
     await productRepository.updateStock(productId, newStock, trx)

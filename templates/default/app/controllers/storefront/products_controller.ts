@@ -326,11 +326,11 @@ export default class ProductsController {
         option1: v.option1,
         option2: v.option2,
         option3: v.option3,
-        inventoryQuantity: v.inventoryQuantity,
+        inventoryQuantity: v.stockQuantity,
         trackInventory: v.trackInventory,
         allowBackorder: v.allowBackorder,
         position: v.position,
-        isAvailable: !v.trackInventory || v.inventoryQuantity > 0 || v.allowBackorder,
+        isAvailable: !v.trackInventory || v.stockQuantity > 0 || v.allowBackorder,
       })),
       options: product.options?.map((o) => ({
         id: o.id,

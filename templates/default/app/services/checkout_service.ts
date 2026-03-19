@@ -192,6 +192,8 @@ export default class CheckoutService {
 
   /**
    * Calculate estimated tax
+   * Note: This returns the pre-calculated tax from cart. For dynamic calculation,
+   * integrate with a tax service based on customer location.
    */
   async calculateEstimatedTax(cartId: string): Promise<number> {
     const cart = await this.cartRepository.findById(cartId)
@@ -200,6 +202,10 @@ export default class CheckoutService {
       return 0
     }
 
+    // TODO: Integrate with tax service for dynamic calculation based on:
+    // - Customer shipping address (state/country)
+    // - Product tax classes
+    // - Applicable tax rates
     return cart.taxTotal || 0
   }
 

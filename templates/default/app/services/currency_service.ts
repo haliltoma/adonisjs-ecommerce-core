@@ -326,7 +326,7 @@ export default class CurrencyService {
 
     try {
       // Try ip-api.com (free, no API key required)
-      const response = await fetch(`http://ip-api.com/json/${ipAddress}`)
+      const response = await fetch(`https://ip-api.com/json/${ipAddress}`)
 
       if (!response.ok) {
         return null

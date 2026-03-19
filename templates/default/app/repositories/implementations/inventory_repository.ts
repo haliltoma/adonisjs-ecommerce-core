@@ -251,9 +251,9 @@ export default class InventoryRepository implements IInventoryRepository {
         .from('products')
         .countDistinct('id as count')
         .where('storeId', storeId)
-        .where('trackQuantity', true)
-        .where('quantityAvailable', '>', 0)
-        .where('quantityAvailable', '<=', 10)
+        .where('track_inventory', true)
+        .where('stock_quantity', '>', 0)
+        .where('stock_quantity', '<=', 10)
         .first(),
 
       // Out of stock products
@@ -261,14 +261,14 @@ export default class InventoryRepository implements IInventoryRepository {
         .from('products')
         .countDistinct('id as count')
         .where('storeId', storeId)
-        .where('trackQuantity', true)
-        .where('quantityAvailable', '<=', 0)
+        .where('track_inventory', true)
+        .where('stock_quantity', '<=', 0)
         .first(),
 
       // Total inventory value
       db
         .from('products')
-        .sum('costPerItem * quantityAvailable as totalValue')
+        .sum('cost_per_item * stock_quantity as total_value')
         .where('storeId', storeId)
         .first(),
     ])

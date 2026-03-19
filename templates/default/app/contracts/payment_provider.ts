@@ -64,6 +64,7 @@ export interface CreatePaymentParams {
   currency: string
   customerEmail: string
   customerName?: string
+  customerId?: string
   description?: string
   returnUrl?: string
   cancelUrl?: string

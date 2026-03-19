@@ -188,6 +188,7 @@ export default class CouponGenerator {
    * Generate gift card coupon
    */
   async generateGiftCardCoupon(options: {
+    storeId: string
     amount: number
     currency?: string
     recipientEmail: string
@@ -201,11 +202,11 @@ export default class CouponGenerator {
     discountId: string
     expiresAt: DateTime | null
   }> {
-    const { amount, currency = 'USD', recipientEmail, recipientName, message, expiresIn, prefix = 'GIFT' } = options
+    const { storeId, amount, currency = 'USD', recipientEmail, recipientName, message, expiresIn, prefix = 'GIFT' } = options
 
     // Create discount for gift card
     const discount = await Discount.create({
-      storeId: 'default', // TODO: get from context
+      storeId,
       name: `Gift Card ${amount} ${currency}`,
       code: prefix, // Will be replaced with unique code
       type: 'fixed_amount',

@@ -120,9 +120,9 @@ export default class ProductRepository implements IProductRepository {
     // Stock filter
     if (filters.inStock !== undefined) {
       if (filters.inStock) {
-        query.where('quantityAvailable', '>', 0)
+        query.where('stock_quantity', '>', 0)
       } else {
-        query.where('quantityAvailable', '<=', 0)
+        query.where('stock_quantity', '<=', 0)
       }
     }
 
@@ -242,10 +242,10 @@ export default class ProductRepository implements IProductRepository {
   async getLowStockProducts(storeId: string, threshold: number = 10): Promise<Product[]> {
     return await Product.query()
       .where('storeId', storeId)
-      .where('trackQuantity', true)
-      .where('quantityAvailable', '>', 0)
-      .where('quantityAvailable', '<=', threshold)
-      .orderBy('quantityAvailable', 'asc')
+      .where('track_inventory', true)
+      .where('stock_quantity', '>', 0)
+      .where('stock_quantity', '<=', threshold)
+      .orderBy('stock_quantity', 'asc')
   }
 
   /**
@@ -254,8 +254,8 @@ export default class ProductRepository implements IProductRepository {
   async getOutOfStockProducts(storeId: string): Promise<Product[]> {
     return await Product.query()
       .where('storeId', storeId)
-      .where('trackQuantity', true)
-      .where('quantityAvailable', '<=', 0)
+      .where('track_inventory', true)
+      .where('stock_quantity', '<=', 0)
       .orderBy('updatedAt', 'desc')
   }
 
@@ -266,7 +266,7 @@ export default class ProductRepository implements IProductRepository {
     await db.from('products')
       .where('id', productId)
       .update({
-        quantityAvailable: quantity,
+        stock_quantity: quantity,
         updatedAt: DateTime.now().toSQL(),
       })
   }
@@ -276,13 +276,13 @@ export default class ProductRepository implements IProductRepository {
    * Uses database-level atomic update with condition to prevent overselling
    */
   async atomicReserveStock(productId: string, quantity: number, trx?: any): Promise<boolean> {
-    // Atomic update: only update if quantityAvailable >= requested quantity
+    // Atomic update: only update if stock_quantity >= requested quantity
     const result = await db.from('products')
       .where('id', productId)
-      .where('trackQuantity', true)
-      .where('quantityAvailable', '>=', quantity)
+      .where('track_inventory', true)
+      .where('stock_quantity', '>=', quantity)
       .update({
-        quantityAvailable: db.rawQuery('quantityAvailable - ?', [quantity]),
+        stock_quantity: db.rawQuery('stock_quantity - ?', [quantity]),
         updatedAt: DateTime.now().toSQL(),
       })
 

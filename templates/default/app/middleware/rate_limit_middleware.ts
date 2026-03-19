@@ -37,7 +37,9 @@ export default class RateLimitMiddleware {
     const maxAttempts = options.maxAttempts ?? 60
     const windowSeconds = options.windowSeconds ?? 60
 
-    const ip = ctx.request.ip()
+    // Check X-Forwarded-For header for proxy scenarios (load balancers, CDNs)
+    const forwardedFor = ctx.request.header('x-forwarded-for')
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : ctx.request.ip()
     const route = ctx.route?.pattern || ctx.request.url()
     const key = `${ip}:${route}`
     const now = Date.now()

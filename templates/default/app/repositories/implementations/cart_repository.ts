@@ -103,8 +103,6 @@ export default class CartRepository implements ICartRepository {
    * Update cart
    */
   async update(cartId: string, data: UpdateCartData, trx?: any): Promise<void> {
-    console.log('[CartRepository.update] called with:', { cartId, grandTotal: data.grandTotal, subtotal: data.subtotal, taxTotal: data.taxTotal })
-
     const updateData: any = {
       subtotal: data.subtotal ?? 0,
       discount_total: data.discountTotal ?? 0,
@@ -115,8 +113,6 @@ export default class CartRepository implements ICartRepository {
       updated_at: DateTime.now().toSQL(),
     }
 
-    console.log('[CartRepository.update] updateData:', updateData)
-
     // Only update optional fields if they are provided
     if (data.couponCode !== undefined) updateData.coupon_code = data.couponCode
     if (data.discountId !== undefined) updateData.discount_id = data.discountId
@@ -125,7 +121,8 @@ export default class CartRepository implements ICartRepository {
     if (data.shippingMethod !== undefined) updateData.shipping_method = data.shippingMethod
     if (data.paymentMethod !== undefined) updateData.payment_method = data.paymentMethod
 
-    await db.from('carts').where('id', cartId).update(updateData)
+    const query = trx ? trx.from('carts') : db.from('carts')
+    await query.where('id', cartId).update(updateData)
   }
 
   /**

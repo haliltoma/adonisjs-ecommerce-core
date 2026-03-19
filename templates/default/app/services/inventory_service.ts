@@ -320,10 +320,10 @@ export default class InventoryService {
         query.where('storeId', storeId)
       })
       .where('trackInventory', true)
-      .where('inventoryQuantity', '<=', threshold)
-      .where('inventoryQuantity', '>', 0)
+      .where('stockQuantity', '<=', threshold)
+      .where('stockQuantity', '>', 0)
       .preload('product')
-      .orderBy('inventoryQuantity', 'asc')
+      .orderBy('stockQuantity', 'asc')
   }
 
   async getOutOfStockVariants(storeId: string) {
@@ -332,7 +332,7 @@ export default class InventoryService {
         query.where('storeId', storeId)
       })
       .where('trackInventory', true)
-      .where('inventoryQuantity', '<=', 0)
+      .where('stockQuantity', '<=', 0)
       .preload('product')
   }
 
@@ -343,6 +343,6 @@ export default class InventoryService {
 
     await ProductVariant.query({ client: trx })
       .where('id', variantId)
-      .update({ inventoryQuantity: total })
+      .update({ stockQuantity: total })
   }
 }

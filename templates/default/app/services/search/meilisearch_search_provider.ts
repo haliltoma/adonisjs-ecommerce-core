@@ -324,7 +324,7 @@ export class MeilisearchSearchProvider extends SearchProvider {
         tagIds: product.tags?.map((t) => t.id) || [],
         tagNames: product.tags?.map((t) => t.name) || [],
         stockQuantity:
-          product.variants?.reduce((sum, v) => sum + (v.inventoryQuantity || 0), 0) || 0,
+          product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) || 0,
         createdAt: product.createdAt.toISO()!,
         updatedAt: product.updatedAt.toISO()!,
       })

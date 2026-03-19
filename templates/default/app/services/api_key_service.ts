@@ -95,10 +95,17 @@ export default class ApiKeyService {
       .whereNull('revokedAt')
       .first()
 
-    if (apiKey) {
-      apiKey.lastUsedAt = DateTime.now()
-      await apiKey.save()
+    if (!apiKey) {
+      return null
     }
+
+    // Check if API key has expired
+    if (apiKey.expiresAt && apiKey.expiresAt < DateTime.now()) {
+      return null
+    }
+
+    apiKey.lastUsedAt = DateTime.now()
+    await apiKey.save()
 
     return apiKey
   }

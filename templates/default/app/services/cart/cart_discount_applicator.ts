@@ -53,7 +53,7 @@ export default class CartDiscountApplicator {
       }
 
       // Get discount from discount service
-      const discount = await discountService.findByCode(couponCode, cart.storeId)
+      const discount = await discountService.findByCode(cart.storeId, couponCode)
 
       if (!discount) {
         return {
@@ -64,7 +64,7 @@ export default class CartDiscountApplicator {
       }
 
       // Check if discount is active
-      if (!discount.isActive || discount.status !== 'active') {
+      if (!discount.isActive) {
         return {
           success: false,
           discountTotal: 0,

@@ -53,7 +53,7 @@ export default class AdvancedInventoryService {
       throw new Error('Product not found')
     }
 
-    const currentStock = product.quantityAvailable || 0
+    const currentStock = product.stockQuantity || 0
 
     // Check if enough stock available
     const activeReservations = await db
@@ -200,7 +200,7 @@ export default class AdvancedInventoryService {
     const product = await Product.find(productId)
     if (!product) return
 
-    const currentStock = product.quantityAvailable || 0
+    const currentStock = product.stockQuantity || 0
     const lowStockThreshold = product.lowStockThreshold || 10
     const backorderThreshold = product.backorderThreshold || 0
 

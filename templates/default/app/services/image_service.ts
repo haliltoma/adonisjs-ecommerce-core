@@ -192,9 +192,7 @@ export default class ImageService {
     height: number = 20,
     quality: number = 30
   ): Promise<string> {
-    const placeholderPath = this.getPlaceholderPath(imagePath)
-
-    await sharp(imagePath)
+    const buffer = await sharp(imagePath)
       .resize(width, height, {
         fit: 'cover',
         position: 'center',
@@ -202,11 +200,8 @@ export default class ImageService {
       .blur(2)
       .jpeg({ quality })
       .toBuffer()
-      .then((data) => {
-        return `data:image/jpeg;base64,${data.toString('base64')}`
-      })
 
-    return `data:image/jpeg;base64,${placeholderPath}`
+    return `data:image/jpeg;base64,${buffer.toString('base64')}`
   }
 
   /**

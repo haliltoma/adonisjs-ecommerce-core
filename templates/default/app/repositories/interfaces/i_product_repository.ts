@@ -18,8 +18,8 @@ export interface CreateProductData {
   costPerItem?: number | null
   sku?: string
   barcode?: string
-  trackQuantity?: boolean
-  quantityAvailable?: number
+  trackInventory?: boolean
+  stockQuantity?: number
   weight?: number | null
   requiresShipping?: boolean
   taxable?: boolean
@@ -38,8 +38,8 @@ export interface UpdateProductData {
   costPerItem?: number | null
   sku?: string
   barcode?: string
-  trackQuantity?: boolean
-  quantityAvailable?: number
+  trackInventory?: boolean
+  stockQuantity?: number
   weight?: number | null
   requiresShipping?: boolean
   taxable?: boolean

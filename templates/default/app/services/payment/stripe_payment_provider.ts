@@ -31,6 +31,9 @@ export class StripePaymentProvider extends PaymentProvider {
   constructor() {
     super()
     const secretKey = env.get('STRIPE_SECRET_KEY', '')
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required')
+    }
     this.stripe = new Stripe(secretKey)
   }
 

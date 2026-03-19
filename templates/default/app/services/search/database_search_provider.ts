@@ -33,12 +33,14 @@ export class DatabaseSearchProvider extends SearchProvider {
 
     // Text search
     if (params.query) {
+      // Escape special LIKE characters to prevent pattern injection
+      const escapedQuery = params.query.replace(/[%_]/g, '\\$&')
       query.where((builder) => {
         builder
-          .whereILike('title', `%${params.query}%`)
-          .orWhereILike('description', `%${params.query}%`)
-          .orWhereILike('sku', `%${params.query}%`)
-          .orWhereILike('vendor', `%${params.query}%`)
+          .whereILike('title', `%${escapedQuery}%`)
+          .orWhereILike('description', `%${escapedQuery}%`)
+          .orWhereILike('sku', `%${escapedQuery}%`)
+          .orWhereILike('vendor', `%${escapedQuery}%`)
       })
     }
 

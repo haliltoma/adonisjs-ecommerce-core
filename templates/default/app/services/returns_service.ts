@@ -8,6 +8,7 @@ import Return from '#models/return'
 import ReturnItem from '#models/return_item'
 import Order from '#models/order'
 import { DateTime } from 'luxon'
+import { randomUUID } from 'node:crypto'
 import db from '@adonisjs/lucid/services/db'
 
 export interface CreateReturnOptions {
@@ -42,11 +43,12 @@ export default class ReturnsService {
   async generateReturnNumber(): Promise<string> {
     const prefix = 'RMA'
     const timestamp = DateTime.now().toFormat('yyyyMMddHHmmss')
+    // Use crypto for secure random generation
     const random = Math.floor(Math.random() * 1000)
       .toString()
       .padStart(3, '0')
 
-    return `${prefix}-${timestamp}-${random}`
+    return `${prefix}-${timestamp}-${random}-${randomUUID().slice(0, 8)}`
   }
 
   /**

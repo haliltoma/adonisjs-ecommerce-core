@@ -58,11 +58,11 @@ export class IyzicoPaymentProvider extends PaymentProvider {
         callbackUrl: params.returnUrl || '',
         enabledInstallments: [1, 2, 3, 6, 9, 12],
         buyer: {
-          id: conversationId,
+          id: params.customerId || conversationId,
           name: params.customerName?.split(' ')[0] || 'Guest',
           surname: params.customerName?.split(' ').slice(1).join(' ') || 'Customer',
           email: params.customerEmail,
-          identityNumber: '11111111111', // TC placeholder — should come from customer
+          identityNumber: params.customerId?.slice(0, 11) || conversationId.slice(0, 11), // Use customerId or generate from conversationId
           registrationAddress: 'N/A',
           city: 'Istanbul',
           country: 'Turkey',

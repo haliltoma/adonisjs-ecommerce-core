@@ -48,12 +48,12 @@ export default class CartItemManager {
         throw new Error('Invalid product variant')
       }
 
-      if (variant.quantityAvailable !== null && variant.quantityAvailable < data.quantity) {
+      if (variant.trackInventory && (variant.stockQuantity || 0) < data.quantity) {
         throw new Error('Insufficient stock')
       }
     } else if (
-      product.trackQuantity &&
-      (product.quantityAvailable || 0) < data.quantity
+      product.trackInventory &&
+      (product.stockQuantity || 0) < data.quantity
     ) {
       throw new Error('Insufficient stock')
     }
@@ -113,19 +113,21 @@ export default class CartItemManager {
     // Check stock availability
     const product = await Product.find(item.productId)
 
-    if (product && product.trackQuantity) {
+    if (product && product.trackInventory) {
+      // Load variants for the product
+      await product.load('variants')
       const availableQuantity = item.variantId
-        ? product.variants.find((v) => v.id === item.variantId)?.quantityAvailable
-        : product.quantityAvailable
+        ? product.variants.find((v) => v.id === item.variantId)?.stockQuantity
+        : product.stockQuantity
 
-      if (availableQuantity !== null && availableQuantity < newQuantity) {
+      if ((availableQuantity || 0) < newQuantity) {
         throw new Error('Insufficient stock')
       }
     }
 
-    // Update quantity
+    // Update quantity - totalPrice is always unitPrice * quantity (discount is separate)
     item.quantity = newQuantity
-    item.totalPrice = item.quantity * item.unitPrice - (item.discountAmount || 0)
+    item.totalPrice = item.quantity * item.unitPrice
 
     await item.save(trx ? { client: trx } : undefined)
 

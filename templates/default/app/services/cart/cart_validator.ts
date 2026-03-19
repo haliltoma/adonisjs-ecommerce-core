@@ -85,14 +85,16 @@ export default class CartValidator {
 
       // Check variant availability
       if (item.variantId) {
+        // Load variants for this product
+        await product.load('variants')
         const variant = product.variants.find((v: any) => v.id === item.variantId)
 
         if (!variant) {
           errors.push('Product variant not found')
-        } else if (variant.quantityAvailable !== null && variant.quantityAvailable < item.quantity) {
+        } else if (variant.trackInventory && (variant.stockQuantity || 0) < item.quantity) {
           errors.push(`Insufficient stock for "${product.title}"`)
         }
-      } else if (product.trackQuantity && (product.quantityAvailable || 0) < item.quantity) {
+      } else if (product.trackInventory && (product.stockQuantity || 0) < item.quantity) {
         errors.push(`Insufficient stock for "${product.title}"`)
       }
     } catch (error) {

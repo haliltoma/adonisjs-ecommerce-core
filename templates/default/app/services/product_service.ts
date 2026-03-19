@@ -172,7 +172,7 @@ export default class ProductService {
           isActive: variant.isActive ?? true,
           trackInventory: variant.trackInventory ?? false,
           allowBackorder: variant.allowBackorder ?? false,
-          quantityAvailable: variant.inventoryQuantity ?? 0,
+          quantityAvailable: variant.stockQuantity ?? 0,
         }))
         await this.variantManager.createVariants(product.id, variantsData, trx)
       }
@@ -267,7 +267,7 @@ export default class ProductService {
           isActive: variant.isActive ?? true,
           trackInventory: variant.trackInventory ?? false,
           allowBackorder: variant.allowBackorder ?? false,
-          quantityAvailable: variant.inventoryQuantity ?? 0,
+          quantityAvailable: variant.stockQuantity ?? 0,
         }))
         await this.variantManager.syncVariants(productId, variantsData, trx)
       }

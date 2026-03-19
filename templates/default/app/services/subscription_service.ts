@@ -180,6 +180,9 @@ export default class SubscriptionService {
       subscription.billingInterval
     )
 
+    // Increment interval count for tracking billing cycles
+    subscription.intervalCount = (subscription.intervalCount || 0) + 1
+
     // Check if trial is ending
     if (subscription.status === 'trialing' && subscription.trialEndsAt) {
       if (DateTime.now() >= subscription.trialEndsAt) {
@@ -293,6 +296,12 @@ export default class SubscriptionService {
     const currentPeriodEnd = subscription.currentPeriodEndsAt || DateTime.now()
 
     const totalPeriodDays = currentPeriodEnd.diff(currentPeriodStart, 'days').days
+
+    // Prevent division by zero
+    if (totalPeriodDays <= 0) {
+      return 0
+    }
+
     const daysUsed = data.prorationDate.diff(currentPeriodStart, 'days').days
     const daysRemaining = totalPeriodDays - daysUsed
 

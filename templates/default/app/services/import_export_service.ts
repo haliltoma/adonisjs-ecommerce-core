@@ -86,10 +86,12 @@ export default class ImportExportService {
    */
   generateCSV(headers: string[], rows: string[][]): string {
     const escapeField = (field: string): string => {
-      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-        return `"${field.replace(/"/g, '""')}"`
+      // Prevent CSV injection by escaping formula characters
+      const sanitized = field.replace(/^[=+\-@\t\r]/, "'$&")
+      if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n')) {
+        return `"${sanitized.replace(/"/g, '""')}"`
       }
-      return field
+      return sanitized
     }
 
     const lines = [headers.map(escapeField).join(',')]
@@ -136,7 +138,6 @@ export default class ImportExportService {
           continue
         }
 
-        variant.inventoryQuantity = quantity
         variant.stockQuantity = quantity
         await variant.save()
         result.updated++
@@ -163,11 +164,11 @@ export default class ImportExportService {
       .orderBy('sku', 'asc')
 
     if (stockFilter === 'in_stock') {
-      query.where('inventoryQuantity', '>', 0)
+      query.where('stockQuantity', '>', 0)
     } else if (stockFilter === 'low_stock') {
-      query.where('inventoryQuantity', '>', 0).where('inventoryQuantity', '<=', 10)
+      query.where('stockQuantity', '>', 0).where('stockQuantity', '<=', 10)
     } else if (stockFilter === 'out_of_stock') {
-      query.where('inventoryQuantity', '<=', 0)
+      query.where('stockQuantity', '<=', 0)
     }
 
     const variants = await query
@@ -189,7 +190,7 @@ export default class ImportExportService {
           case 'title': return v.product?.title || ''
           case 'variantTitle': return v.title || ''
           case 'sku': return v.sku || ''
-          case 'quantity': return String(v.inventoryQuantity || 0)
+          case 'quantity': return String(v.stockQuantity || 0)
           case 'price': return String(v.price || 0)
           case 'barcode': return v.barcode || ''
           case 'location': return ''

@@ -204,7 +204,7 @@ export default class MeiliSearchService {
         images: [],
         tags: [],
         attributes: product.customFields || {},
-        inStock: product.status === 'active' && product.trackInventory ? product.quantityAvailable > 0 : product.status === 'active',
+        inStock: product.status === 'active' && product.trackInventory ? product.stockQuantity > 0 : product.status === 'active',
         onSale: product.compareAtPrice !== null && product.compareAtPrice > (product.price || 0),
         createdAt: product.createdAt.toISO(),
         status: product.status,
@@ -379,8 +379,8 @@ export default class MeiliSearchService {
     if (filters.inStock) {
       query.where((subQuery) => {
         subQuery
-          .where('trackQuantity', false)
-          .orWhere('quantityAvailable', '>', 0)
+          .where('track_inventory', false)
+          .orWhere('stock_quantity', '>', 0)
       })
     }
 
@@ -430,7 +430,7 @@ export default class MeiliSearchService {
         images: p.images || [],
         tags: p.tags || [],
         attributes: p.attributes || {},
-        inStock: p.status === 'active' && (p.trackQuantity ? p.quantityAvailable > 0 : true),
+        inStock: p.status === 'active' && (p.trackInventory ? p.stockQuantity > 0 : true),
         onSale: p.compareAtPrice !== null && p.compareAtPrice > p.price,
       })),
       estimatedTotalHits: products.length,

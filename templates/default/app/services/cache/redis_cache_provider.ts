@@ -43,7 +43,17 @@ export class RedisCacheProvider extends CacheProvider {
   }
 
   async deletePattern(pattern: string): Promise<number> {
-    const keys = await redis.keys(this.key(pattern))
+    // Use SCAN instead of KEYS to avoid blocking Redis
+    const patternKey = this.key(pattern)
+    const keys: string[] = []
+    let cursor = '0'
+
+    do {
+      const [newCursor, foundKeys] = await redis.scan(cursor, 'MATCH', patternKey, 'COUNT', 100)
+      cursor = newCursor
+      keys.push(...foundKeys)
+    } while (cursor !== '0')
+
     if (keys.length === 0) return 0
     return await redis.del(keys)
   }
@@ -66,7 +76,17 @@ export class RedisCacheProvider extends CacheProvider {
   }
 
   async flush(): Promise<void> {
-    const keys = await redis.keys(`${this.prefix}*`)
+    // Use SCAN instead of KEYS to avoid blocking Redis
+    const patternKey = `${this.prefix}*`
+    const keys: string[] = []
+    let cursor = '0'
+
+    do {
+      const [newCursor, foundKeys] = await redis.scan(cursor, 'MATCH', patternKey, 'COUNT', 100)
+      cursor = newCursor
+      keys.push(...foundKeys)
+    } while (cursor !== '0')
+
     if (keys.length > 0) {
       await redis.del(keys)
     }

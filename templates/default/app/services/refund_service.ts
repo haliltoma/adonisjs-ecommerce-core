@@ -59,7 +59,7 @@ export default class RefundService {
       // HARDENED: iter-21 - Validate refund amount does not exceed what's been paid
       const previouslyRefunded = await Refund.query({ client: trx })
         .where('orderId', data.orderId)
-        .where('status', 'completed')
+        .where('status', 'processed')
         .sum('amount as total')
 
       const totalAlreadyRefunded = Number(previouslyRefunded[0]?.total || 0)

@@ -95,7 +95,7 @@ export async function handleSyncInventory(job: JobContext): Promise<void> {
 
           const reservedQty = Number(reserved?.$extras?.total || 0)
           // Update available stock based on reservations
-          variant.stockQuantity = Math.max(0, variant.inventoryQuantity - reservedQty)
+          variant.stockQuantity = Math.max(0, variant.stockQuantity - reservedQty)
           await variant.save()
         }
         await job.updateProgress(80)
