@@ -62,15 +62,21 @@ setup_env() {
         fi
     fi
 
-    # Get APP_MODE
-    local app_mode=$(grep "^APP_MODE=" .env | cut -d= -f2 | tr -d '"' | tr -d "'")
-    app_mode=${app_mode:-docker}
+    # Get APP_MODE - always use docker mode when running docker:dev
+    local app_mode="docker"
 
     # Update COMPOSE_PROJECT_NAME
     if ! grep -q "^COMPOSE_PROJECT_NAME=" .env 2>/dev/null; then
         echo "COMPOSE_PROJECT_NAME=$project_name" >> .env
     else
         sed -i "s|^COMPOSE_PROJECT_NAME=.*|COMPOSE_PROJECT_NAME=$project_name|" .env
+    fi
+
+    # Update APP_MODE to docker
+    if ! grep -q "^APP_MODE=" .env 2>/dev/null; then
+        echo "APP_MODE=docker" >> .env
+    else
+        sed -i "s|^APP_MODE=.*|APP_MODE=docker|" .env
     fi
 
     # Update PROJECT_NAME
@@ -94,8 +100,18 @@ setup_env() {
     local db_port=$((5433 + port_offset))
     local redis_port=$((6380 + port_offset))
 
-    sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env 2>/dev/null
-    sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env 2>/dev/null
+    # Update ports in .env (add if not exists)
+    if grep -q "^DB_PORT=" .env 2>/dev/null; then
+        sed -i "s|^DB_PORT=.*|DB_PORT=$db_port|" .env 2>/dev/null
+    else
+        echo "DB_PORT=$db_port" >> .env
+    fi
+
+    if grep -q "^REDIS_PORT=" .env 2>/dev/null; then
+        sed -i "s|^REDIS_PORT=.*|REDIS_PORT=$redis_port|" .env 2>/dev/null
+    else
+        echo "REDIS_PORT=$redis_port" >> .env
+    fi
 
     # Set host configuration based on APP_MODE
     if [ "$app_mode" = "docker" ]; then
