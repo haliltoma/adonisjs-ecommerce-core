@@ -102,14 +102,15 @@ export default class CustomersController {
     }
   }
 
-  async show({ params, inertia }: HttpContext) {
+  async show({ params, inertia, store }: HttpContext) {
+    const storeId = store.id
     const customer = await this.customerService.findById(params.id)
 
     if (!customer) {
       return inertia.render('admin/errors/NotFound', { resource: 'Customer' })
     }
 
-    const orders = await this.orderService.getCustomerOrders(customer.id, 1, 10)
+    const orders = await this.orderService.getCustomerOrders(customer.id, storeId, 1, 10)
     const addresses = await this.customerService.getAddresses(customer.id)
 
     return inertia.render('admin/customers/Show', {
