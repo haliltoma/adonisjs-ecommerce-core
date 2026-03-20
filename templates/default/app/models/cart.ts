@@ -72,10 +72,10 @@ export default class Cart extends BaseModel {
  @column(jsonColumn())
  declare metadata: Record<string, unknown>
 
- @column.dateTime()
+ @column.dateTime({ columnName: 'completed_at' })
  declare completedAt: DateTime | null
 
- @column.dateTime()
+ @column.dateTime({ columnName: 'expires_at' })
  declare expiresAt: DateTime | null
 
  @column.dateTime({ autoCreate: true })

@@ -1,5 +1,5 @@
-import { useState, useEffect, type ComponentType } from 'react'
 import StorefrontLayout from '../../components/storefront/StorefrontLayout'
+import { PuckRenderer } from '../../components/storefront/PuckRenderer'
 import { ArticleSeo } from '../../components/shared/Seo'
 
 interface Props {
@@ -13,47 +13,6 @@ interface Props {
     metaTitle?: string
     metaDescription?: string
   }
-}
-
-function PuckRenderer({ data }: { data: Record<string, unknown> }) {
-  const [RenderComponent, setRenderComponent] = useState<ComponentType<any> | null>(null)
-  const [config, setConfig] = useState<any>(null)
-  const [error, setError] = useState(false)
-
-  const load = () => {
-    setError(false)
-    Promise.all([
-      import('@puckeditor/core'),
-      import('@/lib/puck-config'),
-    ]).then(([puckModule, configModule]) => {
-      setRenderComponent(() => puckModule.Render)
-      setConfig(configModule.puckConfig)
-    }).catch((err) => {
-      console.error('Failed to load page renderer:', err)
-      setError(true)
-    })
-  }
-
-  useEffect(() => { load() }, [])
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 gap-3">
-        <p className="text-sm text-muted-foreground">Failed to load page content.</p>
-        <button onClick={load} className="text-sm underline underline-offset-4 hover:text-foreground text-muted-foreground">
-          Try again
-        </button>
-      </div>
-    )
-  }
-
-  if (!RenderComponent || !config) {
-    return <div className="flex justify-center py-12">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-foreground" />
-    </div>
-  }
-
-  return <RenderComponent config={config} data={data} />
 }
 
 export default function Page({ store, page }: Props) {

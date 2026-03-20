@@ -8,7 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AnalyticsEventSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'eventType', 'sessionId', 'customerId', 'eventData', 'ipAddress', 'userAgent', 'referrer', 'createdAt', 'pageUrl', 'country', 'city'] as const
+  static $columns = ['id', 'storeId', 'eventType', 'sessionId', 'customerId', 'data', 'ipAddress', 'userAgent', 'referrer', 'createdAt'] as const
   $columns = AnalyticsEventSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -21,7 +21,7 @@ export class AnalyticsEventSchema extends BaseModel {
   @column()
   declare customerId: string | null
   @column()
-  declare eventData: any | null
+  declare data: any | null
   @column()
   declare ipAddress: string | null
   @column()
@@ -30,12 +30,6 @@ export class AnalyticsEventSchema extends BaseModel {
   declare referrer: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
-  @column()
-  declare pageUrl: string | null
-  @column()
-  declare country: string | null
-  @column()
-  declare city: string | null
 }
 
 export class ApiKeySalesChannelSchema extends BaseModel {
@@ -104,7 +98,7 @@ export class AttributeOptionSchema extends BaseModel {
 }
 
 export class AttributeSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'code', 'name', 'type', 'isRequired', 'isFilterable', 'isVisibleOnFront', 'isSearchable', 'isComparable', 'validationRules', 'position', 'createdAt', 'updatedAt', 'sortOrder'] as const
+  static $columns = ['id', 'storeId', 'code', 'name', 'type', 'isRequired', 'isFilterable', 'isVisibleOnFront', 'isSearchable', 'isComparable', 'validationRules', 'position', 'createdAt', 'updatedAt'] as const
   $columns = AttributeSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -134,8 +128,6 @@ export class AttributeSchema extends BaseModel {
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-  @column()
-  declare sortOrder: number | null
 }
 
 export class BannerSchema extends BaseModel {
@@ -236,7 +228,7 @@ export class BlogPostSchema extends BaseModel {
 }
 
 export class CartItemSchema extends BaseModel {
-  static $columns = ['id', 'cartId', 'productId', 'variantId', 'sku', 'title', 'quantity', 'unitPrice', 'totalPrice', 'discountAmount', 'taxAmount', 'weight', 'metadata', 'createdAt', 'updatedAt'] as const
+  static $columns = ['id', 'cartId', 'productId', 'variantId', 'sku', 'title', 'variantTitle', 'quantity', 'unitPrice', 'totalPrice', 'discountAmount', 'taxAmount', 'weight', 'metadata', 'createdAt', 'updatedAt'] as const
   $columns = CartItemSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -250,6 +242,8 @@ export class CartItemSchema extends BaseModel {
   declare sku: string
   @column()
   declare title: string
+  @column()
+  declare variantTitle: string | null
   @column()
   declare quantity: number
   @column()
@@ -609,7 +603,7 @@ export class CustomerSchema extends BaseModel {
 }
 
 export class DailyAnalyticSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'date', 'totalOrders', 'totalRevenue', 'totalCustomers', 'newCustomers', 'averageOrderValue', 'totalItemsSold', 'totalRefunds', 'topProducts', 'conversionRate', 'createdAt', 'updatedAt', 'pageViews', 'uniqueVisitors', 'cartAbandonment', 'returningCustomers', 'topCategories', 'trafficSources'] as const
+  static $columns = ['id', 'storeId', 'date', 'totalOrders', 'totalRevenue', 'totalCustomers', 'newCustomers', 'averageOrderValue', 'totalItemsSold', 'totalRefunds', 'topProducts', 'conversionRate', 'createdAt', 'updatedAt'] as const
   $columns = DailyAnalyticSchema.$columns
   @column({ isPrimary: true })
   declare id: number
@@ -639,18 +633,6 @@ export class DailyAnalyticSchema extends BaseModel {
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-  @column()
-  declare pageViews: number | null
-  @column()
-  declare uniqueVisitors: number | null
-  @column()
-  declare cartAbandonment: string | null
-  @column()
-  declare returningCustomers: number | null
-  @column()
-  declare topCategories: any | null
-  @column()
-  declare trafficSources: any | null
 }
 
 export class DiscountSchema extends BaseModel {
@@ -1042,7 +1024,7 @@ export class InventoryReservationSchema extends BaseModel {
 }
 
 export class LocaleSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'code', 'name', 'isDefault', 'isActive', 'direction', 'createdAt', 'updatedAt'] as const
+  static $columns = ['id', 'storeId', 'code', 'name', 'nativeName', 'isDefault', 'isActive', 'direction', 'createdAt', 'updatedAt'] as const
   $columns = LocaleSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -1052,6 +1034,8 @@ export class LocaleSchema extends BaseModel {
   declare code: string
   @column()
   declare name: string
+  @column()
+  declare nativeName: string | null
   @column()
   declare isDefault: boolean | null
   @column()
@@ -1406,7 +1390,7 @@ export class OrderSchema extends BaseModel {
 }
 
 export class PageSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'title', 'slug', 'content', 'template', 'status', 'isSystem', 'metaTitle', 'metaDescription', 'publishedAt', 'createdAt', 'updatedAt', 'pageType'] as const
+  static $columns = ['id', 'storeId', 'title', 'slug', 'content', 'template', 'status', 'isSystem', 'metaTitle', 'metaDescription', 'publishedAt', 'createdAt', 'updatedAt'] as const
   $columns = PageSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -1434,27 +1418,6 @@ export class PageSchema extends BaseModel {
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-  @column()
-  declare pageType: string
-}
-
-export class PasswordResetSchema extends BaseModel {
-  static $columns = ['id', 'email', 'token', 'isAdmin', 'expiresAt', 'usedAt', 'createdAt'] as const
-  $columns = PasswordResetSchema.$columns
-  @column({ isPrimary: true })
-  declare id: string
-  @column()
-  declare email: string
-  @column()
-  declare token: string
-  @column()
-  declare isAdmin: boolean | null
-  @column.dateTime()
-  declare expiresAt: DateTime
-  @column.dateTime()
-  declare usedAt: DateTime | null
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
 }
 
 export class PermissionSchema extends BaseModel {
@@ -1964,7 +1927,7 @@ export class ReturnSchema extends BaseModel {
 }
 
 export class ReviewSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'productId', 'customerId', 'orderId', 'rating', 'title', 'body', 'status', 'isVerifiedPurchase', 'helpfulCount', 'adminResponse', 'adminRespondedAt', 'createdAt', 'updatedAt', 'reportCount'] as const
+  static $columns = ['id', 'storeId', 'productId', 'customerId', 'orderId', 'rating', 'title', 'body', 'status', 'isVerifiedPurchase', 'helpfulCount', 'adminResponse', 'adminRespondedAt', 'createdAt', 'updatedAt'] as const
   $columns = ReviewSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -1996,8 +1959,6 @@ export class ReviewSchema extends BaseModel {
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-  @column()
-  declare reportCount: number | null
 }
 
 export class RolePermissionSchema extends BaseModel {
@@ -2050,7 +2011,7 @@ export class SalesChannelSchema extends BaseModel {
 }
 
 export class SearchLogSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'query', 'resultsCount', 'customerId', 'createdAt', 'sessionId', 'filters', 'clickedProductId'] as const
+  static $columns = ['id', 'storeId', 'query', 'resultsCount', 'customerId', 'createdAt'] as const
   $columns = SearchLogSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -2064,35 +2025,25 @@ export class SearchLogSchema extends BaseModel {
   declare customerId: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
-  @column()
-  declare sessionId: string | null
-  @column()
-  declare filters: any | null
-  @column()
-  declare clickedProductId: string | null
 }
 
 export class SearchSynonymSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'synonyms', 'createdAt', 'updatedAt', 'term', 'isActive'] as const
+  static $columns = ['id', 'storeId', 'terms', 'createdAt', 'updatedAt'] as const
   $columns = SearchSynonymSchema.$columns
   @column({ isPrimary: true })
   declare id: string
   @column()
   declare storeId: string | null
   @column()
-  declare synonyms: any
+  declare terms: any
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-  @column()
-  declare term: string | null
-  @column()
-  declare isActive: boolean | null
 }
 
 export class SettingSchema extends BaseModel {
-  static $columns = ['id', 'storeId', 'group', 'key', 'value', 'isEncrypted', 'createdAt', 'updatedAt', 'type', 'isPublic'] as const
+  static $columns = ['id', 'storeId', 'group', 'key', 'value', 'isPublic', 'createdAt', 'updatedAt', 'type'] as const
   $columns = SettingSchema.$columns
   @column({ isPrimary: true })
   declare id: number
@@ -2105,15 +2056,13 @@ export class SettingSchema extends BaseModel {
   @column()
   declare value: any | null
   @column()
-  declare isEncrypted: boolean | null
+  declare isPublic: boolean | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
   declare type: string | null
-  @column()
-  declare isPublic: boolean | null
 }
 
 export class ShippingProfileSchema extends BaseModel {
@@ -2311,7 +2260,7 @@ export class UserSchema extends BaseModel {
 }
 
 export class WebhookLogSchema extends BaseModel {
-  static $columns = ['id', 'webhookId', 'event', 'payload', 'responseStatus', 'responseBody', 'durationMs', 'error', 'createdAt', 'status', 'attempts', 'nextRetryAt'] as const
+  static $columns = ['id', 'webhookId', 'event', 'payload', 'responseStatus', 'responseBody', 'durationMs', 'error', 'createdAt'] as const
   $columns = WebhookLogSchema.$columns
   @column({ isPrimary: true })
   declare id: string
@@ -2331,12 +2280,6 @@ export class WebhookLogSchema extends BaseModel {
   declare error: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
-  @column()
-  declare status: string | null
-  @column()
-  declare attempts: number | null
-  @column.dateTime()
-  declare nextRetryAt: DateTime | null
 }
 
 export class WebhookSchema extends BaseModel {

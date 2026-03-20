@@ -11,9 +11,28 @@ export default defineConfig({
     host: 'localhost',
     hmr: {
       host: 'localhost',
+      protocol: 'ws',
+      clientPort: 5173,
+      timeout: 30000,
+      overlay: true,
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000,
     },
   },
   plugins: [
+    {
+      name: 'hmr-error-handler',
+      configureServer(server) {
+        server.httpServer?.on('error', (err: any) => {
+          if (err?.code === 'ERR_IPC_CHANNEL_CLOSED') {
+            console.warn('HMR: IPC channel closed (this is normal during file changes)')
+            return
+          }
+        })
+      },
+    },
     adonisjs({
       entrypoints: ['inertia/app/app.tsx', 'inertia/css/app.css'],
       reload: ['resources/views/**/*.edge'],

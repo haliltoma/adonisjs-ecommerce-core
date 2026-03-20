@@ -361,4 +361,170 @@ export default class BackupsController {
       })
     }
   }
+
+  /**
+   * Execute disaster recovery
+   * POST /admin/backups/recovery/execute
+   */
+  async executeRecovery({ request, response }: HttpContext) {
+    try {
+      const planId = request.input('planId')
+
+      if (!planId) {
+        return response.badRequest({
+          error: 'Plan ID is required',
+        })
+      }
+
+      const result = await disasterRecovery.executeRecoveryPlanById(planId)
+
+      if (!result.success) {
+        return response.badRequest({
+          error: result.error,
+        })
+      }
+
+      return response.ok({
+        message: 'Recovery executed successfully',
+        data: result,
+      })
+    } catch (error) {
+      logger.error({ err: error }, 'Failed to execute recovery')
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
+
+  /**
+   * Get recovery status
+   * GET /admin/backups/recovery/status
+   */
+  async recoveryStatus({ response }: HttpContext) {
+    try {
+      const status = await disasterRecovery.getRecoveryStatus()
+
+      return response.ok({
+        data: status,
+      })
+    } catch (error) {
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
+
+  /**
+   * Cancel ongoing recovery
+   * POST /admin/backups/recovery/cancel
+   */
+  async cancelRecovery({ response }: HttpContext) {
+    try {
+      const result = await disasterRecovery.cancelRecovery()
+
+      return response.ok({
+        message: result ? 'Recovery cancelled' : 'No active recovery to cancel',
+        data: { cancelled: result },
+      })
+    } catch (error) {
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
+
+  /**
+   * Download backup file
+   * GET /admin/backups/:id/download
+   */
+  async download({ params, response }: HttpContext) {
+    try {
+      const backup = await Backup.find(params.id)
+
+      if (!backup) {
+        return response.notFound({
+          error: 'Backup not found',
+        })
+      }
+
+      if (!backup.filePath) {
+        return response.badRequest({
+          error: 'Backup file not available',
+        })
+      }
+
+      // Redirect to the file URL or stream it
+      return response.redirect(String(backup.filePath))
+    } catch (error) {
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
+
+  /**
+   * Cleanup old backups
+   * POST /admin/backups/cleanup
+   */
+  async cleanup({ request, response }: HttpContext) {
+    try {
+      const olderThanDays = request.input('olderThanDays', 30)
+      const dryRun = request.input('dryRun', false)
+
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays)
+
+      // Find old backups
+      const oldBackups = await Backup.query()
+        .where('createdAt', '<', cutoffDate)
+        .where('retained', false)
+        .where('status', 'completed')
+
+      if (dryRun) {
+        return response.ok({
+          message: 'Dry run - no backups deleted',
+          count: oldBackups.length,
+          backups: oldBackups.map(b => ({ id: b.id, name: b.name, createdAt: b.createdAt })),
+        })
+      }
+
+      // Delete old backups
+      const deleted = await disasterRecovery.cleanupOldBackups(olderThanDays)
+
+      return response.ok({
+        message: `Deleted ${deleted} old backups`,
+        count: deleted,
+      })
+    } catch (error) {
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
+
+  /**
+   * Create recovery plan
+   * POST /admin/backups/recovery/plan
+   */
+  async createRecoveryPlan({ request, response }: HttpContext) {
+    try {
+      const data = request.only([
+        'name',
+        'description',
+        'databaseBackupId',
+        'mediaBackupId',
+      ])
+
+      const result = await disasterRecovery.createRecoveryPlan(data)
+
+      return response.created({
+        message: 'Recovery plan created',
+        data: result,
+      })
+    } catch (error) {
+      return response.badRequest({
+        error: (error as Error).message,
+      })
+    }
+  }
 }

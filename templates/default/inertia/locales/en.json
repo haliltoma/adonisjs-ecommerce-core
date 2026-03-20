@@ -375,7 +375,19 @@
       "calculatedNextStep": "Calculated next step",
       "tax": "Tax",
       "total": "Total",
-      "editCart": "Edit Cart"
+      "editCart": "Edit Cart",
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "addressRequired": "Address is required",
+        "cityRequired": "City is required",
+        "stateRequired": "State is required",
+        "postalCodeRequired": "ZIP code is required",
+        "shippingMethodRequired": "Please select a shipping method",
+        "pleaseFillRequired": "Please fill in all required fields"
+      }
     },
     "searchPage": {
       "searchResults": "Search Results",

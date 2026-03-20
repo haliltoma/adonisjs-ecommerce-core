@@ -35,7 +35,7 @@ export default class CartRepository implements ICartRepository {
     return await query
       .where('storeId', storeId)
       .where('customerId', customerId)
-      .whereNull('completedAt')
+      .whereNull('completed_at')
       .preload('items', (itemsQuery) => {
         itemsQuery.preload('product').preload('variant')
       })
@@ -51,7 +51,7 @@ export default class CartRepository implements ICartRepository {
     return await query
       .where('storeId', storeId)
       .where('sessionId', sessionId)
-      .whereNull('completedAt')
+      .whereNull('completed_at')
       .preload('items', (itemsQuery) => {
         itemsQuery.preload('product').preload('variant')
       })
@@ -110,6 +110,7 @@ export default class CartRepository implements ICartRepository {
       shipping_total: data.shippingTotal ?? 0,
       grand_total: data.grandTotal ?? 0,
       total_items: data.totalItems ?? 0,
+      total_quantity: data.totalQuantity ?? 0,
       updated_at: DateTime.now().toSQL(),
     }
 
@@ -120,6 +121,9 @@ export default class CartRepository implements ICartRepository {
     if (data.billingAddressId !== undefined) updateData.billing_address_id = data.billingAddressId
     if (data.shippingMethod !== undefined) updateData.shipping_method = data.shippingMethod
     if (data.paymentMethod !== undefined) updateData.payment_method = data.paymentMethod
+    if (data.email !== undefined) updateData.email = data.email
+    if (data.currencyCode !== undefined) updateData.currency_code = data.currencyCode
+    if (data.notes !== undefined) updateData.notes = data.notes
 
     const query = trx ? trx.from('carts') : db.from('carts')
     await query.where('id', cartId).update(updateData)
@@ -142,8 +146,8 @@ export default class CartRepository implements ICartRepository {
     await db.from('carts')
       .where('id', id)
       .update({
-        completedAt: DateTime.now().toSQL(),
-        updatedAt: DateTime.now().toSQL(),
+        completed_at: DateTime.now().toSQL(),
+        updated_at: DateTime.now().toSQL(),
       })
   }
 
@@ -156,9 +160,9 @@ export default class CartRepository implements ICartRepository {
     limit: number = 20
   ): Promise<any> {
     return await Cart.query()
-      .where('storeId', storeId)
-      .whereNull('completedAt')
-      .orderBy('updatedAt', 'desc')
+      .where('store_id', storeId)
+      .whereNull('completed_at')
+      .orderBy('updated_at', 'desc')
       .paginate(page, limit)
   }
 
@@ -169,11 +173,11 @@ export default class CartRepository implements ICartRepository {
     const cutoffDate = DateTime.now().minus({ hours: hoursOld })
 
     return await Cart.query()
-      .where('storeId', storeId)
-      .whereNull('completedAt')
-      .where('updatedAt', '<', cutoffDate.toSQL())
+      .where('store_id', storeId)
+      .whereNull('completed_at')
+      .where('updated_at', '<', cutoffDate.toSQL())
       .preload('items')
-      .orderBy('updatedAt', 'desc')
+      .orderBy('updated_at', 'desc')
   }
 
   /**

@@ -10,24 +10,42 @@ import Cart from '#models/cart'
 
 export interface CreateCartData {
   storeId: string
-  customerId?: string
-  sessionId?: string
-  email?: string
+  customerId?: string | null
+  sessionId?: string | null
+  email?: string | null
   currencyCode?: string
+  subtotal?: number
+  discountTotal?: number
+  taxTotal?: number
+  shippingTotal?: number
+  grandTotal?: number
+  totalItems?: number
+  totalQuantity?: number
+  couponCode?: string | null
+  discountId?: string | null
+  shippingMethod?: string | null
+  paymentMethod?: string | null
+  metadata?: Record<string, unknown>
 }
 
 export interface UpdateCartData {
   email?: string
   currencyCode?: string
-  couponCode?: string
-  discountId?: string
+  couponCode?: string | null
+  discountId?: string | null
   discountTotal?: number
   subtotal?: number
   taxTotal?: number
   shippingTotal?: number
   grandTotal?: number
+  totalItems?: number
+  totalQuantity?: number
   completedAt?: DateTime | null
   notes?: string
+  shippingAddressId?: string | null
+  billingAddressId?: string | null
+  shippingMethod?: string | null
+  paymentMethod?: string | null
 }
 
 export type TransactionCallback<T> = (trx: any) => Promise<T>

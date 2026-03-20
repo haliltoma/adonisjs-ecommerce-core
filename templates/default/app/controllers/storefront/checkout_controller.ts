@@ -5,11 +5,12 @@ import { useCheckoutService } from '#services/service_container'
 import { useCustomerService } from '#services/service_container'
 import { useDiscountService } from '#services/service_container'
 import { useStoreService } from '#services/service_container'
-import { PaymentProvider } from '#contracts/payment_provider'
+import PaymentProviderFactory from '#factories/payment_provider_factory'
 import Customer from '#models/customer'
-import app from '@adonisjs/core/services/app'
 import emitter from '@adonisjs/core/services/emitter'
 import { PaymentCaptured, PaymentFailed } from '#events/payment_events'
+import { checkoutValidator, paymentValidator } from '#validators/checkout_validator'
+import { ValidationError } from '@vinejs/vine'
 
 export default class CheckoutController {
   private cartService = useCartService()
@@ -57,7 +58,8 @@ export default class CheckoutController {
     for (const [key, value] of Object.entries(settings)) {
       if (key.startsWith('provider_') && value) {
         const provider = typeof value === 'string' ? JSON.parse(value) : value
-        if (provider.enabled) {
+        // Check if enabled is true or if it's not set (defaults to enabled for fallback)
+        if (provider.enabled !== false) {
           const id = key.replace('provider_', '')
           methods.push({
             id,
@@ -68,11 +70,11 @@ export default class CheckoutController {
       }
     }
 
-    // Fallback to defaults if no providers configured
+    // Fallback to defaults if no providers configured (dev mode)
     if (methods.length === 0) {
       return [
-        { id: 'card', name: 'Credit/Debit Card', icon: 'credit-card' },
-        { id: 'paypal', name: 'PayPal', icon: 'paypal' },
+        { id: 'cod', name: 'Cash on Delivery (Test)', icon: 'banknote' },
+        { id: 'bank_transfer', name: 'Bank Transfer (Test)', icon: 'building' },
       ]
     }
 
@@ -136,10 +138,13 @@ export default class CheckoutController {
   }
 
   async processCheckout({ request, response, session, store }: HttpContext) {
+    console.log('[CHECKOUT CONTROLLER] processCheckout START')
     const storeId = store.id
     const sessionId = session.sessionId
     let customerId = session.get('customer_id')
+    console.log('[CHECKOUT CONTROLLER] storeId:', storeId, 'customerId:', customerId)
 
+    console.log('[CHECKOUT CONTROLLER] Getting cart...')
     const cart = await this.cartService.getOrCreateCart(storeId, customerId, sessionId)
     await cart.load('items')
 
@@ -168,16 +173,41 @@ export default class CheckoutController {
       'sameAsShipping',
       'shippingMethod',
       'notes',
+      'paymentMethod',
     ])
 
-    // Ensure billingAddress is populated if sameAsShipping is true or billingAddress is missing
+    // PRE-VALIDATION: Fill shipping address from top-level firstName/lastName/phone if missing
+    if (!data.shippingAddress?.firstName && data.firstName) {
+      data.shippingAddress = { ...data.shippingAddress, firstName: data.firstName }
+    }
+    if (!data.shippingAddress?.lastName && data.lastName) {
+      data.shippingAddress = { ...data.shippingAddress, lastName: data.lastName }
+    }
+    if (!data.shippingAddress?.phone && data.phone) {
+      data.shippingAddress = { ...data.shippingAddress, phone: data.phone }
+    }
+
+    // PRE-VALIDATION: Ensure billingAddress is populated if sameAsShipping is true or billingAddress is missing
     if (data.sameAsShipping || !data.billingAddress?.firstName) {
       data.billingAddress = { ...data.shippingAddress }
+    }
+
+    // VALIDATE INPUT - Use validator to ensure all required fields are present
+    try {
+      await checkoutValidator.validate(data)
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        const firstError = error.messages[0]
+        session.flash('error', firstError?.message || 'Validation failed')
+        return response.redirect().back()
+      }
+      throw error
     }
 
     try {
       // Create customer account if requested
       if (!customerId && data.createAccount && data.password) {
+        console.log('[CHECKOUT CONTROLLER] Creating customer account...')
         const customer = await this.customerService.create({
           storeId,
           email: data.email,
@@ -233,6 +263,7 @@ export default class CheckoutController {
       await cart.save()
 
       // Create order
+      console.log('[CHECKOUT CONTROLLER] Creating order from cart...')
       const order = await this.orderService.createFromCart({
         cartId: cart.id,
         customerId,
@@ -245,6 +276,7 @@ export default class CheckoutController {
 
       // Increment discount usage + campaign budget if applicable
       if (cart.discountId) {
+        console.log('[CHECKOUT CONTROLLER] Incrementing discount usage...')
         await this.discountService.incrementUsage(
           cart.discountId,
           customerId,
@@ -255,6 +287,8 @@ export default class CheckoutController {
       // Redirect to payment page
       return response.redirect().toRoute('storefront.checkout.payment', { orderId: order.id })
     } catch (error: unknown) {
+      console.error('[CHECKOUT CONTROLLER] ERROR:', error)
+      console.error('[CHECKOUT CONTROLLER] ERROR stack:', (error as Error).stack)
       session.flash('error', (error as Error).message)
       return response.redirect().back()
     }
@@ -272,7 +306,7 @@ export default class CheckoutController {
       return response.redirect().toRoute('storefront.checkout.confirmation', { orderId: order.id })
     }
 
-    const paymentProvider = await app.container.make(PaymentProvider)
+    const paymentProvider = PaymentProviderFactory.getProvider()
 
     return inertia.render('storefront/checkout/Payment', {
       order: {
@@ -298,7 +332,20 @@ export default class CheckoutController {
     }
 
     const { paymentMethod } = request.only(['paymentMethod'])
-    const paymentProvider = await app.container.make(PaymentProvider)
+
+    // VALIDATE PAYMENT INPUT
+    try {
+      await paymentValidator.validate({ paymentMethod })
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        const firstError = error.messages[0]
+        session.flash('error', firstError?.message || 'Invalid payment method')
+        return response.redirect().back()
+      }
+      throw error
+    }
+
+    const paymentProvider = PaymentProviderFactory.getProvider()
 
     try {
       const baseUrl = request.completeUrl().split('/checkout')[0]
@@ -441,12 +488,12 @@ export default class CheckoutController {
   private serializeCart(cart: any) {
     return {
       id: cart.id,
-      itemCount: cart.totalItems,
-      subtotal: cart.subtotal,
-      discountTotal: cart.discountTotal,
+      itemCount: Number(cart.totalItems || 0),
+      subtotal: Number(cart.subtotal || 0),
+      discountTotal: Number(cart.discountTotal || 0),
       discountCode: cart.couponCode,
-      taxTotal: cart.taxTotal,
-      total: cart.grandTotal,
+      taxTotal: Number(cart.taxTotal || 0),
+      total: Number(cart.grandTotal || 0),
       currency: cart.currencyCode,
       items: cart.items?.map((item: any) => ({
         id: item.id,
@@ -454,9 +501,9 @@ export default class CheckoutController {
         variantId: item.variantId,
         title: item.title,
         variantTitle: item.variantTitle,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice,
+        quantity: Number(item.quantity || 0),
+        unitPrice: Number(item.unitPrice || 0),
+        totalPrice: Number(item.totalPrice || 0),
         thumbnail: item.product?.images?.[0]?.url,
       })),
     }

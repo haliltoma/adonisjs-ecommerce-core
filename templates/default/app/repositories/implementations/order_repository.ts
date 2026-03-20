@@ -38,6 +38,7 @@ export default class OrderRepository implements IOrderRepository {
    * Create new order
    */
   async create(data: CreateOrderData, trx?: any): Promise<Order> {
+    console.log('[ORDER REPOSITORY] Creating order with data:', { ...data, billingAddress: '[REDACTED]', shippingAddress: '[REDACTED]' })
     return await Order.create(
       {
         storeId: data.storeId,
@@ -56,11 +57,22 @@ export default class OrderRepository implements IOrderRepository {
         shippingTotal: data.shippingTotal,
         taxTotal: data.taxTotal,
         grandTotal: data.grandTotal,
+        totalPaid: 0,
+        totalRefunded: 0,
         billingAddress: data.billingAddress,
         shippingAddress: data.shippingAddress,
         shippingMethod: data.shippingMethod,
+        shippingMethodTitle: data.shippingMethodTitle,
+        paymentMethod: data.paymentMethod,
+        paymentMethodTitle: data.paymentMethodTitle,
         notes: data.notes,
-        createdById: data.userId,
+        internalNotes: data.internalNotes,
+        regionId: data.regionId,
+        salesChannelId: data.salesChannelId,
+        metadata: data.metadata,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+        placedAt: DateTime.now(),
       },
       trx ? { client: trx } : undefined
     )
@@ -162,7 +174,15 @@ export default class OrderRepository implements IOrderRepository {
    * Execute callback within a transaction
    */
   async transaction<T>(callback: TransactionCallback<T>): Promise<T> {
-    return await db.transaction(callback)
+    console.log('[ORDER REPOSITORY] Transaction START')
+    try {
+      const result = await db.transaction(callback)
+      console.log('[ORDER REPOSITORY] Transaction COMMIT')
+      return result
+    } catch (error) {
+      console.error('[ORDER REPOSITORY] Transaction ERROR:', error)
+      throw error
+    }
   }
 
   /**

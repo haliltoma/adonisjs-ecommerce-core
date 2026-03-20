@@ -99,6 +99,9 @@ class ServiceContainer {
     this.services.set('CartItemManager', new CartItemManager())
     this.services.set('CartValidator', new CartValidator())
 
+    // DiscountService must be created before CartService (required dependency)
+    this.services.set('DiscountService', new DiscountService())
+
     // Product Service Components
     this.services.set('ProductSlugGenerator', new ProductSlugGenerator())
     this.services.set('ProductVariantManager', new ProductVariantManager())
@@ -192,7 +195,7 @@ class ServiceContainer {
 
     // Additional Services (without complex dependencies)
     this.services.set('CategoryService', new CategoryService())
-    this.services.set('DiscountService', new DiscountService())
+    // Note: DiscountService was created earlier as a dependency of CartService
     this.services.set('CustomerService', new CustomerService())
     this.services.set('StoreService', new StoreService())
     this.services.set('InventoryService', new InventoryService())
@@ -273,57 +276,143 @@ export const useService = <T>(serviceName: string): T => {
 /**
  * Export specific service getters for type safety
  */
-export const useOrderService = (): OrderService => useService<OrderService>('OrderService')
-export const useCartService = (): CartService => useService<CartService>('CartService')
-export const useProductService = (): ProductService => useService<ProductService>('ProductService')
-export const useCheckoutService = (): CheckoutService => useService<CheckoutService>('CheckoutService')
-export const useOrderRepository = (): OrderRepository => useService<OrderRepository>('OrderRepository')
-export const useCartRepository = (): CartRepository => useService<CartRepository>('CartRepository')
-export const useProductRepository = (): ProductRepository =>
-  useService<ProductRepository>('ProductRepository')
-export const useCustomerRepository = (): CustomerRepository =>
-  useService<CustomerRepository>('CustomerRepository')
-export const useInventoryRepository = (): InventoryRepository =>
-  useService<InventoryRepository>('InventoryRepository')
-export const usePaymentProvider = (): PaymentProviderFactory =>
-  useService<PaymentProviderFactory>('PaymentProviderFactory')
-export const useSearchProvider = (): SearchProviderFactory =>
-  useService<SearchProviderFactory>('SearchProviderFactory')
-export const useCategoryService = (): CategoryService =>
-  useService<CategoryService>('CategoryService')
-export const useDiscountService = (): DiscountService =>
-  useService<DiscountService>('DiscountService')
-export const useCustomerService = (): CustomerService =>
-  useService<CustomerService>('CustomerService')
-export const useStoreService = (): StoreService => useService<StoreService>('StoreService')
-export const useInventoryService = (): InventoryService =>
-  useService<InventoryService>('InventoryService')
-export const useGiftCardService = (): GiftCardService =>
-  useService<GiftCardService>('GiftCardService')
-export const useDraftOrderService = (): DraftOrderService =>
-  useService<DraftOrderService>('DraftOrderService')
-export const usePriceListService = (): PriceListService =>
-  useService<PriceListService>('PriceListService')
-export const useAiService = (): AiService => useService<AiService>('AiService')
-export const useAuthService = (): AuthService => useService<AuthService>('AuthService')
-export const useSubscriptionService = (): SubscriptionService =>
-  useService<SubscriptionService>('SubscriptionService')
-export const useBundleService = (): BundleService => useService<BundleService>('BundleService')
-export const useDigitalProductService = (): DigitalProductService =>
-  useService<DigitalProductService>('DigitalProductService')
-export const useImageService = (): ImageService => useService<ImageService>('ImageService')
-export const useRegionService = (): RegionService => useService<RegionService>('RegionService')
-export const useSalesChannelService = (): SalesChannelService =>
-  useService<SalesChannelService>('SalesChannelService')
-export const useCustomerGroupService = (): CustomerGroupService =>
-  useService<CustomerGroupService>('CustomerGroupService')
-export const useReturnService = (): ReturnService => useService<ReturnService>('ReturnService')
-export const useApiKeyService = (): ApiKeyService => useService<ApiKeyService>('ApiKeyService')
-export const useShippingProfileService = (): ShippingProfileService =>
-  useService<ShippingProfileService>('ShippingProfileService')
-export const useFulfillmentService = (): FulfillmentService =>
-  useService<FulfillmentService>('FulfillmentService')
-export const useRefundService = (): RefundService => useService<RefundService>('RefundService')
-export const useInvoiceService = (): InvoiceService => useService<InvoiceService>('InvoiceService')
-export const useImportExportService = (): ImportExportService =>
-  useService<ImportExportService>('ImportExportService')
+export const useOrderService = (): OrderService => {
+  console.log('[SERVICE CONTAINER] Getting OrderService')
+  return useService<OrderService>('OrderService')
+}
+export const useCartService = (): CartService => {
+  console.log('[SERVICE CONTAINER] Getting CartService')
+  return useService<CartService>('CartService')
+}
+export const useProductService = (): ProductService => {
+  console.log('[SERVICE CONTAINER] Getting ProductService')
+  return useService<ProductService>('ProductService')
+}
+export const useCheckoutService = (): CheckoutService => {
+  console.log('[SERVICE CONTAINER] Getting CheckoutService')
+  return useService<CheckoutService>('CheckoutService')
+}
+export const useOrderRepository = (): OrderRepository => {
+  console.log('[SERVICE CONTAINER] Getting OrderRepository')
+  return useService<OrderRepository>('OrderRepository')
+}
+export const useCartRepository = (): CartRepository => {
+  console.log('[SERVICE CONTAINER] Getting CartRepository')
+  return useService<CartRepository>('CartRepository')
+}
+export const useProductRepository = (): ProductRepository => {
+  console.log('[SERVICE CONTAINER] Getting ProductRepository')
+  return useService<ProductRepository>('ProductRepository')
+}
+export const useCustomerRepository = (): CustomerRepository => {
+  console.log('[SERVICE CONTAINER] Getting CustomerRepository')
+  return useService<CustomerRepository>('CustomerRepository')
+}
+export const useInventoryRepository = (): InventoryRepository => {
+  console.log('[SERVICE CONTAINER] Getting InventoryRepository')
+  return useService<InventoryRepository>('InventoryRepository')
+}
+export const usePaymentProvider = (): PaymentProviderFactory => {
+  console.log('[SERVICE CONTAINER] Getting PaymentProviderFactory')
+  return useService<PaymentProviderFactory>('PaymentProviderFactory')
+}
+export const useSearchProvider = (): SearchProviderFactory => {
+  console.log('[SERVICE CONTAINER] Getting SearchProviderFactory')
+  return useService<SearchProviderFactory>('SearchProviderFactory')
+}
+export const useCategoryService = (): CategoryService => {
+  console.log('[SERVICE CONTAINER] Getting CategoryService')
+  return useService<CategoryService>('CategoryService')
+}
+export const useDiscountService = (): DiscountService => {
+  console.log('[SERVICE CONTAINER] Getting DiscountService')
+  return useService<DiscountService>('DiscountService')
+}
+export const useCustomerService = (): CustomerService => {
+  console.log('[SERVICE CONTAINER] Getting CustomerService')
+  return useService<CustomerService>('CustomerService')
+}
+export const useStoreService = (): StoreService => {
+  console.log('[SERVICE CONTAINER] Getting StoreService')
+  return useService<StoreService>('StoreService')
+}
+export const useInventoryService = (): InventoryService => {
+  console.log('[SERVICE CONTAINER] Getting InventoryService')
+  return useService<InventoryService>('InventoryService')
+}
+export const useGiftCardService = (): GiftCardService => {
+  console.log('[SERVICE CONTAINER] Getting GiftCardService')
+  return useService<GiftCardService>('GiftCardService')
+}
+export const useDraftOrderService = (): DraftOrderService => {
+  console.log('[SERVICE CONTAINER] Getting DraftOrderService')
+  return useService<DraftOrderService>('DraftOrderService')
+}
+export const usePriceListService = (): PriceListService => {
+  console.log('[SERVICE CONTAINER] Getting PriceListService')
+  return useService<PriceListService>('PriceListService')
+}
+export const useAiService = (): AiService => {
+  console.log('[SERVICE CONTAINER] Getting AiService')
+  return useService<AiService>('AiService')
+}
+export const useAuthService = (): AuthService => {
+  console.log('[SERVICE CONTAINER] Getting AuthService')
+  return useService<AuthService>('AuthService')
+}
+export const useSubscriptionService = (): SubscriptionService => {
+  console.log('[SERVICE CONTAINER] Getting SubscriptionService')
+  return useService<SubscriptionService>('SubscriptionService')
+}
+export const useBundleService = (): BundleService => {
+  console.log('[SERVICE CONTAINER] Getting BundleService')
+  return useService<BundleService>('BundleService')
+}
+export const useDigitalProductService = (): DigitalProductService => {
+  console.log('[SERVICE CONTAINER] Getting DigitalProductService')
+  return useService<DigitalProductService>('DigitalProductService')
+}
+export const useImageService = (): ImageService => {
+  console.log('[SERVICE CONTAINER] Getting ImageService')
+  return useService<ImageService>('ImageService')
+}
+export const useRegionService = (): RegionService => {
+  console.log('[SERVICE CONTAINER] Getting RegionService')
+  return useService<RegionService>('RegionService')
+}
+export const useSalesChannelService = (): SalesChannelService => {
+  console.log('[SERVICE CONTAINER] Getting SalesChannelService')
+  return useService<SalesChannelService>('SalesChannelService')
+}
+export const useCustomerGroupService = (): CustomerGroupService => {
+  console.log('[SERVICE CONTAINER] Getting CustomerGroupService')
+  return useService<CustomerGroupService>('CustomerGroupService')
+}
+export const useReturnService = (): ReturnService => {
+  console.log('[SERVICE CONTAINER] Getting ReturnService')
+  return useService<ReturnService>('ReturnService')
+}
+export const useApiKeyService = (): ApiKeyService => {
+  console.log('[SERVICE CONTAINER] Getting ApiKeyService')
+  return useService<ApiKeyService>('ApiKeyService')
+}
+export const useShippingProfileService = (): ShippingProfileService => {
+  console.log('[SERVICE CONTAINER] Getting ShippingProfileService')
+  return useService<ShippingProfileService>('ShippingProfileService')
+}
+export const useFulfillmentService = (): FulfillmentService => {
+  console.log('[SERVICE CONTAINER] Getting FulfillmentService')
+  return useService<FulfillmentService>('FulfillmentService')
+}
+export const useRefundService = (): RefundService => {
+  console.log('[SERVICE CONTAINER] Getting RefundService')
+  return useService<RefundService>('RefundService')
+}
+export const useInvoiceService = (): InvoiceService => {
+  console.log('[SERVICE CONTAINER] Getting InvoiceService')
+  return useService<InvoiceService>('InvoiceService')
+}
+export const useImportExportService = (): ImportExportService => {
+  console.log('[SERVICE CONTAINER] Getting ImportExportService')
+  return useService<ImportExportService>('ImportExportService')
+}

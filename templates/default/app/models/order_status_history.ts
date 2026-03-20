@@ -6,42 +6,44 @@ import User from './user.js'
 import { jsonColumn } from '#helpers/json_column'
 
 export default class OrderStatusHistory extends BaseModel {
- @column({ isPrimary: true })
- declare id: string
+  public static table = 'order_status_history'
 
- @column()
- declare orderId: string
+  @column({ isPrimary: true })
+  declare id: string
 
- @column()
- declare status: string
+  @column()
+  declare orderId: string
 
- @column()
- declare previousStatus: string | null
+  @column()
+  declare status: string
 
- @column()
- declare type: 'status_change' | 'note' | 'payment' | 'fulfillment' | 'refund' | 'system'
+  @column()
+  declare previousStatus: string | null
 
- @column()
- declare title: string
+  @column()
+  declare type: 'status_change' | 'note' | 'payment' | 'fulfillment' | 'refund' | 'system'
 
- @column()
- declare description: string | null
+  @column()
+  declare title: string
 
- @column()
- declare userId: number | null
+  @column()
+  declare description: string | null
 
- @column()
- declare isCustomerNotified: boolean
+  @column()
+  declare userId: number | null
 
- @column(jsonColumn())
- declare metadata: Record<string, unknown>
+  @column()
+  declare isCustomerNotified: boolean
 
- @column.dateTime({ autoCreate: true })
- declare createdAt: DateTime
+  @column(jsonColumn())
+  declare metadata: Record<string, unknown>
 
- @belongsTo(() => Order)
- declare order: BelongsTo<typeof Order>
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
 
- @belongsTo(() => User)
- declare user: BelongsTo<typeof User>
+  @belongsTo(() => Order)
+  declare order: BelongsTo<typeof Order>
+
+  @belongsTo(() => User)
+  declare user: BelongsTo<typeof User>
 }

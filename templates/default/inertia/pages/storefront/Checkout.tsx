@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import { useState } from 'react'
-import { Check, ChevronLeft, Package, Truck } from 'lucide-react'
+import { Check, ChevronLeft, Package, Truck, AlertCircle } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,22 @@ import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency } from '@/lib/utils'
 import { useTranslation } from '@/hooks/use-translation'
+
+// Validation helper types
+interface ValidationErrors {
+  email?: string
+  firstName?: string
+  lastName?: string
+  shippingAddress?: {
+    firstName?: string
+    lastName?: string
+    address1?: string
+    city?: string
+    state?: string
+    postalCode?: string
+  }
+  shippingMethod?: string
+}
 
 interface CartItem {
   id: string
@@ -71,8 +87,81 @@ export default function Checkout({
   customer,
 }: Props) {
   const [step, setStep] = useState(1)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
   const { t, currency } = useTranslation()
   const cur = cart?.currency || currency
+
+  // Validate step 1: Contact & Shipping Address
+  const validateStep1 = (): boolean => {
+    const errors: ValidationErrors = {}
+
+    // Email validation - just check if exists
+    if (!data.email || !data.email.trim()) {
+      errors.email = t('storefront.checkoutPage.errors.emailRequired')
+    }
+
+    // Use top-level or shipping address fields
+    const shipFirstName = data.shippingAddress.firstName?.trim() || data.firstName?.trim()
+    const shipLastName = data.shippingAddress.lastName?.trim() || data.lastName?.trim()
+    const shipAddress1 = data.shippingAddress.address1?.trim()
+    const shipCity = data.shippingAddress.city?.trim()
+    const shipPostalCode = data.shippingAddress.postalCode?.trim()
+    const shipCountry = data.shippingAddress.country?.trim() || 'US'
+
+    // Only require firstName OR lastName
+    if (!shipFirstName && !shipLastName) {
+      errors.firstName = t('storefront.checkoutPage.errors.firstNameRequired')
+    }
+
+    // Address is required
+    if (!shipAddress1) {
+      errors.shippingAddress = { ...errors.shippingAddress, address1: t('storefront.checkoutPage.errors.addressRequired') }
+    }
+
+    // City is required
+    if (!shipCity) {
+      errors.shippingAddress = { ...errors.shippingAddress, city: t('storefront.checkoutPage.errors.cityRequired') }
+    }
+
+    // Postal code is required
+    if (!shipPostalCode) {
+      errors.shippingAddress = { ...errors.shippingAddress, postalCode: t('storefront.checkoutPage.errors.postalCodeRequired') }
+    }
+
+    // Set default country if not set
+    if (!shipCountry) {
+      data.shippingAddress.country = 'US'
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  // Validate step 2: Shipping Method
+  const validateStep2 = (): boolean => {
+    const errors: ValidationErrors = {}
+
+    if (!data.shippingMethod) {
+      errors.shippingMethod = t('storefront.checkoutPage.errors.shippingMethodRequired')
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  // Handle step navigation with validation
+  const handleContinueToStep2 = () => {
+    if (validateStep1()) {
+      setStep(2)
+    }
+  }
+
+  const handleContinueToStep3 = () => {
+    if (validateStep2()) {
+      setStep(3)
+    }
+  }
 
   const { data, setData, post, processing, errors, transform } = useForm({
     email: customer?.email || '',
@@ -253,21 +342,26 @@ export default function Checkout({
                 <div className="space-y-5">
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.firstName')}</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.firstName')} *</Label>
                       <Input
                         value={data.shippingAddress.firstName}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setData('shippingAddress', {
                             ...data.shippingAddress,
                             firstName: e.target.value,
                           })
-                        }
+                          setTouched({ ...touched, 'shippingAddress.firstName': true })
+                        }}
+                        onBlur={() => setTouched({ ...touched, 'shippingAddress.firstName': true })}
                         required
-                        className="h-11 border-border/60 transition-colors focus-visible:border-accent"
+                        className={`h-11 border-border/60 transition-colors focus-visible:border-accent ${touched['shippingAddress.firstName'] && validationErrors.shippingAddress?.firstName ? 'border-destructive focus-visible:border-destructive' : ''}`}
                       />
+                      {touched['shippingAddress.firstName'] && validationErrors.shippingAddress?.firstName && (
+                        <p className="text-destructive text-xs">{validationErrors.shippingAddress.firstName}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.lastName')}</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.lastName')} *</Label>
                       <Input
                         value={data.shippingAddress.lastName}
                         onChange={(e) =>
@@ -297,7 +391,7 @@ export default function Checkout({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.address')}</Label>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.address')} *</Label>
                     <Input
                       value={data.shippingAddress.address1}
                       onChange={(e) =>
@@ -309,6 +403,9 @@ export default function Checkout({
                       required
                       className="h-11 border-border/60 transition-colors focus-visible:border-accent"
                     />
+                    {validationErrors.shippingAddress?.address1 && (
+                      <p className="text-destructive text-xs">{validationErrors.shippingAddress.address1}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -327,7 +424,7 @@ export default function Checkout({
 
                   <div className="grid gap-5 sm:grid-cols-3">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.city')}</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.city')} *</Label>
                       <Input
                         value={data.shippingAddress.city}
                         onChange={(e) =>
@@ -339,9 +436,12 @@ export default function Checkout({
                         required
                         className="h-11 border-border/60 transition-colors focus-visible:border-accent"
                       />
+                      {validationErrors.shippingAddress?.city && (
+                        <p className="text-destructive text-xs">{validationErrors.shippingAddress.city}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.state')}</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.state')} *</Label>
                       <Input
                         value={data.shippingAddress.state}
                         onChange={(e) =>
@@ -353,9 +453,12 @@ export default function Checkout({
                         required
                         className="h-11 border-border/60 transition-colors focus-visible:border-accent"
                       />
+                      {validationErrors.shippingAddress?.state && (
+                        <p className="text-destructive text-xs">{validationErrors.shippingAddress.state}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.zipCode')}</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t('storefront.checkoutPage.zipCode')} *</Label>
                       <Input
                         value={data.shippingAddress.postalCode}
                         onChange={(e) =>
@@ -367,6 +470,9 @@ export default function Checkout({
                         required
                         className="h-11 border-border/60 transition-colors focus-visible:border-accent"
                       />
+                      {validationErrors.shippingAddress?.postalCode && (
+                        <p className="text-destructive text-xs">{validationErrors.shippingAddress.postalCode}</p>
+                      )}
                     </div>
                   </div>
 
@@ -387,12 +493,21 @@ export default function Checkout({
                 <div className="flex justify-end pt-6">
                   <Button
                     type="button"
-                    onClick={() => setStep(2)}
+                    onClick={handleContinueToStep2}
                     className="h-12 px-8 tracking-wide"
                   >
                     {t('storefront.checkoutPage.continueToShipping')}
                   </Button>
                 </div>
+
+                {/* Validation Errors */}
+                {(Object.keys(validationErrors).length > 0 ||
+                  (validationErrors.shippingAddress && Object.keys(validationErrors.shippingAddress).filter(k => k !== 'firstName' && k !== 'lastName').length > 0)) && step === 1 && (
+                  <div className="mt-4 flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{t('storefront.checkoutPage.errors.pleaseFillRequired')}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -464,12 +579,20 @@ export default function Checkout({
                   </Button>
                   <Button
                     type="button"
-                    onClick={() => setStep(3)}
+                    onClick={handleContinueToStep3}
                     className="h-12 px-8 tracking-wide"
                   >
                     {t('storefront.checkoutPage.continueToPayment')}
                   </Button>
                 </div>
+
+                {/* Shipping Method Validation Error */}
+                {validationErrors.shippingMethod && step === 2 && (
+                  <div className="mt-4 flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{validationErrors.shippingMethod}</span>
+                  </div>
+                )}
               </div>
             )}
 

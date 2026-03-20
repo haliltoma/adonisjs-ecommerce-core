@@ -1,8 +1,9 @@
 import { Link, useForm } from '@inertiajs/react'
 import { useState, useEffect, type ComponentType } from 'react'
-import { ArrowRight, Package, RefreshCw, Shield, Truck } from 'lucide-react'
+import { ArrowRight, Package, RefreshCw, Shield, Truck, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { PuckRenderer } from '@/components/storefront/PuckRenderer'
 import { HomeSeo } from '@/components/shared/Seo'
 import { useTranslation } from '@/hooks/use-translation'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -48,6 +49,103 @@ interface Banner {
   linkUrl: string | null
 }
 
+// Banner Carousel Component
+function BannerCarousel({ banners }: { banners: Banner[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [imageError, setImageError] = useState(false)
+
+  // Reset image error when banner changes
+  useEffect(() => {
+    setImageError(false)
+  }, [currentIndex])
+
+  useEffect(() => {
+    if (banners.length <= 1) return
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [banners.length])
+
+  if (banners.length === 0) return null
+
+  const currentBanner = banners[currentIndex]
+  const showImage = currentBanner.imageUrl && !imageError
+
+  return (
+    <section className="relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
+          <div className="flex flex-col justify-center">
+            <span className="animate-fade-up text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+              {currentBanner.subtitle || 'Featured'}
+            </span>
+            <h1 className="animate-fade-up delay-100 font-display text-5xl tracking-tight sm:text-6xl lg:text-7xl mt-4 leading-[1.05]">
+              {currentBanner.title}
+            </h1>
+            <p className="animate-fade-up delay-200 text-muted-foreground mt-6 text-lg leading-relaxed max-w-lg">
+              {currentBanner.subtitle}
+            </p>
+            <div className="animate-fade-up delay-300 mt-10 flex flex-wrap gap-4">
+              <Button size="lg" className="px-8" asChild>
+                <Link href={currentBanner.linkUrl || '/products'}>
+                  Shop Now
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+          <div className="animate-fade-up delay-300 relative">
+            <div className="overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
+              {showImage ? (
+                <img
+                  src={currentBanner.imageUrl}
+                  alt={currentBanner.title}
+                  className="h-full w-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                  <Package className="text-muted-foreground/40 h-20 w-20" />
+                </div>
+              )}
+            </div>
+            {/* Navigation arrows */}
+            {banners.length > 1 && (
+              <>
+                <button
+                  onClick={() => setCurrentIndex((currentIndex - 1 + banners.length) % banners.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow-lg"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setCurrentIndex((currentIndex + 1) % banners.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow-lg"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+                {/* Dots */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {banners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === currentIndex ? 'bg-foreground w-4' : 'bg-foreground/40'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 interface Props {
   store: { name: string; logoUrl: string | null }
   puckContent?: Record<string, unknown> | null
@@ -56,29 +154,6 @@ interface Props {
   newArrivals: ProductCard[]
   collections: Collection[]
   categories: Category[]
-}
-
-function HomePuckRenderer({ data }: { data: Record<string, unknown> }) {
-  const [RenderComponent, setRenderComponent] = useState<ComponentType<any> | null>(null)
-  const [config, setConfig] = useState<any>(null)
-
-  useEffect(() => {
-    Promise.all([
-      import('@puckeditor/core'),
-      import('@/lib/puck-config'),
-    ]).then(([puckModule, configModule]) => {
-      setRenderComponent(() => puckModule.Render)
-      setConfig(configModule.puckConfig)
-    }).catch(() => {})
-  }, [])
-
-  if (!RenderComponent || !config) {
-    return <div className="flex justify-center py-12">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-foreground" />
-    </div>
-  }
-
-  return <RenderComponent config={config} data={data} />
 }
 
 export default function Home({
@@ -94,7 +169,7 @@ export default function Home({
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
-  // If there's a Puck template for the home page, render it instead
+  // If there's a Puck template for the home page, render it with banners
   if (puckContent && typeof puckContent === 'object' && 'content' in puckContent) {
     return (
       <StorefrontLayout>
@@ -103,6 +178,8 @@ export default function Home({
           baseUrl={baseUrl}
           logoUrl={store.logoUrl}
         />
+        {/* Show banners even when Puck template is used */}
+        {banners.length > 0 && <BannerCarousel banners={banners} />}
         <HomePuckRenderer data={puckContent} />
       </StorefrontLayout>
     )
@@ -116,53 +193,48 @@ export default function Home({
         logoUrl={store.logoUrl}
       />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
-            <div className="flex flex-col justify-center">
-              <span className="animate-fade-up text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-                {t('storefront.home.heroLabel')}
-              </span>
-              <h1 className="animate-fade-up delay-100 font-display text-5xl tracking-tight sm:text-6xl lg:text-7xl mt-4 leading-[1.05]">
-                {banners[0]?.title || t('storefront.home.heroDefaultTitle')}
-              </h1>
-              <p className="animate-fade-up delay-200 text-muted-foreground mt-6 text-lg leading-relaxed max-w-lg">
-                {banners[0]?.subtitle ||
-                  t('storefront.home.heroDefaultSubtitle')}
-              </p>
-              <div className="animate-fade-up delay-300 mt-10 flex flex-wrap gap-4">
-                <Button size="lg" className="px-8" asChild>
-                  <Link href={banners[0]?.linkUrl || '/products'}>
-                    {t('storefront.home.shopNow')}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="px-8" asChild>
-                  <Link href="/collections">{t('storefront.home.viewCollections')}</Link>
-                </Button>
+      {/* Hero Section with Banner Carousel */}
+      {banners.length > 0 ? (
+        <BannerCarousel banners={banners} />
+      ) : (
+        /* Fallback hero when no banners */
+        <section className="relative overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-center">
+              <div className="flex flex-col justify-center">
+                <span className="animate-fade-up text-xs font-semibold tracking-[0.2em] uppercase text-accent">
+                  {t('storefront.home.heroLabel')}
+                </span>
+                <h1 className="animate-fade-up delay-100 font-display text-5xl tracking-tight sm:text-6xl lg:text-7xl mt-4 leading-[1.05]">
+                  {t('storefront.home.heroDefaultTitle')}
+                </h1>
+                <p className="animate-fade-up delay-200 text-muted-foreground mt-6 text-lg leading-relaxed max-w-lg">
+                  {t('storefront.home.heroDefaultSubtitle')}
+                </p>
+                <div className="animate-fade-up delay-300 mt-10 flex flex-wrap gap-4">
+                  <Button size="lg" className="px-8" asChild>
+                    <Link href="/products">
+                      {t('storefront.home.shopNow')}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="px-8" asChild>
+                    <Link href="/collections">{t('storefront.home.viewCollections')}</Link>
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="animate-fade-up delay-300 relative">
-              <div className="overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
-                {banners[0]?.imageUrl ? (
-                  <img
-                    src={banners[0].imageUrl}
-                    alt={banners[0].title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
+              <div className="animate-fade-up delay-300 relative">
+                <div className="overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
                   <div className="flex h-full items-center justify-center bg-gradient-to-br from-secondary to-muted">
                     <Package className="text-muted-foreground/40 h-20 w-20" />
                   </div>
-                )}
+                </div>
+                <div className="absolute -bottom-4 -right-4 h-full w-full rounded-2xl border border-border -z-10" />
               </div>
-              {/* Decorative element */}
-              <div className="absolute -bottom-4 -right-4 h-full w-full rounded-2xl border border-border -z-10" />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Categories */}
       {categories.length > 0 && (

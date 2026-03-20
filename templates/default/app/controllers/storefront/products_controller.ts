@@ -6,10 +6,27 @@ import { useCategoryService } from '#services/service_container'
 import Product from '#models/product'
 import Collection from '#models/collection'
 import Review from '#models/review'
+import Page from '#models/page'
 
 export default class ProductsController {
   private productService = useProductService()
   private categoryService = useCategoryService()
+
+  /**
+   * Get Puck template for a page type
+   */
+  private async getPuckTemplate(storeId: string, pageType: 'product' | 'category' | 'collection') {
+    const template = await Page.query()
+      .where('storeId', storeId)
+      .where('pageType', pageType)
+      .where('status', 'published')
+      .first()
+
+    if (template?.content && 'root' in template.content && 'content' in template.content) {
+      return template.content
+    }
+    return null
+  }
 
   async index({ inertia, request, store }: HttpContext) {
     const storeId = store.id
@@ -86,8 +103,12 @@ export default class ProductsController {
       ? await this.categoryService.getAncestors(product.categories[0].id)
       : []
 
+    // Get Puck template for product pages
+    const puckContent = await this.getPuckTemplate(storeId, 'product')
+
     return inertia.render('storefront/products/Show', {
       product: this.serializeProduct(product),
+      puckContent,
       relatedProducts: relatedProducts.map((p) => this.serializeProductCard(p)),
       reviews: reviews.map((r) => ({
         id: r.id,
@@ -183,6 +204,9 @@ export default class ProductsController {
     const ancestors = await this.categoryService.getAncestors(category.id)
     const children = await this.categoryService.getChildren(category.id)
 
+    // Get Puck template for category pages
+    const puckContent = await this.getPuckTemplate(storeId, 'category')
+
     return inertia.render('storefront/products/Category', {
       category: {
         id: category.id,
@@ -191,6 +215,7 @@ export default class ProductsController {
         description: category.description,
         imageUrl: category.imageUrl,
       },
+      puckContent,
       products: {
         data: products.all().map((p) => this.serializeProductCard(p)),
         meta: products.getMeta(),
@@ -226,8 +251,9 @@ export default class ProductsController {
   }
 
   async showCollection({ params, inertia, request, store }: HttpContext) {
+    const storeId = store.id
     const collection = await Collection.query()
-      .where('storeId', store.id)
+      .where('storeId', storeId)
       .where('slug', params.slug)
       .where('isActive', true)
       .first()
@@ -256,6 +282,9 @@ export default class ProductsController {
 
     const products = await productsQuery.paginate(page, 24)
 
+    // Get Puck template for collection pages
+    const puckContent = await this.getPuckTemplate(storeId, 'collection')
+
     return inertia.render('storefront/products/Category', {
       category: {
         id: collection.id,
@@ -264,6 +293,7 @@ export default class ProductsController {
         description: collection.description,
         imageUrl: collection.imageUrl,
       },
+      puckContent,
       products: {
         data: products.all().map((p) => this.serializeProductCard(p)),
         meta: products.getMeta(),

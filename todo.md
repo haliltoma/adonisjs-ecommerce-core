@@ -1,11 +1,15 @@
 **Store
-- store tarafında login ve register çalışmıyor kontrol edilecek
--
+- ana sayfada hata var 
+- select * from "pages" where "store_id" = $1 and "page_type" = $2 and "status" = $3 limit $4 - column "page_type" does not exist
 
 
 
 **Admin
-- dashboard tarafında göstergeler raporlamalar eksik
--http://dell:42187/admin/products/create prodıuct create sayfasında slug doğru çalışmıyor içerideki fonksiyonlar kontrol edilmemeiş variants sistemini göremiyorum
-- ordersta 12 tane gözüküyor diyor badge te ama içeride ordes yok kontrol eder misin
--
+- http://localhost:3334/admin/price-lists/create - burada ürün arama yaparken site patlıyor kontrol edilmesi lazım 
+- Payment providers çalışmıyor hiçbir providerı kullanmıuotum manuel ayarlayabmıyorum kontrol et
+- theme consumer alanı hatalı çalışmıyor 
+
+
+**Idea
+- Reklam yapan birine kod oluşturp kayıt olursa obunlar raporlansın o müşterinin kimden geldiği hakkında ve discount oluştuurlacaksa oluşturulsun ona göre hesaplansın 
+

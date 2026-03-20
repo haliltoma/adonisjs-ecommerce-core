@@ -1,3 +1,5 @@
+'use client'
+
 import { Head } from '@inertiajs/react'
 import { csrfFetch } from '@/lib/csrf'
 import { useState, useCallback, useEffect, useRef, type ComponentType } from 'react'

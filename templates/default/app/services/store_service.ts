@@ -93,9 +93,9 @@ export default class StoreService {
     const setting = await Setting.query()
       .where((query) => {
         if (storeId) {
-          query.where('storeId', storeId)
+          query.where('store_id', storeId)
         } else {
-          query.whereNull('storeId')
+          query.whereNull('store_id')
         }
       })
       .where('group', group)
@@ -116,9 +116,9 @@ export default class StoreService {
     const existing = await Setting.query()
       .where((query) => {
         if (storeId) {
-          query.where('storeId', storeId)
+          query.where('store_id', storeId)
         } else {
-          query.whereNull('storeId')
+          query.whereNull('store_id')
         }
       })
       .where('group', group)
@@ -147,9 +147,9 @@ export default class StoreService {
     const settings = await Setting.query()
       .where((query) => {
         if (storeId) {
-          query.where('storeId', storeId)
+          query.where('store_id', storeId)
         } else {
-          query.whereNull('storeId')
+          query.whereNull('store_id')
         }
       })
       .where('group', group)
@@ -164,7 +164,7 @@ export default class StoreService {
   }
 
   async getAllSettings(storeId: string): Promise<Record<string, Record<string, unknown>>> {
-    const settings = await Setting.query().where('storeId', storeId)
+    const settings = await Setting.query().where('store_id', storeId)
 
     return settings.reduce(
       (acc, setting) => {

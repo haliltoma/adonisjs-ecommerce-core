@@ -118,9 +118,36 @@ export default class ProductInventoryManager {
     adjustment: number,
     trx?: any
   ): Promise<void> {
-    // HARDENED: iter-2 - Use atomic update with raw SQL to prevent race conditions
-    const result = await db.from('product_variants')
+    console.log('[INVENTORY MANAGER] adjustVariantInventory START', { variantId, adjustment })
+
+    // First check if variant exists and get current state
+    const variant = await (trx || db).from('product_variants')
       .where('id', variantId)
+      .first()
+
+    if (!variant) {
+      console.error('[INVENTORY MANAGER] Variant not found:', variantId)
+      throw new Error(`Variant not found: ${variantId}`)
+    }
+
+    console.log('[INVENTORY MANAGER] Variant found:', {
+      variantId,
+      trackInventory: variant.track_inventory,
+      currentStock: variant.inventory_quantity,
+      adjustment,
+    })
+
+    // If variant doesn't track inventory, skip
+    if (!variant.track_inventory) {
+      console.log('[INVENTORY MANAGER] Variant does not track inventory, skipping')
+      return
+    }
+
+    // HARDENED: iter-2 - Use atomic update with raw SQL to prevent race conditions
+    const query = (trx || db).from('product_variants')
+      .where('id', variantId)
+
+    const result = await query
       .where('track_inventory', true)
       .whereRaw('COALESCE(inventory_quantity, 0) + ? >= 0', [adjustment])
       .update({
@@ -128,9 +155,19 @@ export default class ProductInventoryManager {
         updated_at: DateTime.now().toSQL(),
       })
 
+    console.log('[INVENTORY MANAGER] Update result:', result)
+
     if ((result as any).rowCount === 0 || result === 0) {
       // Either variant doesn't exist, doesn't track inventory, or would go negative
-      throw new Error(`Failed to adjust inventory for variant: ${variantId}`)
+      console.error('[INVENTORY MANAGER] Failed to adjust inventory:', {
+        variantId,
+        currentStock: variant.inventory_quantity,
+        adjustment,
+        wouldGoNegative: (variant.inventory_quantity || 0) + adjustment < 0,
+      })
+      throw new Error(`Failed to adjust inventory for variant: ${variantId}. Current stock: ${variant.inventory_quantity}, adjustment: ${adjustment}`)
     }
+
+    console.log('[INVENTORY MANAGER] Successfully adjusted inventory')
   }
 }

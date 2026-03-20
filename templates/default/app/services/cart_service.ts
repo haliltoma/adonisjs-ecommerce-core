@@ -61,11 +61,13 @@ export default class CartService {
         customerId,
         sessionId,
         currencyCode: 'USD',
+        subtotal: 0,
         discountTotal: 0,
         taxTotal: 0,
         shippingTotal: 0,
         grandTotal: 0,
         totalItems: 0,
+        totalQuantity: 0,
         metadata: {},
       })
     }

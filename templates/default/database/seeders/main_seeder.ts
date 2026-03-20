@@ -757,7 +757,7 @@ export default class MainSeeder extends BaseSeeder {
       storeId,
       title: 'Summer Sale',
       subtitle: 'Up to 50% off on selected items',
-      imageUrl: '/images/banners/summer-sale.jpg',
+      imageUrl: 'https://picsum.photos/seed/summer/1200/800',
       linkUrl: '/collections/sale',
       position: 'home',
       sortOrder: 1,
@@ -769,10 +769,22 @@ export default class MainSeeder extends BaseSeeder {
       storeId,
       title: 'New Arrivals',
       subtitle: 'Check out our latest products',
-      imageUrl: '/images/banners/new-arrivals.jpg',
+      imageUrl: 'https://picsum.photos/seed/newarrivals/1200/800',
       linkUrl: '/collections/new-arrivals',
       position: 'home',
       sortOrder: 2,
+      isActive: true,
+    })
+
+    await Banner.create({
+      id: randomUUID(),
+      storeId,
+      title: 'Free Shipping',
+      subtitle: 'Free shipping on orders over $50',
+      imageUrl: 'https://picsum.photos/seed/shipping/1200/800',
+      linkUrl: '/products',
+      position: 'home',
+      sortOrder: 3,
       isActive: true,
     })
   }

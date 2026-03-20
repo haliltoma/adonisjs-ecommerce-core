@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Package, X } from 'lucide-react'
 
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { PuckRenderer } from '@/components/storefront/PuckRenderer'
 import { useTranslation } from '@/hooks/use-translation'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
@@ -61,6 +62,7 @@ interface BreadcrumbItem {
 
 interface Props {
   category: Category
+  puckContent?: Record<string, unknown> | null
   products: {
     data: Product[]
     meta: {
@@ -81,6 +83,7 @@ interface Props {
 
 export default function CategoryPage({
   category,
+  puckContent,
   products,
   filters,
   breadcrumb,
@@ -115,6 +118,22 @@ export default function CategoryPage({
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const storeName = 'AdonisCommerce'
+
+  // If there's Puck content, render it instead
+  if (puckContent && typeof puckContent === 'object' && 'content' in puckContent) {
+    return (
+      <StorefrontLayout>
+        <CollectionListSeo
+          title={category.name}
+          description={category.description || t('storefront.categoryPage.productsCount', { count: products.meta.total })}
+          storeName={storeName}
+          baseUrl={baseUrl}
+          image={category.imageUrl || products.data[0]?.thumbnail || undefined}
+        />
+        <PuckRenderer data={puckContent} />
+      </StorefrontLayout>
+    )
+  }
 
   return (
     <StorefrontLayout>

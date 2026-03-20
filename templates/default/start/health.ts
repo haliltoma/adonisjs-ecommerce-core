@@ -5,6 +5,11 @@
  */
 
 import logger from '@adonisjs/core/services/logger'
+import db from '@adonisjs/lucid/services/db'
+import redis from '@adonisjs/redis/services/main'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import app from '@adonisjs/core/services/app'
 
 /**
  * Simple health check class
@@ -76,43 +81,30 @@ export const healthChecks = new HealthChecks()
  */
 
 // Database health check
-try {
-  const db = require('@adonisjs/lucid/services/main').default
-  healthChecks.register('database', async () => {
-    try {
-      await db.connection().knex.raw('SELECT 1')
-      return { status: 'ok', message: 'Database connection healthy' }
-    } catch (error) {
-      return { status: 'error', message: `Database error: ${(error as Error).message}` }
-    }
-  })
-} catch {
-  // Database not configured
-}
+healthChecks.register('database', async () => {
+  try {
+    await db.raw('SELECT 1')
+    return { status: 'ok', message: 'Database connection healthy' }
+  } catch (error) {
+    return { status: 'error', message: `Database error: ${(error as Error).message}` }
+  }
+})
 
 // Redis health check
-try {
-  const redis = require('@adonisjs/redis/services/main').default
-  healthChecks.register('redis', async () => {
-    try {
-      await redis.connection('local').ping()
-      return { status: 'ok', message: 'Redis connection healthy' }
-    } catch (error) {
-      return { status: 'error', message: `Redis error: ${(error as Error).message}` }
-    }
-  })
-} catch {
-  // Redis not configured
-}
+healthChecks.register('redis', async () => {
+  try {
+    const redisLocal = redis.connection()
+    await redisLocal.ping()
+    return { status: 'ok', message: 'Redis connection healthy' }
+  } catch (error) {
+    return { status: 'error', message: `Redis error: ${(error as Error).message}` }
+  }
+})
 
 // File system health check
 healthChecks.register('filesystem', async () => {
-  const fs = require('node:fs/promises')
-  const path = require('node:path')
-  const app = require('@adonisjs/core/services/app').default
-
   try {
-    const testPath = path.join(app.appRoot, 'tmp')
+    const testPath = path.join(String(app.appRoot), 'tmp')
     await fs.access(testPath, fs.constants.W_OK)
     return { status: 'ok', message: 'File system accessible' }
   } catch (error) {

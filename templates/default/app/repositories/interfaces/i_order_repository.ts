@@ -11,11 +11,11 @@ import Order from '#models/order'
 
 export interface CreateOrderData {
   storeId: string
-  customerId: string
+  customerId: string | null
   orderNumber: string
   email: string
   phone?: string | null
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
   paymentStatus:
   | 'pending'
   | 'authorized'
@@ -23,7 +23,8 @@ export interface CreateOrderData {
   | 'partially_refunded'
   | 'refunded'
   | 'failed'
-  fulfillmentStatus: 'unfulfilled' | 'partially_fulfilled' | 'fulfilled'
+  | 'voided'
+  fulfillmentStatus: 'unfulfilled' | 'partially_fulfilled' | 'fulfilled' | 'returned' | 'partially_returned'
   currencyCode: string
   subtotal: number
   discountTotal: number
@@ -35,8 +36,16 @@ export interface CreateOrderData {
   billingAddress: Record<string, any>
   shippingAddress?: Record<string, any> | null
   shippingMethod?: string | null
+  shippingMethodTitle?: string | null
+  paymentMethod?: string | null
+  paymentMethodTitle?: string | null
   notes?: string | null
-  userId?: number
+  internalNotes?: string | null
+  regionId?: string | null
+  salesChannelId?: string | null
+  metadata?: Record<string, any>
+  ipAddress?: string | null
+  userAgent?: string | null
 }
 
 export interface UpdateOrderData {

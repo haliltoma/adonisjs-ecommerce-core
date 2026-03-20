@@ -5,16 +5,17 @@
  * This enables proper dependency injection following SOLID principles.
  */
 
-import { ApplicationContract } from '@adonisjs/core/types'
+import type { ApplicationService } from '@adonisjs/core/types'
 import OrderRepository from '#repositories/implementations/order_repository'
 import CartRepository from '#repositories/implementations/cart_repository'
+import ProductRepository from '#repositories/implementations/product_repository'
 import OrderService from '#services/order_service'
 import OrderItemFactory from '#services/order/order_item_factory'
 import OrderStatusManager from '#services/order/order_status_manager'
 import OrderNumberGenerator from '#services/order/order_number_generator'
 
 export default class OrderServiceProvider {
-  constructor(protected app: ApplicationContract) {}
+  constructor(protected app: ApplicationService) {}
 
   /**
    * Register bindings
@@ -27,6 +28,10 @@ export default class OrderServiceProvider {
 
     this.app.container.bind('repositories/CartRepository', () => {
       return new CartRepository()
+    })
+
+    this.app.container.bind('repositories/ProductRepository', () => {
+      return new ProductRepository()
     })
 
     // Register order service components
@@ -43,19 +48,21 @@ export default class OrderServiceProvider {
     })
 
     // Register OrderService with all dependencies
-    this.app.container.bind('services/OrderService', () => {
+    this.app.container.bind('services/OrderService', async () => {
       const orderRepository = await this.app.container.make('repositories/OrderRepository')
       const cartRepository = await this.app.container.make('repositories/CartRepository')
       const orderItemFactory = await this.app.container.make('services/order/OrderItemFactory')
       const statusManager = await this.app.container.make('services/order/OrderStatusManager')
       const numberGenerator = await this.app.container.make('services/order/OrderNumberGenerator')
+      const productRepository = await this.app.container.make('repositories/ProductRepository')
 
       return new OrderService(
         orderRepository,
         cartRepository,
         orderItemFactory,
         statusManager,
-        numberGenerator
+        numberGenerator,
+        productRepository
       )
     })
   }

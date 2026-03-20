@@ -18,11 +18,12 @@ export interface DiscountResult {
 export default class CartDiscountApplicator {
   /**
    * Apply discount code to cart
+   * Uses DiscountService.validateAndApply which handles all validation logic
    */
   async applyDiscount(
     cart: Cart,
     couponCode: string,
-    discountService: any // Will be injected
+    discountService: any
   ): Promise<DiscountResult> {
     try {
       // Validate cart state
@@ -42,7 +43,7 @@ export default class CartDiscountApplicator {
         }
       }
 
-      // HARDENED: iter-3 - Check if coupon is already applied to prevent double discount
+      // Check if coupon is already applied to prevent double discount
       if (cart.couponCode && cart.couponCode.toLowerCase() === couponCode.toLowerCase()) {
         return {
           success: false,
@@ -52,70 +53,26 @@ export default class CartDiscountApplicator {
         }
       }
 
-      // Get discount from discount service
-      const discount = await discountService.findByCode(cart.storeId, couponCode)
-
-      if (!discount) {
-        return {
-          success: false,
-          discountTotal: 0,
-          message: 'Invalid discount code',
-        }
-      }
-
-      // Check if discount is active
-      if (!discount.isActive) {
-        return {
-          success: false,
-          discountTotal: 0,
-          message: 'Discount is not active',
-        }
-      }
-
-      // Check dates
-      const now = new Date()
-      if (discount.startsAt && new Date(discount.startsAt) > now) {
-        return {
-          success: false,
-          discountTotal: 0,
-          message: 'Discount has not started yet',
-        }
-      }
-
-      if (discount.endsAt && new Date(discount.endsAt) < now) {
-        return {
-          success: false,
-          discountTotal: 0,
-          message: 'Discount has expired',
-        }
-      }
-
-      // Build validation context
-      const context = await this.buildValidationContext(cart, discountService)
-
-      // Validate discount
-      const validationResult = await discountService.validate(discount, context)
+      // Delegate to DiscountService for validation and calculation
+      const validationResult = await discountService.validateAndApply(
+        cart.storeId,
+        couponCode,
+        cart
+      )
 
       if (!validationResult.valid) {
         return {
           success: false,
           discountTotal: 0,
-          message: validationResult.message || 'Discount not applicable',
+          message: validationResult.error || 'Discount not applicable',
         }
       }
 
-      // Calculate discount amount
-      const discountTotal = await this.calculateDiscountAmount(
-        cart,
-        discount,
-        discountService
-      )
-
       return {
         success: true,
-        discountId: discount.id,
-        couponCode: discount.couponCode,
-        discountTotal,
+        discountId: validationResult.discount?.id || null,
+        couponCode: validationResult.discount?.couponCode || couponCode.toUpperCase(),
+        discountTotal: validationResult.discountAmount,
         message: 'Discount applied successfully',
       }
     } catch (error) {
@@ -134,43 +91,5 @@ export default class CartDiscountApplicator {
     cart.couponCode = null
     cart.discountId = null
     cart.discountTotal = 0
-  }
-
-  /**
-   * Build validation context for discount
-   */
-  private async buildValidationContext(
-    cart: Cart,
-    discountService: any
-  ): Promise<any> {
-    return await discountService.buildContextFromCart(cart)
-  }
-
-  /**
-   * Calculate discount amount
-   */
-  private async calculateDiscountAmount(
-    cart: Cart,
-    discount: any,
-    discountService: any
-  ): Promise<number> {
-    const subtotal = cart.subtotal || 0
-
-    if (discount.type === 'percentage') {
-      const discountAmount = (subtotal * discount.value) / 100
-
-      // Apply max discount if set
-      if (discount.maxDiscountAmount) {
-        return Math.min(discountAmount, discount.maxDiscountAmount)
-      }
-
-      return discountAmount
-    }
-
-    if (discount.type === 'fixed') {
-      return Math.min(discount.value, subtotal)
-    }
-
-    return 0
   }
 }

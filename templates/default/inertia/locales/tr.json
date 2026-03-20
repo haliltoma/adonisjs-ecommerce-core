@@ -375,7 +375,19 @@
       "calculatedNextStep": "Sonraki adımda hesaplanır",
       "tax": "Vergi",
       "total": "Toplam",
-      "editCart": "Sepeti Düzenle"
+      "editCart": "Sepeti Düzenle",
+      "errors": {
+        "emailRequired": "E-posta gereklidir",
+        "emailInvalid": "Geçerli bir e-posta adresi girin",
+        "firstNameRequired": "Ad gereklidir",
+        "lastNameRequired": "Soyad gereklidir",
+        "addressRequired": "Adres gereklidir",
+        "cityRequired": "Şehir gereklidir",
+        "stateRequired": "İlçe gereklidir",
+        "postalCodeRequired": "Posta kodu gereklidir",
+        "shippingMethodRequired": "Lütfen bir kargo yöntemi seçin",
+        "pleaseFillRequired": "Lütfen tüm zorunlu alanları doldurun"
+      }
     },
     "searchPage": {
       "searchResults": "Arama Sonuçları",

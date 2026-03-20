@@ -8,6 +8,8 @@
 import { DateTime } from 'luxon'
 import backupConfig from '#config/backup'
 import logger from '@adonisjs/core/services/logger'
+import db from '@adonisjs/lucid/services/db'
+import redis from '@adonisjs/redis/services/main'
 import Backup from '#models/backup'
 import { databaseBackup } from './database_backup_service'
 import { mediaBackup } from './media_backup_service'
@@ -274,11 +276,9 @@ export default class DisasterRecoveryService {
     logger.info('Verifying system health')
 
     // Check database connection
-    const db = require('@adonisjs/lucid/services/main').default
-    await db.connection().knex.raw('SELECT 1')
+    await db.raw('SELECT 1')
 
     // Check Redis connection
-    const redis = require('@adonisjs/redis/services/main').default
     await redis.connection('local').ping()
 
     // TODO: Add more health checks
@@ -319,6 +319,38 @@ export default class DisasterRecoveryService {
     logger.info('Cancelling recovery plan', { planId: this.activeRecovery.id })
     this.activeRecovery = null
     return true
+  }
+
+  /**
+   * Execute recovery plan by ID
+   */
+  async executeRecoveryPlanById(planId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Find the backup to recover
+      const backup = await Backup.find(planId)
+
+      if (!backup) {
+        return { success: false, error: 'Backup not found' }
+      }
+
+      if (backup.status !== 'completed') {
+        return { success: false, error: 'Backup is not completed' }
+      }
+
+      // Create a recovery plan from the backup
+      const plan = await this.createRecoveryPlan({
+        name: `Recovery from ${backup.name}`,
+        description: `Recovery from backup ${backup.id}`,
+        databaseBackupId: backup.id,
+        mediaBackupId: undefined,
+      })
+
+      // Execute the recovery
+      return await this.executeRecoveryPlan(plan)
+    } catch (error) {
+      logger.error({ err: error }, 'Failed to execute recovery by ID')
+      return { success: false, error: (error as Error).message }
+    }
   }
 
   /**
@@ -516,6 +548,33 @@ export default class DisasterRecoveryService {
    */
   private generateStepId(): string {
     return `step-${Math.random().toString(36).substring(7)}`
+  }
+
+  /**
+   * Cleanup old backups
+   */
+  async cleanupOldBackups(olderThanDays: number): Promise<number> {
+    const cutoffDate = DateTime.now().minus({ days: olderThanDays }).toISO()
+
+    // Find old backups that are not retained
+    const oldBackups = await Backup.query()
+      .where('createdAt', '<', cutoffDate)
+      .where('retained', false)
+      .where('status', 'completed')
+
+    let deletedCount = 0
+
+    for (const backup of oldBackups) {
+      try {
+        await this.deleteBackup(backup.id)
+        deletedCount++
+      } catch (error) {
+        logger.warn({ err: error, backupId: backup.id }, 'Failed to delete old backup')
+      }
+    }
+
+    logger.info({ deletedCount, olderThanDays }, 'Old backups cleanup completed')
+    return deletedCount
   }
 }
 

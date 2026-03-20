@@ -4,6 +4,7 @@ import { Minus, Plus, Star } from 'lucide-react'
 
 import { useTranslation } from '@/hooks/use-translation'
 import StorefrontLayout from '@/components/storefront/StorefrontLayout'
+import { PuckRenderer } from '@/components/storefront/PuckRenderer'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -103,6 +104,7 @@ interface RelatedProduct {
 
 interface Props {
   product: Product
+  puckContent?: Record<string, unknown> | null
   relatedProducts: RelatedProduct[]
   reviews: Review[]
   reviewStats: ReviewStats
@@ -263,6 +265,7 @@ function ReviewForm({ productSlug }: { productSlug: string }) {
 
 export default function ProductShow({
   product,
+  puckContent,
   relatedProducts,
   reviews,
   reviewStats,
@@ -318,6 +321,40 @@ export default function ProductShow({
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const storeName = 'AdonisCommerce'
+
+  // If there's Puck content, render it instead
+  if (puckContent && typeof puckContent === 'object' && 'content' in puckContent) {
+    return (
+      <StorefrontLayout>
+        <ProductSeo
+          product={{
+            title: product.title,
+            slug: product.slug,
+            description: product.description || undefined,
+            shortDescription: product.shortDescription || undefined,
+            price: price,
+            compareAtPrice: compareAtPrice,
+            sku: product.sku || undefined,
+            vendor: product.vendor || undefined,
+            images: product.images.map((img) => ({
+              url: img.url,
+              alt: img.alt || undefined,
+            })),
+            categories: product.categories,
+            inStock: isAvailable,
+            rating: reviewStats.total > 0
+              ? { value: reviewStats.average, count: reviewStats.total }
+              : undefined,
+          }}
+          reviews={reviews}
+          storeName={storeName}
+          baseUrl={baseUrl}
+          breadcrumbs={breadcrumb}
+        />
+        <PuckRenderer data={puckContent} />
+      </StorefrontLayout>
+    )
+  }
 
   return (
     <StorefrontLayout>

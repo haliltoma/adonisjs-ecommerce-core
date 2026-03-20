@@ -9,6 +9,16 @@ import { DateTime } from 'luxon'
 
 export default class AdminCustomerSegmentsController {
   /**
+   * Show create form (for REST API compatibility)
+   */
+  async create({ response }: HttpContext) {
+    return response.status(200).json({
+      message: 'Use POST /segments to create a new segment',
+      method: 'store',
+    })
+  }
+
+  /**
    * List all segments
    */
   async index({ request }: HttpContext) {

@@ -4,7 +4,7 @@ import Cart from '#models/cart'
 import CartItem from '#models/cart_item'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
-import { ModelPaginatorContract } from '#models/cart'
+import type { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import {
   discountEngine,
   type DiscountContext,

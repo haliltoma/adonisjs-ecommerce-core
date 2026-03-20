@@ -14,6 +14,8 @@ import {
   Clock,
   AlertCircle,
   Pencil,
+  FileText,
+  Download,
 } from 'lucide-react'
 import { FormEvent, useState } from 'react'
 
@@ -207,6 +209,9 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isReturnOpen, setIsReturnOpen] = useState(false)
   const [isClaimOpen, setIsClaimOpen] = useState(false)
+  const [isFulfillmentOpen, setIsFulfillmentOpen] = useState(false)
+  const [fulfillmentCarrier, setFulfillmentCarrier] = useState('')
+  const [fulfillmentTracking, setFulfillmentTracking] = useState('')
   const [returnItems, setReturnItems] = useState<{ orderItemId: string; quantity: number; returnReasonId?: string; note?: string }[]>([])
   const [claimItems, setClaimItems] = useState<{ orderItemId: string; quantity: number; reason: string }[]>([])
   const [claimType, setClaimType] = useState<'refund' | 'replace'>('refund')
@@ -276,7 +281,14 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
 
     if (unfulfilledItems.length === 0) return
 
-    router.post(`/admin/orders/${order.id}/fulfillments`, { items: unfulfilledItems })
+    router.post(`/admin/orders/${order.id}/fulfillments`, {
+      items: unfulfilledItems,
+      carrier: fulfillmentCarrier || undefined,
+      trackingNumber: fulfillmentTracking || undefined,
+    })
+    setIsFulfillmentOpen(false)
+    setFulfillmentCarrier('')
+    setFulfillmentTracking('')
   }
 
   const handleToggleReturnItem = (itemId: string, quantity: number) => {
@@ -332,10 +344,16 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
       title={`Order ${order.orderNumber}`}
       description={`Created ${formatDateTime(order.createdAt)}`}
       actions={
-        <Button variant="outline" onClick={() => router.get('/admin/orders')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Orders
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.open(`/admin/orders/${order.id}/invoice`, '_blank')}>
+            <FileText className="mr-2 h-4 w-4" />
+            Invoice
+          </Button>
+          <Button variant="outline" onClick={() => router.get('/admin/orders')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        </div>
       }
     >
       <Head title={`Order ${order.orderNumber} - Admin`} />
@@ -529,7 +547,7 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
                         fulfillment
                       </CardDescription>
                     </div>
-                    <Button size="sm" onClick={handleCreateFulfillment} className="tracking-wide">
+                    <Button size="sm" onClick={() => setIsFulfillmentOpen(true)} className="tracking-wide">
                       <Package className="mr-2 h-4 w-4" />
                       Create Fulfillment
                     </Button>
@@ -1252,6 +1270,46 @@ export default function OrderShow({ order, unfulfilledItems, returns = [], claim
                         <Button variant="outline" onClick={() => setIsClaimOpen(false)}>Cancel</Button>
                         <Button onClick={handleSubmitClaim} disabled={claimItems.length === 0}>
                           Create Claim
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={isFulfillmentOpen} onOpenChange={setIsFulfillmentOpen}>
+                    <DialogTrigger asChild>
+                      <span />
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="font-display">Create Fulfillment</DialogTitle>
+                        <DialogDescription>
+                          Add shipping details for this order fulfillment.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="carrier">Carrier</Label>
+                          <Input
+                            id="carrier"
+                            placeholder="e.g., UPS, FedEx, DHL"
+                            value={fulfillmentCarrier}
+                            onChange={(e) => setFulfillmentCarrier(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="tracking">Tracking Number</Label>
+                          <Input
+                            id="tracking"
+                            placeholder="Enter tracking number"
+                            value={fulfillmentTracking}
+                            onChange={(e) => setFulfillmentTracking(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsFulfillmentOpen(false)}>Cancel</Button>
+                        <Button onClick={handleCreateFulfillment}>
+                          Create & Ship
                         </Button>
                       </DialogFooter>
                     </DialogContent>
